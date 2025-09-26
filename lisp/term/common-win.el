@@ -39,9 +39,8 @@
     (unless (featurep 'ns)
       (define-key map [iso-lefttab] [backtab])
       (define-key map [S-iso-lefttab] [backtab]))
-    (and (or (eq system-type 'windows-nt)
-	     (featurep 'ns))
-	 (define-key map [S-tab] [backtab]))
+    (when (or (featurep 'ns) (featurep 'pgtk))
+      (define-key map [S-tab] [backtab]))
     map)
   "Keymap of possible alternative meanings for some keys.")
 
@@ -388,17 +387,13 @@ For X, the list comes from the `rgb.txt' file,v 10.41 94/02/20.
 For Nextstep, this is a list of non-PANTONE colors returned by
 the operating system.")
 
-(defvar w32-color-map)
-
 (defun xw-defined-colors (&optional frame)
   "Internal function called by `defined-colors', which see."
   (if (featurep 'ns)
       x-colors
     (or frame (setq frame (selected-frame)))
     (let (defined-colors)
-      (dolist (this-color (if (eq system-type 'windows-nt)
-			      (or (mapcar 'car w32-color-map) x-colors)
-			    x-colors))
+      (dolist (this-color x-colors)
 	(and (color-supported-p this-color frame t)
 	     (setq defined-colors (cons this-color defined-colors))))
       defined-colors)))

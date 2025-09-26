@@ -56,8 +56,8 @@
 ;; terminal-specific files in lisp/term define their own standard
 ;; colors.  If your terminal supports different or additional colors,
 ;; call `tty-color-define' from your `.emacs' or `site-start.el'.  For
-;; more-or-less standard definitions of VGA text-mode colors, see
-;; lisp/term/pc-win.el.
+;; more-or-less standard definitions of VGA text-mode colors were
+;; historically provided by the MS-DOS port.
 
 ;;; Code:
 
@@ -66,8 +66,8 @@
 ;; WARNING: Some colors, such as "lightred", do not appear in this
 ;; list.  If you think it's a good idea to add them, don't!  The
 ;; problem is that the X-standard definition of "red" actually
-;; corresponds to "lightred" on VGA (that's why pc-win.el and
-;; w32-fns.el define "lightred" with the same RGB values as "red"
+;; corresponds to "lightred" on VGA (the retired MS-DOS and MS-Windows
+;; ports defined "lightred" with the same RGB values as "red"
 ;; below).  Adding "lightred" here would therefore create confusing
 ;; and counter-intuitive results, like "red" and "lightred" being the
 ;; same color.  A similar situation exists with other "light*" colors.

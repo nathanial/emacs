@@ -30,13 +30,7 @@ along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.  */
 #endif
 
 /* To help make dependencies clearer elsewhere, this file typically
-   does not #include other files.  The exception is ms-w32.h (DOS_NT
-   only) because it historically was included here and changing that
-   would take some work.  */
-
-#if defined WINDOWSNT && !defined DEFER_MS_W32_H
-# include <ms-w32.h>
-#endif
+   does not #include other files.  */
 
 /* GNUC_PREREQ (V, W, X) is true if this is GNU C version V.W.X or later.
    It can be used in a preprocessor expression.  */
@@ -55,11 +49,7 @@ along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.  */
    into the same 1-, 2-, or 4-byte allocation unit in the MinGW
    builds.  It was also needed to port to pre-C99 compilers, although
    we don't care about that any more.  */
-#ifdef __MINGW32__
-typedef unsigned int bool_bf;
-#else
 typedef bool bool_bf;
-#endif
 
 /* A substitute for __has_attribute on compilers that lack it.
    It is used only on arguments like cleanup that are handled here.
@@ -105,77 +95,6 @@ typedef bool bool_bf;
 #undef HAVE_RINT
 #endif  /* HPUX */
 
-#ifdef MSDOS
-#ifndef __DJGPP__
-You lose; /* Emacs for DOS must be compiled with DJGPP */
-#endif
-#define _NAIVE_DOS_REGS
-
-/* Start of gnulib-related stuff  */
-
-/* lib/ftoastr.c wants strtold, but DJGPP only has _strtold.  DJGPP >
-   2.03 has it, but it also has _strtold as a stub that jumps to
-   strtold, so use _strtold in all versions.  */
-#define strtold _strtold
-
-#if __DJGPP__ > 2 || __DJGPP_MINOR__ > 3
-# define HAVE_LSTAT 1
-#else
-# define lstat stat
-/* DJGPP 2.03 and older don't have the next two.  */
-# define EOVERFLOW ERANGE
-# define SIZE_MAX  4294967295U
-#endif
-
-/* Things that lib/reg* wants.  */
-
-#define mbrtowc(pwc, s, n, ps) mbtowc (pwc, s, n)
-#define wcrtomb(s, wc, ps) wctomb (s, wc)
-#define btowc(b) ((wchar_t) (b))
-#define towupper(chr) toupper (chr)
-#define towlower(chr) tolower (chr)
-#define iswalnum(chr) isalnum (chr)
-#define wctype(name) ((wctype_t) 0)
-#define iswctype(wc, type) false
-#define mbsinit(ps) 1
-
-/* Some things that lib/at-func.c wants.  */
-#define GNULIB_SUPPORT_ONLY_AT_FDCWD
-
-/* Needed by lib/lchmod.c.  */
-#define EOPNOTSUPP EINVAL
-
-#define MALLOC_0_IS_NONNULL 1
-
-/* We must intercept 'opendir' calls to stash away the directory name,
-   so we could reuse it in readlinkat; see msdos.c.  */
-#define opendir sys_opendir
-
-/* End of gnulib-related stuff.  */
-
-#define emacs_raise(sig) msdos_fatal_signal (sig)
-
-/* DATA_START is needed by vm-limit.c. */
-#define DATA_START (&etext + 1)
-#endif  /* MSDOS */
-
-#if defined HAVE_NTGUI && !defined DebPrint
-# ifdef EMACSDEBUG
-extern void _DebPrint (const char *fmt, ...);
-#  define DebPrint(stuff) _DebPrint stuff
-# else
-#  define DebPrint(stuff) ((void) 0)
-# endif
-#endif
-
-#if defined CYGWIN && defined HAVE_NTGUI
-# define NTGUI_UNICODE /* Cygwin runs only on UNICODE-supporting systems */
-# define _WIN32_WINNT 0x500 /* Win2k */
-/* The following was in /usr/include/string.h prior to Cygwin 1.7.33.  */
-#ifndef strnicmp
-#define strnicmp strncasecmp
-#endif
-#endif
 
 #ifdef emacs /* Don't do this for lib-src.  */
 /* Tell regex.c to use a type compatible with Emacs.  */
@@ -194,33 +113,7 @@ extern int emacs_setenv_TZ (char const *);
 #define NO_INLINE _GL_ATTRIBUTE_NOINLINE
 #define EXTERNALLY_VISIBLE _GL_ATTRIBUTE_EXTERNALLY_VISIBLE
 
-#if GNUC_PREREQ (4, 4, 0) && defined __GLIBC_MINOR__
-# define PRINTF_ARCHETYPE __gnu_printf__
-#elif GNUC_PREREQ (4, 4, 0) && defined __MINGW32__
-# ifdef MINGW_W64
-/* When __USE_MINGW_ANSI_STDIO is non-zero (as set by config.h),
-   MinGW64 replaces printf* with its own versions that are
-   __gnu_printf__ compatible, and emits warnings for MS native %I64d
-   format spec.  */
-#  if __USE_MINGW_ANSI_STDIO
-#   define PRINTF_ARCHETYPE __gnu_printf__
-#  else
-#   define PRINTF_ARCHETYPE __ms_printf__
-#  endif
-# else	/* mingw.org's MinGW */
-/* Starting from runtime v5.0.0, mingw.org's MinGW with GCC 6 and
-   later turns on __USE_MINGW_ANSI_STDIO by default, replaces printf*
-   with its own __mingw_printf__ version, which still recognizes
-   %I64d.  */
-#  if GNUC_PREREQ (6, 0, 0) && __MINGW32_MAJOR_VERSION >= 5
-#   define PRINTF_ARCHETYPE __mingw_printf__
-#  else  /* __MINGW32_MAJOR_VERSION < 5 */
-#   define PRINTF_ARCHETYPE __ms_printf__
-#  endif  /* __MINGW32_MAJOR_VERSION < 5 */
-# endif	 /* MinGW */
-#else
-# define PRINTF_ARCHETYPE __printf__
-#endif
+#define PRINTF_ARCHETYPE __printf__
 #define ATTRIBUTE_FORMAT_PRINTF(string_index, first_to_check) \
   _GL_ATTRIBUTE_FORMAT ((PRINTF_ARCHETYPE, string_index, first_to_check))
 
@@ -299,7 +192,7 @@ extern int emacs_setenv_TZ (char const *);
 #define VFORK() vfork ()
 #endif
 
-#if ! (defined __FreeBSD__ || defined GNU_LINUX || defined __MINGW32__)
+#if ! (defined __FreeBSD__ || defined GNU_LINUX)
 # undef PROFILING
 #endif
 
@@ -384,18 +277,6 @@ extern int emacs_setenv_TZ (char const *);
    nor Gnulib strftime support for non-Gregorian calendars.  */
 #define REQUIRE_GNUISH_STRFTIME_AM_PM false
 #define SUPPORT_NON_GREG_CALENDARS_IN_STRFTIME false
-
-#ifdef MSDOS
-/* These are required by file-has-acl.c but defined in dirent.h and
-   errno.h, which are not generated on DOS.  */
-#define _GL_DT_NOTDIR 0x100   /* Not a directory */
-#define ENOTSUP ENOSYS
-# define IFTODT(mode) \
-   (S_ISREG (mode) ? DT_REG : S_ISDIR (mode) ? DT_DIR \
-    : S_ISLNK (mode) ? DT_LNK : S_ISBLK (mode) ? DT_BLK \
-    : S_ISCHR (mode) ? DT_CHR : S_ISFIFO (mode) ? DT_FIFO \
-    : S_ISSOCK (mode) ? DT_SOCK : DT_UNKNOWN)
-#endif /* MSDOS */
 
 #if defined __ANDROID__ && __ANDROID_API__ >= 35
 #define _GL_TIME_H

@@ -9,14 +9,8 @@ documented in config.in, and this file would not be necessary.
 
 AIX
 _AIX
-CYGWIN		Compiling the Cygwin port.
-__CYGWIN__	Ditto
 GNU_LINUX
 HPUX
-DOS_NT		Historical macro defined when building the native MS-Windows port.
-WINDOWSNT	Compiling the native MS-Windows (W32) port.
-__MINGW32__	Compiling the W32 port with the MinGW or MinGW-w64 ports of GCC.
-MINGW_W64	Compiling the W32 port with the MinGW-w64 port of GCC.
 DARWIN_OS	Compiling on macOS or pure Darwin (and using s/darwin.h).
 SOLARIS2
 USG
@@ -28,7 +22,6 @@ __ANDROID_API__ A numerical "API level" indicating the version of
 
 ** Distinguishing GUIs **
 
-HAVE_NTGUI	Use the native W32 GUI for windows, frames, menus&scrollbars.
 HAVE_NS		Use the NeXT/OpenStep/Cocoa UI under macOS or GNUstep.
 NS_IMPL_COCOA	Compile support for Cocoa (Apple) implementation of NS GUI API.
 HAVE_X11	Compile support for the X11 GUI.
@@ -71,9 +64,7 @@ USE_XCB		Whether or not the XCB library is used to optimize some X requests.
 
 FRAME_TERMCAP_P	A tty (character terminal) frame.
 FRAME_X_P	A frame on X Window system.
-FRAME_MSDOS_P	An MS-DOS frame (used only by the DOS port).
-FRAME_W32_P	A frame using native MS-Windows GUI.
-FRAME_WINDOW_P	A GUI frame (like X, w32, etc.)
+FRAME_WINDOW_P	A GUI frame (like X, NS, or PGTK).
 
 ** Support for accessing other processes on the system **
 
@@ -84,7 +75,6 @@ HAVE_PROCFS     The /proc filesystem is supported.
 REL_ALLOC	Compile in the relocatable memory allocator ralloc.c.
 SYSTEM_MALLOC	Use the system library's malloc.
 subprocesses    System can use subprocesses (for M-x shell for example).
-                Defined by default, only MSDOS undefines it.
 DEBUG_LISP_OBJECT_TYPE Define it in lisp.h enable compile time checks
                        on Lisp_Object use.
 
@@ -98,7 +88,7 @@ SYSTEM_TYPE
 
 ** Misc macros
 USER_FULL_NAME   If defined, overrides the default pw->pw_gecos for
-getting at the full user name.  Only MSDOS overrides the default.
+getting at the full user name.
 
 ** Miscellaneous defines.  Some of these might not be used in the code
 anymore, so they can be removed.

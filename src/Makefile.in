@@ -437,7 +437,7 @@ SOME_MACHINE_OBJECTS = \
   fontset.o dbusbind.o \
   nsterm.o nsfns.o nsmenu.o nsselect.o nsimage.o macfont.o \
   nsxwidget.o \
-  w16select.o widget.o xfont.o ftfont.o xftfont.o gtkutil.o \
+  widget.o xfont.o ftfont.o xftfont.o gtkutil.o \
   xsettings.o xgselect.o termcap.o hbfont.o \
   haikuterm.o haikufns.o haikumenu.o haikufont.o androidterm.o androidfns.o \
   androidfont.o androidselect.c androidvfs.c sfntfont-android.c sfntfont.c

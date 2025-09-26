@@ -191,7 +191,6 @@ terminfo.o: terminfo.c tparam.h lisp.h globals.h $(config_h)
 tparam.o: tparam.c tparam.h lisp.h $(config_h)
 undo.o: undo.c buffer.h commands.h window.h dispextern.h \
    lisp.h globals.h $(config_h)
-w16select.o: w16select.c dispextern.h frame.h blockinput.h atimer.h systime.h \ buffer.h charset.h coding.h composite.h lisp.h $(config_h)
 widget.o: widget.c xterm.h frame.h dispextern.h widgetprv.h \
    lisp.h $(config_h)
 window.o: window.c indent.h commands.h frame.h window.h buffer.h termchar.h \

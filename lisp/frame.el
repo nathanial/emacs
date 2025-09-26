@@ -486,17 +486,15 @@ there (in decreasing order of priority)."
 	(setq parms (delq (assq 'minibuffer parms) parms))
 	(modify-frame-parameters
 	 nil
-	 (if initial-window-system
+	   (if initial-window-system
 	     parms
-	   ;; initial-frame-alist and default-frame-alist were already
-	   ;; applied in pc-win.el.
 	   (setq parms (append initial-frame-alist window-system-frame-alist
 			       default-frame-alist parms nil))
 	   ;; Don't enable tab-bar in daemon's initial frame.
 	   (when (and (daemonp) (not (frame-parameter nil 'client)))
 	     (setq parms (delq (assq 'tab-bar-lines parms) parms)))
 	   parms))
-	(if (null initial-window-system) ;; MS-DOS does this differently in pc-win.el
+	(if (null initial-window-system)
 	    (let ((newparms (frame-parameters))
 		  (frame (selected-frame)))
 	      (tty-handle-reverse-video frame newparms)

@@ -1405,7 +1405,7 @@ support into the MS-DOS port of Emacs.  He also wrote
 @file{desktop.el}, facilities for saving some of Emacs's state between
 sessions; @file{timer.el}, the Emacs facility to run commands at a
 given time or frequency, or when Emacs is idle, and its C-level
-support code; @file{pc-win.el}, the MS-DOS ``window-system'' support;
+support code; the now-retired @file{pc-win.el}, the MS-DOS ``window-system'' support;
 @file{internal.el}, an ``internal terminal'' emulator for the MS-DOS
 port of Emacs; @file{arc-mode.el}, the mode for editing compressed
 archives; @file{s-region.el}, commands for setting the region using

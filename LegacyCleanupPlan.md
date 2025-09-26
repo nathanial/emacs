@@ -16,6 +16,7 @@ Rationalize the Emacs source tree for a codebase that only targets modern macOS 
 - [x] Removed `oldXMenu/` legacy X11 menu library and ended non-toolkit X builds on 2025-09-26.
 - [x] Removed `lwlib/` Lucid widget toolkit implementation on 2025-09-26.
 - [x] Removed `nextstep/GNUstep/` GNUstep bundle assets and support on 2025-09-26.
+- [x] Retired Windows/MS-DOS shims (`src/w16select.c`, `lisp/term/pc-win.el`) and dropped the `etc/NEXTSTEP` GNUstep doc stub on 2025-09-26.
 
 ## Candidate Directories to Retire
 | Directory / Files | Primary Purpose | Why It Can Likely Be Removed | Follow-Up Tasks & Risks |
@@ -27,8 +28,7 @@ Rationalize the Emacs source tree for a codebase that only targets modern macOS 
 | `lwlib/` | Lucid Widget library (Motif-style X toolkit). | Removed on 2025-09-26; GTK/PGTK now provide the supported X GUI paths. | Documentation pruning (e.g., `xresources` Lucid appendix) still pending; source code references guarded by `USE_LUCID`/`USE_MOTIF` were scrubbed on 2025-09-26. |
 | `src/android*`, `lisp/term/android-win.el`, `test/infra/android/`, `admin/download-android-deps.sh` | Android runtime, Lisp front-ends, and CI helpers. | We no longer target Android, so the runtime stubs, tests, and tooling are dead weight. | Remove `HAVE_ANDROID`/`ANDROID_STUBIFY` guards, drop configure options, and ensure remaining files do not expect JNI or Android assets. |
 | `src/haiku*`, `lisp/term/haiku-win.el`, `src/haiku_*` support files | Haiku window-system implementation. | Haiku is outside the supported macOS/Linux matrix; keeping it increases maintenance burden. | Rip out Haiku-specific code paths, simplify toolkit selection logic, and update docs (`INSTALL`, `etc/NEWS`) accordingly. |
-| Windows/MS-DOS residual glue: `src/conf_post.h` (MSDOS block), `src/w16select.c`, `lisp/term/common-win.el`, `lisp/term/pc-win.el`, `admin/CPP-DEFINES` entries | Leftover runtime shims for ports we have already removed. | With the platform directories gone, these files only add unreachable code and build-time complexity. | Delete the sources, collapse related `#ifdef WINDOWSNT`/`MSDOS` branches, and re-run autoreconf to verify generated files no longer mention these targets. |
-| `etc/NEXTSTEP` and GNUstep historical docs | Documentation for previously supported GNUstep deployment. | GNUstep support has been removed; the doc is purely archival. | Decide whether to move the history to `etc/HISTORY` or prune it; ensure `INSTALL`/`README` no longer reference GNUstep as a viable build. |
+| Windows/MS-DOS residual glue: `src/conf_post.h` (legacy guards), `lisp/term/common-win.el` (old Windows branches), `admin/CPP-DEFINES` entries | Leftover conditionals for retired ports. | Major shims (`src/w16select.c`, `lisp/term/pc-win.el`) are gone, and `common-win.el` no longer checks `system-type 'windows-nt`. | Continue pruning `WINDOWSNT`/`MSDOS` branches in C and Lisp sources as they are encountered during Phase 3. |
 
 ## Additional Cleanup Opportunities
 - Check `lisp/term/` for platform-specific terminal definitions that only exist for retired platforms (e.g., `pc-win.el`, `android-win.el`, `haiku-win.el`) and prune them while keeping the shared TTY support we still rely on.
@@ -37,7 +37,7 @@ Rationalize the Emacs source tree for a codebase that only targets modern macOS 
 
 ## Phased Execution Plan
 - **Phase 1 – Scope Lockdown (Week of 2025-09-29):** Update INSTALL/README/CONTRIBUTE to state the macOS (Cocoa) and Linux (GTK/PGTK) focus; make `./configure` fail fast for unsupported switches such as `--with-android`, `--with-gs`, and Windows options, then regenerate via `autogen.sh all`; align NEWS and CI matrices with the new scope while keeping TTY coverage.
-- **Phase 2 – Retired Platform Shims (Early October 2025):** Delete Windows/MS-DOS residue (`src/conf_post.h` MSDOS block, `src/w16select.c`, `lisp/term/common-win.el`, `pc-win.el`) and remove GNUstep artifacts (`etc/NEXTSTEP`, stale references in INSTALL/FolderStructure.md); regenerate build files, reconfigure with `--with-ns --with-modules`, and run `make -j` plus `make check` on macOS to confirm stability.
+- **Phase 2 – Retired Platform Shims (Completed 2025-09-26):** Removed the remaining Windows/MS-DOS shims (`src/w16select.c`, `lisp/term/pc-win.el`), scrubbed the MSDOS/MinGW guards in `src/conf_post.h`, trimmed Windows-only logic from `lisp/term/common-win.el`, dropped the `etc/NEXTSTEP` historical doc, refreshed `admin/CPP-DEFINES`, regenerated `configure` via `autogen.sh`, and rebuilt with `./configure --with-ns --with-modules` followed by `make -j` and `make check` on macOS (GUI build succeeded; `make check` still reports known Eglot/rust-analyzer failures in the local environment).
 - **Phase 3 – Android and Haiku Retirement (Mid October 2025):** Excise Android sources (`src/android*.c`, headers, Lisp/tests, admin scripts) and strip `HAVE_ANDROID` logic; drop Haiku UI support (`src/haiku*`, `lisp/term/haiku-win.el`) while verifying GTK/PGTK and NS builds still pass bootstrap, test, and GUI smoke checks on Linux and macOS; archive or tag the removed code as needed.
 
 ## Sequencing Recommendations
@@ -49,6 +49,7 @@ Rationalize the Emacs source tree for a codebase that only targets modern macOS 
 
 ## Risks & Mitigations
 - **Hidden dependencies**: Some Lisp packages may still reference Windows- or GNUstep-specific features. Run `make check` and grep for platform guards after removal.
+- **Test flakiness**: `make check` currently fails when Rust tooling (`rust-analyzer`) is unavailable; capture these as expected in CI or provide skip hooks before shipping Phase 3 deletions.
 - **Community patches**: External contributors might expect Windows/Android support; clearly communicate the narrower scope in `CONTRIBUTE` and release notes.
 - **Build system brittleness**: Aggressive pruning can break Autotools logic. Maintain incremental commits with CI on macOS/Linux to catch regressions early.
 
