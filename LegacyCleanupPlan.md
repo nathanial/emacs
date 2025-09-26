@@ -8,10 +8,13 @@ Rationalize the Emacs source tree for a codebase that only targets modern macOS 
 - Terminal and TTY builds remain required on both platforms.
 - We can afford to rework build scripts after pruning directories but want to avoid deep refactors outside the flagged components.
 
+## Progress Update
+- [x] Removed `msdos/` directory and associated MS-DOS port sources on 2025-09-25.
+
 ## Candidate Directories to Retire
 | Directory | Primary Purpose | Why It Can Likely Be Removed | Follow-Up Tasks & Risks |
 |-----------|------------------|------------------------------|--------------------------|
-| `msdos/` | MS-DOS port sources, docs, and build glue. | DOS is not a target; code is unused on modern UNIX-like systems. | Update `configure.ac`, `Makefile.in`, and docs that reference the MS-DOS port. Remove DOS-specific conditionals in `src/` and `lisp/term/` (e.g., `dos-w32`). |
+| `msdos/` | MS-DOS port sources, docs, and build glue. | Removed on 2025-09-25; MS-DOS is no longer a supported target. | Ensure any lingering conditionals guarding MS-DOS code paths are cleaned up as subsequent refactors land. |
 | `nt/` | Windows (NT) port including resource files, w32 GUI back-end, installer scripts. | Windows support is unnecessary when limiting to macOS and Linux. | Purge `NT` build options from configure scripts, remove `HAVE_NTGUI` branches in C and Lisp, adjust documentation (`doc/misc/efaq-w32.texi`). |
 | `java/` | Android port scaffolding and Gradle project. | Android is out of scope; none of these files participate in desktop builds. | Clean up configure probes (`--with-android`), delete Android-specific code paths under `src/` guarded by `android` macros. |
 | `cross/` | Cross-compilation helper configs for niche targets (e.g., MIPS, ARM). | Focus is on native macOS/Linux builds; these configs add maintenance overhead. | Ensure documentation (`INSTALL.REPO`) reflects the change, and warn contributors that cross builds are untested/unsupported. |

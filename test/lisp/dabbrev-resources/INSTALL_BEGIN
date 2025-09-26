@@ -13,7 +13,6 @@ configurations, we have additional specialized files:
   . nt/INSTALL if you build for MS-Windows
   . nextstep/INSTALL if you build for GNUstep/macOS
   . java/INSTALL if you build for Android
-  . msdos/INSTALL if you build for MS-DOS
 
 
 BASIC INSTALLATION

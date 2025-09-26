@@ -81,7 +81,6 @@ genfiles="
   build-aux/config.guess build-aux/config.sub
   build-aux/install-sh
 "
-## msdos-only:
 genfiles="src/config.in"
 
 basegen=""

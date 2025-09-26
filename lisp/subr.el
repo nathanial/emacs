@@ -7767,4 +7767,22 @@ and return the value found in PLACE instead."
                ,(funcall setter val)
                ,val)))))
 
+;; Legacy stubs retained for removed MS-DOS support.
+(defun msdos-long-file-names ()
+  "Return non-nil to signal that long file names are available."
+  t)
+
+(defun dos-8+3-filename (filename)
+  "Return FILENAME unchanged; MS-DOS compatibility is no longer supported."
+  filename)
+
+(defun dosified-file-name (filename)
+  "Return FILENAME unchanged; MS-DOS compatibility is no longer supported."
+  filename)
+
+(defun dos-convert-standard-filename (filename)
+  "Return FILENAME unchanged; MS-DOS compatibility is no longer supported."
+  filename)
+
+
 ;;; subr.el ends here

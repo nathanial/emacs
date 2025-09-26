@@ -29,6 +29,10 @@ applies, and please also update docstrings as needed.
 The traditional unexec dumper, deprecated since Emacs 27, has been
 removed.
 
++++
+** MS-DOS port removed.
+Support for building and running Emacs via the legacy DJGPP/MS-DOS port has been removed.  Related build scripts, documentation, and platform-specific code have been deleted.
+
 ---
 ** Emacs's old 'ctags' program is no longer built or installed.
 You are encouraged to use Universal Ctags <https://ctags.io/> instead.

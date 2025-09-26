@@ -1666,8 +1666,6 @@ Lisp programming.
 @include macos.texi
 @include haiku.texi
 @include android.texi
-@c Includes msdos-xtra.
-@include msdos.texi
 @include gnu.texi
 @include glossary.texi
 @ifnottex

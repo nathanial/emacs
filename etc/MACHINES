@@ -70,11 +70,6 @@ file, and edit the 'configure.ac' source as needed.
 
   For installation instructions see the file nt/INSTALL.
 
-** MS-DOS
-
-  For installation instructions see the file msdos/INSTALL.
-  See the "MS-DOS" chapter of the manual for information about using
-  Emacs on MS-DOS.
 
 ** Solaris
 

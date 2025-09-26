@@ -1117,7 +1117,6 @@ To input symbols and punctuation, type `/' followed by one of `a' to
  Some infrequent characters are accessed by typing \\, followed by
  the Cantonese romanization of the respective radical (部首)."))
 
-(declare-function dos-8+3-filename "dos-fns.el" (filename))
 
 (define-obsolete-function-alias 'miscdic-convert #'tit-miscdic-convert "30.1")
 (defun tit-miscdic-convert (filename &optional dirname)

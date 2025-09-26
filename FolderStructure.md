@@ -16,7 +16,6 @@ This document summarizes the major directories and files in the Emacs source tre
 ## Platform-Specific Support
 - `nextstep/` – Files for the macOS (Cocoa) and GNUstep GUI ports. After `make install`, the self-contained macOS bundle lives at `nextstep/Emacs.app`.
 - `nt/` – Windows-specific sources, resource scripts, and build files.
-- `msdos/` – Legacy MS-DOS port sources and documentation.
 - `cross/` – Configuration fragments and scripts that assist with cross-compiling Emacs.
 
 ## Build System and Tooling

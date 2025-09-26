@@ -8421,15 +8421,7 @@ Switch to *doctor* buffer and start giving psychotherapy." t)
 (register-definition-prefixes "dom" '("dom-"))
 
 
-;;; Generated autoloads from dos-fns.el
-
-(register-definition-prefixes "dos-fns" '("dos"))
-
 
-;;; Generated autoloads from dos-vars.el
-
-(register-definition-prefixes "dos-vars" '("dos-codepage-setup-hook" "msdos-shells"))
-
 
 ;;; Generated autoloads from dos-w32.el
 

@@ -28,6 +28,10 @@
 
 ;;; Code:
 
+(defgroup dos-fns nil
+  "Compatibility settings retained for the retired MS-DOS port."
+  :group 'environment)
+
 ;; Use ";" instead of ":" as a path separator (from files.el).
 (when (memq system-type '(ms-dos windows-nt))
   (setq path-separator ";")

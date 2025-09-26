@@ -30,18 +30,6 @@ Eli Zaretskii
 	test/biditest.el
 	test/redisplay-testsuite.el
 
-	The MS-DOS (a.k.a. DJGPP) port:
-	    config.bat
-	    msdos/*
-	    src/msdos.[ch]
-	    src/dosfns.[ch]
-	    src/w16select.c
-	    lisp/term/internal.el
-	    lisp/term/pc-win.el
-	    lisp/dos-fns.el
-	    lisp/dos-w32.el
-	    lisp/dos-vars.el
-	    doc/emacs/msdos.texi
 
 Kenichi Handa
 	Mule

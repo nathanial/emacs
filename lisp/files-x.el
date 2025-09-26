@@ -31,7 +31,6 @@
 ;;; Code:
 
 (eval-when-compile (require 'subr-x)) ; for string-trim-right
-(declare-function dosified-file-name "dos-fns" (file-name))
 (declare-function project-root "project" (project))
 
 
