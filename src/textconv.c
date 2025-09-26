@@ -42,15 +42,6 @@ along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.  */
 
 /* Define debugging macros.  */
 
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY
-#if 0
-#include <android/log.h>
-
-#define TEXTCONV_DEBUG(fmt, ...)					\
-  __android_log_print (ANDROID_LOG_VERBOSE, "EmacsInputConnection",	\
-		       "%s: " fmt, __func__, ## __VA_ARGS__)
-#endif /* 0 */
-#endif /* defined HAVE_ANDROID && !defined ANDROID_STUBIFY */
 
 #ifndef TEXTCONV_DEBUG
 #define TEXTCONV_DEBUG(...) ((void) 0)

@@ -22,30 +22,14 @@ along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.  */
 #include <cairo-ft.h>
 
 #include "lisp.h"
-#ifdef HAVE_X_WINDOWS
-#include "xterm.h"
-#elif HAVE_HAIKU
-#include "haikuterm.h"
-#include "haiku_support.h"
-#include "termchar.h"
-#else
 #include "pgtkterm.h"
-#endif
 #include "blockinput.h"
 #include "charset.h"
 #include "composite.h"
 #include "font.h"
 #include "ftfont.h"
 #include "pdumper.h"
-#ifdef HAVE_PGTK
-#include "xsettings.h"
-#endif
 
-#ifdef USE_BE_CAIRO
-#define RED_FROM_ULONG(color)	(((color) >> 16) & 0xff)
-#define GREEN_FROM_ULONG(color)	(((color) >> 8) & 0xff)
-#define BLUE_FROM_ULONG(color)	((color) & 0xff)
-#endif
 
 #define METRICS_NCOLS_PER_ROW	(128)
 
@@ -172,15 +156,7 @@ ftcrfont_open (struct frame *f, Lisp_Object entity, int pixel_size)
   cairo_matrix_init_scale (&font_matrix, pixel_size, pixel_size);
   cairo_matrix_init_identity (&ctm);
 
-#ifdef HAVE_PGTK
-  cairo_font_options_t *options = xsettings_get_font_options ();
-#else
   cairo_font_options_t *options = cairo_font_options_create ();
-#endif
-#ifdef USE_BE_CAIRO
-  if (be_use_subpixel_antialiasing ())
-    cairo_font_options_set_antialias (options, CAIRO_ANTIALIAS_SUBPIXEL);
-#endif
   cairo_scaled_font_t *scaled_font
     = cairo_scaled_font_create (font_face, &font_matrix, &ctm, options);
   cairo_font_face_destroy (font_face);
@@ -205,11 +181,6 @@ ftcrfont_open (struct frame *f, Lisp_Object entity, int pixel_size)
   ASET (font_object, FONT_FILE_INDEX, filename);
   font = XFONT_OBJECT (font_object);
   font->pixel_size = size;
-#ifdef HAVE_HARFBUZZ
-  if (EQ (AREF (font_object, FONT_TYPE_INDEX), Qftcrhb))
-    font->driver = &ftcrhbfont_driver;
-  else
-#endif	/* HAVE_HARFBUZZ */
   font->driver = &ftcrfont_driver;
   font->encoding_charset = font->repertory_charset = -1;
 
@@ -296,13 +267,6 @@ ftcrfont_open (struct frame *f, Lisp_Object entity, int pixel_size)
       font->underline_position = -1;
       font->underline_thickness = 0;
     }
-#ifdef HAVE_LIBOTF
-  ftcrfont_info->maybe_otf = (ft_face->face_flags & FT_FACE_FLAG_SFNT) != 0;
-  ftcrfont_info->otf = NULL;
-#endif	/* HAVE_LIBOTF */
-#ifdef HAVE_HARFBUZZ
-  ftcrfont_info->hb_font = NULL;
-#endif	/* HAVE_HARFBUZZ */
   if (ft_face->units_per_EM)
     ftcrfont_info->bitmap_position_unit = 0;
   else
@@ -330,20 +294,6 @@ ftcrfont_close (struct font *font)
   struct font_info *ftcrfont_info = (struct font_info *) font;
 
   block_input ();
-#ifdef HAVE_LIBOTF
-  if (ftcrfont_info->otf)
-    {
-      OTF_close (ftcrfont_info->otf);
-      ftcrfont_info->otf = NULL;
-    }
-#endif
-#ifdef HAVE_HARFBUZZ
-  if (ftcrfont_info->hb_font)
-    {
-      hb_font_destroy (ftcrfont_info->hb_font);
-      ftcrfont_info->hb_font = NULL;
-    }
-#endif
   if (ftcrfont_info->metrics)
     {
       for (int i = 0; i < ftcrfont_info->metrics_nrows; i++)
@@ -481,61 +431,8 @@ ftcrfont_anchor_point (struct font *font, unsigned int code, int idx,
   return result;
 }
 
-#ifdef HAVE_LIBOTF
-static Lisp_Object
-ftcrfont_otf_capability (struct font *font)
-{
-  struct font_info *ftcrfont_info = (struct font_info *) font;
-  cairo_scaled_font_t *scaled_font = ftcrfont_info->cr_scaled_font;
-  FT_Face ft_face = cairo_ft_scaled_font_lock_face (scaled_font);
 
-  ftcrfont_info->ft_size = ft_face->size;
-  Lisp_Object result = ftfont_otf_capability (font);
-  cairo_ft_scaled_font_unlock_face (scaled_font);
-  ftcrfont_info->ft_size = NULL;
 
-  return result;
-}
-#endif
-
-#if defined HAVE_M17N_FLT && defined HAVE_LIBOTF
-static Lisp_Object
-ftcrfont_shape (Lisp_Object lgstring, Lisp_Object direction)
-{
-  struct font *font = CHECK_FONT_GET_OBJECT (LGSTRING_FONT (lgstring));
-  struct font_info *ftcrfont_info = (struct font_info *) font;
-
-  if (ftcrfont_info->bitmap_position_unit)
-    return make_fixnum (0);
-
-  cairo_scaled_font_t *scaled_font = ftcrfont_info->cr_scaled_font;
-  FT_Face ft_face = cairo_ft_scaled_font_lock_face (scaled_font);
-
-  ftcrfont_info->ft_size = ft_face->size;
-  Lisp_Object result = ftfont_shape (lgstring, direction);
-  cairo_ft_scaled_font_unlock_face (scaled_font);
-  ftcrfont_info->ft_size = NULL;
-
-  return result;
-}
-#endif
-
-#if defined HAVE_OTF_GET_VARIATION_GLYPHS || defined HAVE_FT_FACE_GETCHARVARIANTINDEX
-static int
-ftcrfont_variation_glyphs (struct font *font, int c, unsigned variations[256])
-{
-  struct font_info *ftcrfont_info = (struct font_info *) font;
-  cairo_scaled_font_t *scaled_font = ftcrfont_info->cr_scaled_font;
-  FT_Face ft_face = cairo_ft_scaled_font_lock_face (scaled_font);
-
-  ftcrfont_info->ft_size = ft_face->size;
-  int result = ftfont_variation_glyphs (font, c, variations);
-  cairo_ft_scaled_font_unlock_face (scaled_font);
-  ftcrfont_info->ft_size = NULL;
-
-  return result;
-}
-#endif	/* HAVE_OTF_GET_VARIATION_GLYPHS || HAVE_FT_FACE_GETCHARVARIANTINDEX */
 
 static int
 ftcrfont_draw (struct glyph_string *s,
@@ -547,57 +444,15 @@ ftcrfont_draw (struct glyph_string *s,
   cairo_glyph_t *glyphs;
   int len = to - from;
   int i;
-#ifdef USE_BE_CAIRO
-  unsigned long be_foreground, be_background;
-
-  if (s->hl != DRAW_CURSOR)
-    {
-      be_foreground = s->face->foreground;
-      be_background = s->face->background;
-    }
-  else
-    haiku_merge_cursor_foreground (s, &be_foreground,
-				   &be_background);
-#endif
 
   block_input ();
 
-#ifndef USE_BE_CAIRO
-#ifdef HAVE_X_WINDOWS
-  cr = x_begin_cr_clip (f, s->gc);
-#else
   cr = pgtk_begin_cr_clip (f);
-#endif
-#else
-  /* Presumably the draw lock is already held by
-     haiku_draw_glyph_string.  */
-  EmacsWindow_begin_cr_critical_section (FRAME_HAIKU_WINDOW (f));
-  cr = haiku_begin_cr_clip (f, s);
-  if (!cr)
-    {
-      EmacsWindow_end_cr_critical_section (FRAME_HAIKU_WINDOW (f));
-      unblock_input ();
-      return 0;
-    }
-  BView_cr_dump_clipping (FRAME_HAIKU_DRAWABLE (f), cr);
-#endif
 
   if (with_background)
     {
-#ifndef USE_BE_CAIRO
-#ifdef HAVE_X_WINDOWS
-      x_set_cr_source_with_gc_background (f, s->gc, s->hl != DRAW_CURSOR);
-#else
       pgtk_set_cr_source_with_color (f, s->xgcv.background,
 				     s->hl != DRAW_CURSOR);
-#endif
-#else
-      uint32_t col = be_background;
-
-      cairo_set_source_rgb (cr, RED_FROM_ULONG (col) / 255.0,
-			    GREEN_FROM_ULONG (col) / 255.0,
-			    BLUE_FROM_ULONG (col) / 255.0);
-#endif
       cairo_rectangle (cr, x, y - FONT_BASE (s->font),
 		       s->width, FONT_HEIGHT (s->font));
       cairo_fill (cr);
@@ -613,117 +468,16 @@ ftcrfont_draw (struct glyph_string *s,
                                                        glyphs[i].index,
                                                        NULL));
     }
-#ifndef USE_BE_CAIRO
-#ifdef HAVE_X_WINDOWS
-  x_set_cr_source_with_gc_foreground (f, s->gc, false);
-#else
   pgtk_set_cr_source_with_color (f, s->xgcv.foreground, false);
-#endif
-#else
-  uint32_t col = be_foreground;
-
-  cairo_set_source_rgb (cr, RED_FROM_ULONG (col) / 255.0,
-			GREEN_FROM_ULONG (col) / 255.0,
-			BLUE_FROM_ULONG (col) / 255.0);
-#endif
   cairo_set_scaled_font (cr, ftcrfont_info->cr_scaled_font);
   cairo_show_glyphs (cr, glyphs, len);
-#ifndef USE_BE_CAIRO
-#ifdef HAVE_X_WINDOWS
-  x_end_cr_clip (f);
-#else
   pgtk_end_cr_clip (f);
-#endif
-#else
-  haiku_end_cr_clip (cr);
-  EmacsWindow_end_cr_critical_section (FRAME_HAIKU_WINDOW (f));
-#endif
   unblock_input ();
 
   return len;
 }
 
-#ifdef HAVE_PGTK
-/* Determine if FONT_OBJECT is a valid cached font for ENTITY by
-   comparing the options used to open it with the user's current
-   preferences specified via GSettings.  */
-static bool
-ftcrfont_cached_font_ok (struct frame *f, Lisp_Object font_object,
-			 Lisp_Object entity)
-{
-  struct font_info *info = (struct font_info *) XFONT_OBJECT (font_object);
 
-  cairo_font_options_t *options = cairo_font_options_create ();
-  cairo_scaled_font_get_font_options (info->cr_scaled_font, options);
-  cairo_font_options_t *gsettings_options = xsettings_get_font_options ();
-
-  bool equal = cairo_font_options_equal (options, gsettings_options);
-  cairo_font_options_destroy (options);
-  cairo_font_options_destroy (gsettings_options);
-
-  return equal;
-}
-#endif
-
-#ifdef HAVE_HARFBUZZ
-
-static Lisp_Object
-ftcrhbfont_list (struct frame *f, Lisp_Object spec)
-{
-  return ftfont_list2 (f, spec, Qftcrhb);
-}
-
-static Lisp_Object
-ftcrhbfont_match (struct frame *f, Lisp_Object spec)
-{
-  return ftfont_match2 (f, spec, Qftcrhb);
-}
-
-static hb_font_t *
-ftcrhbfont_begin_hb_font (struct font *font, double *position_unit)
-{
-  struct font_info *ftcrfont_info = (struct font_info *) font;
-  cairo_scaled_font_t *scaled_font = ftcrfont_info->cr_scaled_font;
-  FT_Face ft_face = cairo_ft_scaled_font_lock_face (scaled_font);
-
-  ftcrfont_info->ft_size = ft_face->size;
-  hb_font_t *hb_font = fthbfont_begin_hb_font (font, position_unit);
-  /* HarfBuzz 5 correctly scales bitmap-only fonts without position
-     unit adjustment.
-     (https://github.com/harfbuzz/harfbuzz/issues/489)
-
-     Update: HarfBuzz 5.2.0 no longer does this for an hb_font_t font
-     object created from a given FT_Face.
-     (https://github.com/harfbuzz/harfbuzz/issues/3788) */
-  if ((hb_version_atleast (5, 2, 0) || !hb_version_atleast (5, 0, 0))
-      && ftcrfont_info->bitmap_position_unit)
-    *position_unit = ftcrfont_info->bitmap_position_unit;
-
-  return hb_font;
-}
-
-static void
-ftcrhbfont_end_hb_font (struct font *font, hb_font_t *hb_font)
-{
-  struct font_info *ftcrfont_info = (struct font_info *) font;
-  cairo_scaled_font_t *scaled_font = ftcrfont_info->cr_scaled_font;
-
-  eassert (hb_font == ftcrfont_info->hb_font);
-  /* ftcrfont_info->hb_font holds a reference to the FT_Face returned by
-     cairo_ft_scaled_font_lock_face.  Keeping it around after the matching
-     unlock call would violate the API contract, and cause corrupted
-     display of composed characters (Bug#73752).  We destroy and NULLify
-     hb_font here, which will then cause fthbfont_begin_hb_font, called by
-     ftcrhbfont_begin_hb_font, to recreate hb_font anew, taking into
-     consideration any scale changes in FT_Face.  */
-  hb_font_destroy (ftcrfont_info->hb_font);
-  ftcrfont_info->hb_font = NULL;
-
-  cairo_ft_scaled_font_unlock_face (scaled_font);
-  ftcrfont_info->ft_size = NULL;
-}
-
-#endif	/* HAVE_HARFBUZZ */
 
 
 static void syms_of_ftcrfont_for_pdumper (void);
@@ -743,86 +497,20 @@ struct font_driver const ftcrfont_driver =
   .draw = ftcrfont_draw,
   .get_bitmap = ftcrfont_get_bitmap,
   .anchor_point = ftcrfont_anchor_point,
-#ifdef HAVE_LIBOTF
-  .otf_capability = ftcrfont_otf_capability,
-#endif
-#if defined HAVE_M17N_FLT && defined HAVE_LIBOTF
-  .shape = ftcrfont_shape,
-#endif
-#if defined HAVE_OTF_GET_VARIATION_GLYPHS || defined HAVE_FT_FACE_GETCHARVARIANTINDEX
-  .get_variation_glyphs = ftcrfont_variation_glyphs,
-#endif
   .filter_properties = ftfont_filter_properties,
   .combining_capability = ftfont_combining_capability,
-#ifdef HAVE_PGTK
-  .cached_font_ok = ftcrfont_cached_font_ok,
-#endif
   };
-#ifdef HAVE_HARFBUZZ
-struct font_driver ftcrhbfont_driver;
-#endif	/* HAVE_HARFBUZZ */
 
 void
 syms_of_ftcrfont (void)
 {
   DEFSYM (Qftcr, "ftcr");
-#ifdef HAVE_HARFBUZZ
-  DEFSYM (Qftcrhb, "ftcrhb");
-  Fput (Qftcr, Qfont_driver_superseded_by, Qftcrhb);
-#endif	/* HAVE_HARFBUZZ */
   pdumper_do_now_and_after_load (syms_of_ftcrfont_for_pdumper);
 }
 
-#ifdef HAVE_X_WINDOWS
-
-/* Place the default font options used by Cairo on the given display
-   in OPTIONS.  */
-
-void
-ftcrfont_get_default_font_options (struct x_display_info *dpyinfo,
-				   cairo_font_options_t *options)
-{
-  Pixmap drawable;
-  cairo_surface_t *surface;
-
-  /* Cairo doesn't allow fetching the default font options for a
-     display, so the only option is to create a drawable, and an Xlib
-     surface for that drawable, and to get the font options from there
-     instead.  */
-
-  drawable = XCreatePixmap (dpyinfo->display, dpyinfo->root_window,
-			    1, 1, dpyinfo->n_planes);
-  surface = cairo_xlib_surface_create (dpyinfo->display, drawable,
-				       dpyinfo->visual, 1, 1);
-
-  if (!surface)
-    {
-      XFreePixmap (dpyinfo->display, drawable);
-      return;
-    }
-
-  cairo_surface_get_font_options (surface, options);
-  XFreePixmap (dpyinfo->display, drawable);
-  cairo_surface_destroy (surface);
-  return;
-}
-
-#endif
 
 static void
 syms_of_ftcrfont_for_pdumper (void)
 {
   register_font_driver (&ftcrfont_driver, NULL);
-#ifdef HAVE_HARFBUZZ
-  ftcrhbfont_driver = ftcrfont_driver;
-  ftcrhbfont_driver.type = Qftcrhb;
-  ftcrhbfont_driver.list = ftcrhbfont_list;
-  ftcrhbfont_driver.match = ftcrhbfont_match;
-  ftcrhbfont_driver.otf_capability = hbfont_otf_capability;
-  ftcrhbfont_driver.shape = hbfont_shape;
-  ftcrhbfont_driver.combining_capability = hbfont_combining_capability;
-  ftcrhbfont_driver.begin_hb_font = ftcrhbfont_begin_hb_font;
-  ftcrhbfont_driver.end_hb_font = ftcrhbfont_end_hb_font;
-  register_font_driver (&ftcrhbfont_driver, NULL);
-#endif	/* HAVE_HARFBUZZ */
 }

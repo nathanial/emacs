@@ -108,9 +108,6 @@ post_acquire_global_lock (struct thread_state *self)
 
   /* Switch the JNI interface pointer to the environment assigned to the
      current thread.  */
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY
-  android_java_env = self->java_env;
-#endif /* defined HAVE_ANDROID && !defined ANDROID_STUBIFY */
 
   /* Do this early on, so that code below could signal errors (e.g.,
      unbind_for_thread_switch might) correctly, because we are already
@@ -132,11 +129,6 @@ post_acquire_global_lock (struct thread_state *self)
       set_buffer_internal_2 (current_buffer);
     }
 
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY
-  /* This step is performed in android_select when built without
-     threads.  */
-  android_check_query ();
-#endif /* defined HAVE_ANDROID && !defined ANDROID_STUBIFY */
 
    /* We could have been signaled while waiting to grab the global lock
       for the first time since this thread was created, in which case
@@ -653,9 +645,6 @@ thread_select (select_func *func, int max_fds, fd_set *rfds,
   sa.efds = efds;
   sa.timeout = timeout;
   sa.sigmask = sigmask;
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY
-  android_before_select ();
-#endif /* HAVE_ANDROID && !defined ANDROID_STUBIFY */
   flush_stack_call_func (really_call_select, &sa);
   return sa.result;
 }
@@ -772,9 +761,6 @@ run_thread (void *state)
   struct thread_state *self = state;
   struct thread_state **iter;
 #ifdef THREADS_ENABLED
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY
-  jint rc;
-#endif /* #if defined HAVE_ANDROID && !defined ANDROID_STUBIFY */
 #endif /* THREADS_ENABLED */
 
 #ifdef HAVE_NS
@@ -787,13 +773,6 @@ run_thread (void *state)
 #endif
 
 #ifdef THREADS_ENABLED
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY
-  rc
-    = (*android_jvm)->AttachCurrentThread (android_jvm, &self->java_env,
-					   NULL);
-  if (rc != JNI_OK)
-    emacs_abort ();
-#endif /* defined HAVE_ANDROID && !defined ANDROID_STUBIFY */
 #endif /* THREADS_ENABLED */
 
   self->m_stack_bottom = self->stack_top = &stack_pos.c;
@@ -843,11 +822,6 @@ run_thread (void *state)
 #endif
 
 #ifdef THREADS_ENABLED
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY
-  rc = (*android_jvm)->DetachCurrentThread (android_jvm);
-  if (rc != JNI_OK)
-    emacs_abort ();
-#endif /* defined HAVE_ANDROID && !defined ANDROID_STUBIFY */
 #endif /* THREADS_ENABLED */
 
   /* Unlink this thread from the list of all threads.  Note that we
@@ -1249,9 +1223,6 @@ init_threads (void)
   sys_mutex_init (&global_lock);
   sys_mutex_lock (&global_lock);
   current_thread = &main_thread.s;
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY
-  current_thread->java_env = android_java_env;
-#endif /* defined HAVE_ANDROID && !defined ANDROID_STUBIFY */
 
   main_thread.s.thread_id = sys_thread_self ();
   main_thread.s.buffer_disposition = Qnil;

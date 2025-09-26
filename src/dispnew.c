@@ -45,9 +45,6 @@ along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.  */
 #include "disptab.h"
 #include "cm.h"
 
-#ifdef HAVE_ANDROID
-#include "android.h"
-#endif
 
 #ifdef HAVE_WINDOW_SYSTEM
 #include TERM_HEADER
@@ -1166,7 +1163,6 @@ prepare_desired_row (struct window *w, struct glyph_row *row, bool mode_line_p)
     }
 }
 
-#ifndef HAVE_ANDROID
 
 /* Return a hash code for glyph row ROW, which may
    be from current or desired matrix of frame F.  */
@@ -1267,7 +1263,6 @@ line_draw_cost (struct frame *f, struct glyph_matrix *matrix, int vpos)
   return len;
 }
 
-#endif
 
 /* Return true if the glyph rows A and B have equal contents.
    MOUSE_FACE_P means compare the mouse_face_p flags of A and B, too.  */
@@ -3295,7 +3290,6 @@ struct rect
   int x, y, w, h;
 };
 
-#ifndef HAVE_ANDROID
 
 /* Compute the intersection of R1 and R2 in R.  Value is true if R1 and
    R2 intersect, false otherwise.  */
@@ -3352,7 +3346,6 @@ frame_rect_abs (struct frame *f)
   return (struct rect) { x, y, f->total_cols, f->total_lines };
 }
 
-#endif /* !HAVE_ANDROID */
 
 int
 max_child_z_order (struct frame *parent)
@@ -3544,7 +3537,6 @@ make_matrix_current (struct frame *f)
 	make_current (f, NULL, i);
 }
 
-#ifndef HAVE_ANDROID
 
 /* Prepare ROOT's desired row at index Y for copying child frame
    contents to it.  Value is the prepared desired row or NULL if we
@@ -3796,7 +3788,6 @@ copy_child_glyphs (struct frame *root, struct frame *child)
     }
 }
 
-#endif /* !HAVE_ANDROID */
 
 /***********************************************************************
 			     Frame Update
@@ -3890,7 +3881,6 @@ update_tty_frame (struct frame *f)
   build_frame_matrix (f);
 }
 
-#ifndef HAVE_ANDROID
 
 /* Return the cursor position of the selected window of frame F, in
    absolute coordinates in *X and *Y.  Note that if F is a child frame,
@@ -4087,12 +4077,6 @@ combine_updates_for_frame (struct frame *f, bool inhibit_scrolling)
     }
 }
 
-#else /* HAVE_ANDROID */
-void
-combine_updates_for_frame (struct frame *f, bool inhibit_scrolling)
-{
-}
-#endif /* HAVE_ANDROID */
 
 /* Update on the screen all root frames ROOTS.  Called from
    redisplay_internal as the last step of redisplaying.  */
@@ -4365,28 +4349,6 @@ redraw_overlapping_rows (struct window *w, int yb)
 #endif /* HAVE_WINDOW_SYSTEM */
 
 
-#if defined GLYPH_DEBUG && 0
-
-/* Check that no row in the current matrix of window W is enabled
-   which is below what's displayed in the window.  */
-
-static void
-check_current_matrix_flags (struct window *w)
-{
-  bool last_seen_p = 0;
-  int i, yb = window_text_bottom_y (w);
-
-  for (i = 0; i < w->current_matrix->nrows - 1; ++i)
-    {
-      struct glyph_row *row = MATRIX_ROW (w->current_matrix, i);
-      if (!last_seen_p && MATRIX_ROW_BOTTOM_Y (row) >= yb)
-	last_seen_p = 1;
-      else if (last_seen_p && row->enabled_p)
-	emacs_abort ();
-    }
-}
-
-#endif /* GLYPH_DEBUG */
 
 
 /* Update display of window W.  */
@@ -5763,7 +5725,6 @@ scrolling (struct frame *frame)
   /* In fact this code should never be reached at all under
      Android.  */
 
-#ifndef HAVE_ANDROID
   int unchanged_at_top, unchanged_at_bottom;
   int window_size;
   int changed_lines;
@@ -5854,7 +5815,6 @@ scrolling (struct frame *frame)
 		 free_at_end_vpos - unchanged_at_top);
 
   SAFE_FREE ();
-#endif
 }
 
 
@@ -5895,9 +5855,7 @@ count_match (struct glyph *str1, struct glyph *end1, struct glyph *str2, struct 
 
 /* Char insertion/deletion cost vector, from term.c */
 
-#ifndef HAVE_ANDROID
 #define char_ins_del_cost(f) (&char_ins_del_vector[FRAME_TOTAL_COLS (f)])
-#endif
 
 
 /* Perform a frame-based update on line VPOS in frame FRAME.  */
@@ -6095,9 +6053,7 @@ write_row (struct frame *f, int vpos, bool updating_menu_p)
   tem = (nlen - nsp) - (olen - osp);
   if (endmatch && tem
       && (!FRAME_CHAR_INS_DEL_OK (f)
-#ifndef HAVE_ANDROID
           || endmatch <= char_ins_del_cost (f)[tem]
-#endif
 	  ))
     endmatch = 0;
 
@@ -6108,9 +6064,7 @@ write_row (struct frame *f, int vpos, bool updating_menu_p)
 
   if (nsp != osp
       && (!FRAME_CHAR_INS_DEL_OK (f)
-#ifndef HAVE_ANDROID
 	  || begmatch + endmatch <= char_ins_del_cost (f)[nsp - osp]
-#endif
 	  ))
     {
       begmatch = 0;
@@ -7246,14 +7200,6 @@ init_display_interactive (void)
     }
 #endif /* HAVE_X_WINDOWS */
 
-#ifdef HAVE_ANDROID
-  if (!inhibit_window_system && android_init_gui)
-    {
-      Vinitial_window_system = Qandroid;
-      android_term_init ();
-      return;
-    }
-#endif
 
 #ifdef HAVE_NTGUI
   if (!inhibit_window_system)
@@ -7279,13 +7225,6 @@ init_display_interactive (void)
     }
 #endif
 
-#ifdef HAVE_HAIKU
-  if (!inhibit_window_system && !will_dump_p ())
-    {
-      Vinitial_window_system = Qhaiku;
-      return;
-    }
-#endif
 
   /* If no window system has been specified, try to use the terminal.  */
   if (! isatty (STDIN_FILENO))
@@ -7309,7 +7248,6 @@ init_display_interactive (void)
       exit (1);
     }
 
-#ifndef HAVE_ANDROID
   {
     struct terminal *t;
     struct frame *f = XFRAME (selected_frame);
@@ -7352,11 +7290,6 @@ init_display_interactive (void)
 				    : Qnil));
     Fmodify_frame_parameters (selected_frame, tty_arg);
   }
-#else
-  fatal ("Could not establish a connection to the Android application.\n"
-	 "Emacs does not work on text terminals when built to run as"
-	 " part of an Android application package.");
-#endif
 
   {
     struct frame *sf = SELECTED_FRAME ();

@@ -47,7 +47,7 @@ along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.  */
 #endif
 
 #ifdef HAVE_SETRLIMIT
-# include <sys/resource.h>
+#include <sys/resource.h>
 
 /* If NOFILE_LIMIT.rlim_cur is greater than FD_SETSIZE, then
    NOFILE_LIMIT is the initial limit on the number of open files,
@@ -119,11 +119,6 @@ static struct rlimit nofile_limit;
 #include "gnutls.h"
 #endif
 
-#ifdef HAVE_ANDROID
-#include "android.h"
-#include "androidterm.h"
-#endif
-
 #ifdef HAVE_WINDOW_SYSTEM
 #include TERM_HEADER
 #endif /* HAVE_WINDOW_SYSTEM */
@@ -149,7 +144,7 @@ extern int sys_select (int, fd_set *, fd_set *, fd_set *,
    <https://gcc.gnu.org/bugzilla/show_bug.cgi?id=52904>.
    This bug appears to be fixed in GCC 5.1, so don't work around it there.  */
 #if GNUC_PREREQ (4, 3, 0) && ! GNUC_PREREQ (5, 1, 0)
-# pragma GCC diagnostic ignored "-Wstrict-overflow"
+#pragma GCC diagnostic ignored "-Wstrict-overflow"
 #endif
 
 /* True if keyboard input is on hold, zero otherwise.  */
@@ -174,10 +169,10 @@ union u_sockaddr
 };
 
 #ifndef SOCK_CLOEXEC
-# define SOCK_CLOEXEC 0
+#define SOCK_CLOEXEC 0
 #endif
 #ifndef SOCK_NONBLOCK
-# define SOCK_NONBLOCK 0
+#define SOCK_NONBLOCK 0
 #endif
 
 /* True if ERRNUM represents an error where the system call would
@@ -204,8 +199,8 @@ close_on_exec (int fd)
   return fd;
 }
 
-# undef accept4
-# define accept4(sockfd, addr, addrlen, flags) \
+#undef accept4
+#define accept4(sockfd, addr, addrlen, flags) \
     process_accept4 (sockfd, addr, addrlen, flags)
 static int
 accept4 (int sockfd, struct sockaddr *addr, socklen_t *addrlen, int flags)
@@ -218,8 +213,8 @@ process_socket (int domain, int type, int protocol)
 {
   return close_on_exec (socket (domain, type, protocol));
 }
-# undef socket
-# define socket(domain, type, protocol) process_socket (domain, type, protocol)
+#undef socket
+#define socket(domain, type, protocol) process_socket (domain, type, protocol)
 #endif
 
 #define NETCONN_P(p) (EQ (XPROCESS (p)->type, Qnetwork))
@@ -240,15 +235,15 @@ static EMACS_INT update_tick;
    or emulation of select using FIONREAD.  */
 
 #ifndef BROKEN_DATAGRAM_SOCKETS
-# if defined HAVE_SELECT || defined USABLE_FIONREAD
-#  if defined HAVE_SENDTO && defined HAVE_RECVFROM && defined EMSGSIZE
-#   define DATAGRAM_SOCKETS
-#  endif
-# endif
+#if defined HAVE_SELECT || defined USABLE_FIONREAD
+#if defined HAVE_SENDTO && defined HAVE_RECVFROM && defined EMSGSIZE
+#define DATAGRAM_SOCKETS
+#endif
+#endif
 #endif
 
 #if defined HAVE_LOCAL_SOCKETS && defined DATAGRAM_SOCKETS
-# define HAVE_SEQPACKET
+#define HAVE_SEQPACKET
 #endif
 
 #define READ_OUTPUT_DELAY_INCREMENT (TIMESPEC_HZ / 100)
@@ -5270,27 +5265,6 @@ wait_reading_process_output_1 (void)
 {
 }
 
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY	\
-  && defined THREADS_ENABLED
-
-/* Wrapper around `android_select' that exposes a calling interface with
-   an extra argument for compatibility with `thread_pselect'.  */
-
-static int
-android_select_wrapper (int nfds, fd_set *readfds, fd_set *writefds,
-			fd_set *exceptfds, const struct timespec *timeout,
-			const sigset_t *sigmask)
-{
-  /* sigmask is not supported.  */
-  if (sigmask)
-    emacs_abort ();
-
-  return android_select (nfds, readfds, writefds, exceptfds,
-			 (struct timespec *) timeout);
-}
-
-#endif /* HAVE_ANDROID && !ANDROID_STUBIFY && THREADS_ENABLED */
-
 /* Read and dispose of subprocess output while waiting for timeout to
    elapse and/or keyboard input to be available.
 
@@ -5783,21 +5757,6 @@ wait_reading_process_output (intmax_t time_limit, int nsecs, int read_kbd,
 	    timeout = short_timeout;
 #endif
 
-	  /* Android requires using a replacement for pselect in
-	     android.c to poll for events.  */
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY
-#ifndef THREADS_ENABLED
-	  nfds = android_select (max_desc + 1,
-				 &Available, (check_write ? &Writeok : 0),
-				 NULL, &timeout);
-#else /* THREADS_ENABLED */
-	  nfds = thread_select (android_select_wrapper,
-				max_desc + 1,
-				&Available, (check_write ? &Writeok : 0),
-				NULL, &timeout, NULL);
-#endif /* THREADS_ENABLED */
-#else
-
 	  /* Non-macOS HAVE_GLIB builds call thread_select in
 	     xgselect.c.  */
 #if defined HAVE_GLIB && !defined HAVE_NS
@@ -5815,7 +5774,6 @@ wait_reading_process_output (intmax_t time_limit, int nsecs, int read_kbd,
 				(check_write ? &Writeok : 0),
 				NULL, &timeout, NULL);
 #endif	/* !HAVE_GLIB */
-#endif /* HAVE_ANDROID && !ANDROID_STUBIFY */
 
 #ifdef HAVE_GNUTLS
 	  /* Merge tls_available into Available. */
@@ -8029,7 +7987,7 @@ DEFUN ("process-coding-system",
 
 
 
-# ifdef HAVE_GPM
+#ifdef HAVE_GPM
 
 void
 add_gpm_wait_descriptor (int desc)
@@ -8043,7 +8001,7 @@ delete_gpm_wait_descriptor (int desc)
   delete_keyboard_wait_descriptor (desc);
 }
 
-# endif
+#endif
 
 #if defined (USABLE_SIGIO) || defined (USABLE_SIGPOLL)
 
@@ -8064,7 +8022,7 @@ keyboard_bit_set (fd_set *mask)
 
   return 0;
 }
-# endif
+#endif
 
 #else  /* not subprocesses */
 
@@ -8722,7 +8680,7 @@ init_process_emacs (int sockfd)
 
   external_sock_fd = sockfd;
   Lisp_Object sockname = Qnil;
-# if HAVE_GETSOCKNAME
+#if HAVE_GETSOCKNAME
   if (0 <= sockfd)
     {
       union u_sockaddr sa;
@@ -8730,7 +8688,7 @@ init_process_emacs (int sockfd)
       if (getsockname (sockfd, &sa.sa, &salen) == 0)
 	sockname = conv_sockaddr_to_lisp (&sa.sa, salen);
     }
-# endif
+#endif
   Vinternal__daemon_sockname = sockname;
 
   max_desc = -1;

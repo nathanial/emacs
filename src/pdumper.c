@@ -4143,12 +4143,10 @@ types.  */)
 {
   eassert (initialized);
 
-#ifndef HAVE_ANDROID
   if (! noninteractive)
     error ("Dumping Emacs currently works only in batch mode.  "
            "If you'd like it to work interactively, please consider "
            "contributing a patch to Emacs.");
-#endif
 
   if (!main_thread_p (current_thread))
     error ("This function can be called only in the main thread");

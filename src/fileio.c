@@ -56,9 +56,6 @@ along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.  */
 #include "region-cache.h"
 #include "frame.h"
 
-#ifdef HAVE_ANDROID
-#include "android.h"
-#endif /* HAVE_ANDROID */
 
 #ifdef HAVE_LINUX_FS_H
 # include <sys/ioctl.h>
@@ -113,7 +110,6 @@ along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.  */
 
 #include "commands.h"
 
-#if !defined HAVE_ANDROID || defined ANDROID_STUBIFY
 
 /* Type describing a file descriptor used by functions such as
    `insert-file-contents'.  */
@@ -135,19 +131,6 @@ typedef int emacs_fd;
 #define emacs_fd_to_int(fds)	(fds)
 #endif /* WINDOWSNT */
 
-#else /* HAVE_ANDROID && !defined ANDROID_STUBIFY */
-
-typedef struct android_fd_or_asset emacs_fd;
-
-#define emacs_fd_open		android_open_asset
-#define emacs_fd_close		android_close_asset
-#define emacs_fd_read		android_asset_read_quit
-#define emacs_fd_lseek		android_asset_lseek
-#define emacs_fd_fstat		android_asset_fstat
-#define emacs_fd_valid_p(fd)	((fd).asset != ((void *) -1))
-#define emacs_fd_to_int(fds)	((fds).asset ? -1 : (fds).fd)
-
-#endif /* !defined HAVE_ANDROID || defined ANDROID_STUBIFY */
 
 /* True during writing of auto-save files.  */
 static bool auto_saving;
@@ -189,15 +172,6 @@ static bool e_write (int, Lisp_Object, ptrdiff_t, ptrdiff_t,
 static void
 check_vfs_filename (Lisp_Object encoded, const char *reason)
 {
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY
-  const char *name;
-
-  name = SSDATA (encoded);
-
-  if (android_is_special_directory (name, "/assets")
-      || android_is_special_directory (name, "/content"))
-    xsignal2 (Qfile_error, build_string (reason), encoded);
-#endif /* defined HAVE_ANDROID && !defined ANDROID_STUBIFY */
 }
 
 #ifdef HAVE_LIBSELINUX
@@ -210,10 +184,6 @@ static bool
 selinux_enabled_p (const char *file)
 {
   return (is_selinux_enabled ()
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY
-	  && !android_is_special_directory (file, "/assets")
-	  && !android_is_special_directory (file, "/content")
-#endif /* defined HAVE_ANDROID && !defined ANDROID_STUBIFY */
 	  );
 }
 
@@ -980,10 +950,6 @@ user_homedir (char const *name)
   p[length] = 0;
   struct passwd *pw = getpwnam (p);
   SAFE_FREE ();
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY
-  if (pw && !pw->pw_dir && pw->pw_uid == getuid ())
-    return (char *) android_get_home_directory ();
-#endif
   if (!pw || (pw->pw_dir && !IS_ABSOLUTE_FILE_NAME (pw->pw_dir)))
     return NULL;
   return pw->pw_dir;
@@ -1975,10 +1941,6 @@ get_homedir (void)
       if (pw)
 	home = pw->pw_dir;
 
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY
-      if (!home && pw && pw->pw_uid == getuid ())
-	return android_get_home_directory ();
-#endif
       if (!home)
 	return "";
     }
@@ -2503,12 +2465,6 @@ permissions.  */)
 
       /* See https://debbugs.gnu.org/11245 for ENOTSUP.  */
       if (fail
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY
-	  /* Treat SELinux errors copying files leniently on Android,
-	     since the system usually forbids user programs from
-	     changing file contexts.  */
-	  && errno != EACCES
-#endif /* defined HAVE_ANDROID && !defined ANDROID_STUBIFY */
 	  && errno != ENOTSUP)
 	report_file_error ("Doing fsetfilecon", newname);
     }
@@ -2525,10 +2481,6 @@ permissions.  */)
 	     uses fdutimens instead.  However, fdutimens is not
 	     supported on many Android kernels, so just silently fail
 	     if errno is ENOTSUP or ENOSYS.  */
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY
-	  && errno != ENOTSUP
-	  && errno != ENOSYS
-#endif
 	  )
 	xsignal2 (Qfile_date_error,
 		  build_string ("Cannot set file date"), newname);
@@ -3120,11 +3072,7 @@ emacs_readlinkat (int fd, char const *filename)
 
   buf = careadlinkat (fd, filename, readlink_buf, sizeof readlink_buf,
 		      &emacs_norealloc_allocator,
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY
-		      android_readlinkat
-#else /* !HAVE_ANDROID || ANDROID_STUBIFY */
 		      readlinkat
-#endif /* HAVE_ANDROID && !ANDROID_STUBIFY */
 		      );
   if (!buf)
     return Qnil;
@@ -3217,7 +3165,7 @@ file_directory_p (Lisp_Object file)
     errno = ENOTDIR;	/* like the non-DOS_NT branch below does */
   return retval;
 #else
-# if defined O_PATH && !(defined HAVE_ANDROID && !defined ANDROID_STUBIFY)
+# if defined O_PATH
   /* Use O_PATH if available, as it avoids races and EOVERFLOW issues.  */
   int fd = emacs_openat (AT_FDCWD, SSDATA (file),
 			 O_PATH | O_CLOEXEC | O_DIRECTORY, 0);
@@ -5761,12 +5709,6 @@ write_region (Lisp_Object start, Lisp_Object end, Lisp_Object filename,
       if (emacs_fstatat (AT_FDCWD, fn, &st1, 0) == 0
 	  && st.st_dev == st1.st_dev
 	  && (st.st_ino == st1.st_ino
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY
-	      /* `st1.st_ino' == 0 indicates that the inode number
-		 cannot be extracted from this document file, despite
-		 `st' potentially being backed by a real file.  */
-	      || st1.st_ino == 0
-#endif /* defined HAVE_ANDROID && !defined ANDROID_STUBIFY */
 	      ))
 	{
 	  /* Use the heuristic if it appears to be valid.  With neither
@@ -6559,7 +6501,7 @@ before any other event (mouse or keypress) is handled.  */)
   (void)
 {
 #if (defined USE_GTK \
-     || defined HAVE_NS || defined HAVE_NTGUI || defined HAVE_HAIKU)
+     || defined HAVE_NS || defined HAVE_NTGUI)
   if ((NILP (last_nonmenu_event) || CONSP (last_nonmenu_event))
       && use_dialog_box
       && use_file_dialog
@@ -6665,12 +6607,6 @@ If the underlying system call fails, value is nil.  */)
 
   name = SSDATA (ENCODE_FILE (filename));
 
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY
-  /* With special directories, this information is unavailable.  */
-  if (android_is_special_directory (name, "/assets")
-      || android_is_special_directory (name, "/content"))
-    return Qnil;
-#endif /* defined HAVE_ANDROID && !defined ANDROID_STUBIFY */
 
   if (get_fs_usage (name, NULL, &u) != 0)
     return errno == ENOSYS ? Qnil : file_attribute_errno (filename, errno);

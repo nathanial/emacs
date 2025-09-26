@@ -49,9 +49,6 @@ along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.  */
 #include "textconv.h"
 #endif /* HAVE_TEXT_CONVERSION */
 
-#ifdef HAVE_ANDROID
-#include "android.h"
-#endif /* HAVE_ANDROID */
 
 #include <errno.h>
 
@@ -4163,7 +4160,6 @@ kbd_buffer_get_event (KBOARD **kbp,
 	 We return nil for them.  */
       switch (event->kind)
       {
-#ifndef HAVE_HAIKU
       case SELECTION_REQUEST_EVENT:
       case SELECTION_CLEAR_EVENT:
 	{
@@ -4187,20 +4183,6 @@ kbd_buffer_get_event (KBOARD **kbp,
 #endif
 	}
         break;
-#else
-      case SELECTION_REQUEST_EVENT:
-	emacs_abort ();
-
-      case SELECTION_CLEAR_EVENT:
-	{
-	  struct input_event copy = event->ie;
-
-	  kbd_fetch_ptr = next_kbd_event (event);
-	  input_pending = readable_events (0);
-	  haiku_handle_selection_clear (&copy);
-	}
-	break;
-#endif
 
       case MONITORS_CHANGED_EVENT:
 	{
@@ -4214,15 +4196,6 @@ kbd_buffer_get_event (KBOARD **kbp,
 	  break;
 	}
 
-#ifdef HAVE_ANDROID
-      case NOTIFICATION_EVENT:
-        {
-	  kbd_fetch_ptr = next_kbd_event (event);
-	  input_pending = readable_events (0);
-	  CALLN (Fapply, XCAR (event->ie.arg), XCDR (event->ie.arg));
-	  break;
-	}
-#endif /* HAVE_ANDROID */
 
 #ifdef HAVE_EXT_MENU_BAR
       case MENU_BAR_ACTIVATE_EVENT:
@@ -4531,11 +4504,7 @@ process_special_events (void)
 {
   union buffered_input_event *event;
 #if defined HAVE_X11 || defined HAVE_PGTK || defined HAVE_HAIKU
-#ifndef HAVE_HAIKU
   struct selection_input_event copy;
-#else
-  struct input_event copy;
-#endif
   int moved_events;
 #endif
 
@@ -4576,27 +4545,6 @@ process_special_events (void)
 #else
 	  pgtk_handle_selection_event (&copy);
 #endif
-#elif defined HAVE_HAIKU
-	  if (event->ie.kind != SELECTION_CLEAR_EVENT)
-	    emacs_abort ();
-
-	  copy = event->ie;
-
-	  if (event < kbd_fetch_ptr)
-	    {
-	      memmove (kbd_buffer + 1, kbd_buffer,
-		       (event - kbd_buffer) * sizeof *kbd_buffer);
-	      kbd_buffer[0] = kbd_buffer[KBD_BUFFER_SIZE - 1];
-	      moved_events = kbd_buffer + KBD_BUFFER_SIZE - 1 - kbd_fetch_ptr;
-	    }
-	  else
-	    moved_events = event - kbd_fetch_ptr;
-
-	  memmove (kbd_fetch_ptr + 1, kbd_fetch_ptr,
-		   moved_events * sizeof *kbd_fetch_ptr);
-	  kbd_fetch_ptr = next_kbd_event (kbd_fetch_ptr);
-	  input_pending = readable_events (0);
-	  haiku_handle_selection_clear (&copy);
 #else
 	  /* We're getting selection request events, but we don't have
              a window system.  */
@@ -5041,107 +4989,7 @@ static const char *const lispy_accent_keys[] =
   "dead-horn",
 };
 
-#ifdef HAVE_ANDROID
-#define FUNCTION_KEY_OFFSET 0
-
-/* Mind that Android designates 23 KEYCODE_DPAD_CENTER, but it is
-   merely abstruse terminology for the ``select'' key frequently
-   located in certain physical keyboards.  */
-
-static const char *const lispy_function_keys[] =
-  {
-    /* All elements in this array default to 0, except for the few
-       function keys that Emacs recognizes.  */
-    [111] = "escape",
-    [112] = "delete",
-    [116] = "scroll",
-    [120] = "sysrq",
-    [121] = "break",
-    [122] = "home",
-    [123] = "end",
-    [124] = "insert",
-    [126] = "media-play",
-    [127] = "media-pause",
-    [130] = "media-record",
-    [131] = "f1",
-    [132] = "f2",
-    [133] = "f3",
-    [134] = "f4",
-    [135] = "f5",
-    [136] = "f6",
-    [137] = "f7",
-    [138] = "f8",
-    [139] = "f9",
-    [140] = "f10",
-    [141] = "f11",
-    [142] = "f12",
-    [143] = "kp-numlock",
-    [160] = "kp-ret",
-    [164] = "volume-mute",
-    [165] = "info",
-    [19]  = "up",
-    [20]  = "down",
-    [211] = "zenkaku-hankaku",
-    [213] = "muhenkan",
-    [214] = "henkan",
-    [215] = "hiragana-katakana",
-    [218] = "kana",
-    [21]  = "left",
-    [223] = "sleep",
-    [22]  = "right",
-    [23]  = "select",
-    [24]  = "volume-up",
-    [259] = "help",
-    [25]  = "volume-down",
-    [268] = "kp-up-left",
-    [269] = "kp-down-left",
-    [26]  = "power",
-    [270] = "kp-up-right",
-    [271] = "kp-down-right",
-    [272] = "media-skip-forward",
-    [273] = "media-skip-backward",
-    [277] = "cut",
-    [278] = "copy",
-    [279] = "paste",
-    [285] = "browser-refresh",
-    [28]  = "clear",
-    [300] = "XF86Forward",
-    [319] = "dictate",
-    [320] = "new",
-    [321] = "close",
-    [322] = "do-not-disturb",
-    [323] = "print",
-    [324] = "lock",
-    [325] = "fullscreen",
-    [326] = "f13",
-    [327] = "f14",
-    [328] = "f15",
-    [329] = "f16",
-    [330] = "f17",
-    [331] = "f18",
-    [332] = "f19",
-    [333] = "f20",
-    [334] = "f21",
-    [335] = "f22",
-    [336] = "f23",
-    [337] = "f24",
-    [4]	  = "XF86Back",
-    [61]  = "tab",
-    [66]  = "return",
-    [67]  = "backspace",
-    [82]  = "menu",
-    [84]  = "find",
-    [85]  = "media-play-pause",
-    [86]  = "media-stop",
-    [87]  = "media-next",
-    [88]  = "media-previous",
-    [89]  = "media-rewind",
-    [92]  = "prior",
-    [93]  = "next",
-    [95]  = "mode-change",
-  };
-
-#elif defined HAVE_NTGUI
+#if   defined HAVE_NTGUI
 #define FUNCTION_KEY_OFFSET 0x0
 
 const char *const lispy_function_keys[] =
@@ -8282,13 +8130,6 @@ tty_read_avail_input (struct terminal *terminal,
 static void
 handle_async_input (void)
 {
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY
-  /* Check and respond to an ``urgent'' query from the UI thread.
-     A query becomes urgent once the UI thread has been waiting
-     for more than two seconds.  */
-
-  android_check_query_urgent ();
-#endif /* HAVE_ANDROID && !ANDROID_STUBIFY */
 
 #ifndef DOS_NT
   while (1)
@@ -8358,16 +8199,6 @@ totally_unblock_input (void)
 void
 handle_input_available_signal (int sig)
 {
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY
-  /* Make all writes from the Android UI thread visible.  If
-     `android_urgent_query' has been set, preceding writes to query
-     related variables should become observable here on as well.  */
-#if defined __aarch64__
-  asm ("dmb ishst");
-#else /* !defined __aarch64__ */
-  __atomic_thread_fence (__ATOMIC_SEQ_CST);
-#endif /* defined __aarch64__ */
-#endif /* HAVE_ANDROID && !ANDROID_STUBIFY */
   pending_signals = true;
 
   if (input_available_clear_time)
@@ -14528,9 +14359,7 @@ mark_kboards (void)
     {
       /* These two special event types have no Lisp_Objects to mark.  */
       if (event->kind != SELECTION_REQUEST_EVENT
-#ifndef HAVE_HAIKU
 	  && event->kind != SELECTION_CLEAR_EVENT
-#endif
 	  )
 	{
 	  mark_object (event->ie.x);

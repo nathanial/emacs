@@ -39,34 +39,11 @@ along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.  */
 
 
 
-#if !defined HAVE_ANDROID || defined ANDROID_STUBIFY	\
-  || (__ANDROID_API__ < 9)
 #define doc_fd		int
 #define doc_fd_p(fd)	((fd) >= 0)
 #define doc_open	emacs_open
 #define doc_read_quit	emacs_read_quit
 #define doc_lseek	lseek
-#else /* HAVE_ANDROID && !defined ANDROID_STUBIFY
-	 && __ANDROID_API__ >= 9 */
-
-#include "android.h"
-
-/* Use an Android file descriptor under Android instead, as this
-   allows loading directly from asset files without loading each asset
-   into memory and creating a separate file descriptor every time.
-
-   However, lread requires the ability to seek inside asset files,
-   which is not provided under Android 2.2.  So when building for that
-   particular system, fall back to the usual file descriptor-based
-   code.  */
-
-#define doc_fd		struct android_fd_or_asset
-#define doc_fd_p(fd)	((fd).asset != (void *) -1)
-#define doc_open	android_open_asset
-#define doc_read_quit	android_asset_read_quit
-#define doc_lseek	android_asset_lseek
-#define USE_ANDROID_ASSETS
-#endif /* !HAVE_ANDROID || ANDROID_STUBIFY || __ANDROID_API__ < 9 */
 
 
 
@@ -75,22 +52,6 @@ static char *get_doc_string_buffer;
 static ptrdiff_t get_doc_string_buffer_size;
 
 static char const sibling_etc[] = "../etc/";
-
-#ifdef USE_ANDROID_ASSETS
-
-/* Like `close_file_unwind'.  However, PTR is a pointer to an Android
-   file descriptor instead of a system file descriptor.  */
-
-static void
-close_file_unwind_android_fd (void *ptr)
-{
-  struct android_fd_or_asset *fd;
-
-  fd = ptr;
-  android_close_asset (*fd);
-}
-
-#endif /* USE_ANDROID_ASSETS */
 
 /* Extract a doc string from a file.  FILEPOS says where to get it.
    If it is an integer, use that position in the standard DOC file.
@@ -173,11 +134,7 @@ get_doc_string (Lisp_Object filepos, bool unibyte)
 	  return concat3 (cannot_open, file, quote_nl);
 	}
     }
-#ifndef USE_ANDROID_ASSETS
   record_unwind_protect_int (close_file_unwind, fd);
-#else /* USE_ANDROID_ASSETS */
-  record_unwind_protect_ptr (close_file_unwind_android_fd, &fd);
-#endif /* !USE_ANDROID_ASSETS */
 
   /* Seek only to beginning of disk block.  */
   /* Make sure we read at least 1024 bytes before `position'
@@ -558,11 +515,7 @@ the same file name is found in the `doc-directory'.  */)
       report_file_errno ("Opening doc string file", build_string (name),
 			 open_errno);
     }
-#ifndef USE_ANDROID_ASSETS
   record_unwind_protect_int (close_file_unwind, fd);
-#else /* USE_ANDROID_ASSETS */
-  record_unwind_protect_ptr (close_file_unwind_android_fd, &fd);
-#endif /* !USE_ANDROID_ASSETS */
   Vdoc_file_name = filename;
   int filled = 0;
   EMACS_INT pos = 0;

@@ -32,13 +32,6 @@ cat > $1 <<EOF
 
 #include <config.h>
 
-#ifdef HAVE_ANDROID
-#define EXPORT __attribute__ ((visibility ("default")))
-#endif /* HAVE_ANDROID */
-
 extern int emacs_shortlisp_counter;
-#ifdef EXPORT
-EXPORT
-#endif /* EXPORT */
 int emacs_shortlisp_counter = $curcount;
 EOF

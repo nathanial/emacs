@@ -52,9 +52,6 @@ along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.  */
 
 #ifndef MSDOS
 
-#ifdef HAVE_ANDROID
-#include "android.h" /* For `android_is_special_directory'.  */
-#endif /* HAVE_ANDROID */
 
 /* Normally use a symbolic link to represent a lock.
    The strategy: to lock a file FN, create a symlink .#FN in FN's
@@ -537,23 +534,9 @@ static Lisp_Object
 make_lock_file_name (Lisp_Object fn)
 {
   Lisp_Object lock_file_name;
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY
-  char *name;
-#endif
 
   fn = Fexpand_file_name (fn, Qnil);
 
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY
-  /* Files in /assets and /contents can't have lock files on Android
-     as these directories are fabrications of android.c, and backed by
-     read only data.  */
-
-  name = SSDATA (fn);
-
-  if (android_is_special_directory (name, "/assets")
-      || android_is_special_directory (name, "/content"))
-  return Qnil;
-#endif /* defined HAVE_ANDROID && !defined ANDROID_STUBIFY */
 
   lock_file_name = calln (Qmake_lock_file_name, fn);
 

@@ -20,51 +20,22 @@ along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.  */
 
 #include <config.h>
 
-#ifdef WINDOWSNT
+#include "syswait.h"
 
-/* ms-w32.h defines these, which disables sockets altogether!  */
-# undef _WINSOCKAPI_
-# undef _WINSOCK_H
+#include <arpa/inet.h>
+#include <fcntl.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <sys/un.h>
 
-# include <malloc.h>
-# include <windows.h>
-# include <commctrl.h>
-# include <io.h>
-# include <winsock2.h>
+#define SOCKETS_IN_FILE_SYSTEM
 
-# define HSOCKET SOCKET
-# define CLOSE_SOCKET closesocket
-# define INITIALIZE() initialize_sockets ()
+#define INVALID_SOCKET (-1)
+#define HSOCKET int
+#define CLOSE_SOCKET close
+#define INITIALIZE()
 
-char *w32_getenv (const char *);
-# define egetenv(VAR) w32_getenv (VAR)
-
-# undef signal
-
-#else /* !WINDOWSNT */
-
-# ifdef HAVE_NTGUI
-#  include <windows.h>
-# endif
-
-# include "syswait.h"
-
-# include <arpa/inet.h>
-# include <fcntl.h>
-# include <netinet/in.h>
-# include <sys/socket.h>
-# include <sys/un.h>
-
-# define SOCKETS_IN_FILE_SYSTEM
-
-# define INVALID_SOCKET (-1)
-# define HSOCKET int
-# define CLOSE_SOCKET close
-# define INITIALIZE()
-
-# define egetenv(VAR) getenv (VAR)
-
-#endif /* !WINDOWSNT */
+#define egetenv(VAR) getenv (VAR)
 
 #define DEFAULT_TIMEOUT (30)
 
@@ -296,167 +267,7 @@ get_current_dir_name (void)
 }
 #endif
 
-#ifdef WINDOWSNT
-
-# define REG_ROOT "SOFTWARE\\GNU\\Emacs"
-
-char *w32_get_resource (HKEY, const char *, LPDWORD);
-
-/* Retrieve an environment variable from the Emacs subkeys of the registry.
-   Return NULL if the variable was not found, or it was empty.
-   This code is based on w32_get_resource (w32.c).  */
-char *
-w32_get_resource (HKEY predefined, const char *key, LPDWORD type)
-{
-  HKEY hrootkey = NULL;
-  char *result = NULL;
-  DWORD cbData;
-
-  if (RegOpenKeyEx (predefined, REG_ROOT, 0, KEY_READ, &hrootkey)
-      == ERROR_SUCCESS)
-    {
-      if (RegQueryValueEx (hrootkey, key, NULL, NULL, NULL, &cbData)
-	  == ERROR_SUCCESS)
-	{
-	  result = xmalloc (cbData);
-
-	  if ((RegQueryValueEx (hrootkey, key, NULL, type, (LPBYTE) result,
-				&cbData)
-	       != ERROR_SUCCESS)
-	      || *result == 0)
-	    {
-	      free (result);
-	      result = NULL;
-	    }
-	}
-
-      RegCloseKey (hrootkey);
-    }
-
-  return result;
-}
-
-/*
-  getenv wrapper for Windows
-
-  Value is allocated on the heap, and can be free'd.
-
-  This is needed to duplicate Emacs's behavior, which is to look for
-  environment variables in the registry if they don't appear in the
-  environment.  */
-char *
-w32_getenv (const char *envvar)
-{
-  char *value;
-  DWORD dwType;
-
-  if ((value = getenv (envvar)))
-    /* Found in the environment.  strdup it, because values returned
-       by getenv cannot be free'd.  */
-    return xstrdup (value);
-
-  if (! (value = w32_get_resource (HKEY_CURRENT_USER, envvar, &dwType)) &&
-      ! (value = w32_get_resource (HKEY_LOCAL_MACHINE, envvar, &dwType)))
-    {
-      /* "w32console" is what Emacs on Windows uses for tty-type under -nw.  */
-      if (strcmp (envvar, "TERM") == 0)
-	return xstrdup ("w32console");
-      /* Found neither in the environment nor in the registry.  */
-      return NULL;
-    }
-
-  if (dwType == REG_SZ)
-    /* Registry; no need to expand.  */
-    return value;
-
-  if (dwType == REG_EXPAND_SZ)
-    {
-      DWORD size;
-
-      if ((size = ExpandEnvironmentStrings (value, NULL, 0)))
-	{
-	  char *buffer = xmalloc (size);
-	  if (ExpandEnvironmentStrings (value, buffer, size))
-	    {
-	      /* Found and expanded.  */
-	      free (value);
-	      return buffer;
-	    }
-
-	  /* Error expanding.  */
-	  free (buffer);
-	}
-    }
-
-  /* Not the right type, or not correctly expanded.  */
-  free (value);
-  return NULL;
-}
-
-int w32_window_app (void);
-
-int
-w32_window_app (void)
-{
-  static int window_app = -1;
-  char szTitle[MAX_PATH];
-
-  if (window_app < 0)
-    {
-      /* Checking for STDOUT does not work; it's a valid handle also in
-         nonconsole apps.  Testing for the console title seems to work. */
-      window_app = (GetConsoleTitleA (szTitle, MAX_PATH) == 0);
-      if (window_app)
-        InitCommonControls ();
-    }
-
-  return window_app;
-}
-
-/* execvp wrapper for Windows.  Quotes arguments with embedded spaces.
-
-  This is necessary due to the broken implementation of exec* routines in
-  the Microsoft libraries: they concatenate the arguments together without
-  quoting special characters, and pass the result to CreateProcess, with
-  predictably bad results.  By contrast, POSIX execvp passes the arguments
-  directly into the argv array of the child process.  */
-
-int w32_execvp (const char *, char **);
-
-int
-w32_execvp (const char *path, char **argv)
-{
-  int i;
-
-  /* Required to allow a .BAT script as alternate editor.  */
-  argv[0] = (char *) alternate_editor;
-
-  for (i = 0; argv[i]; i++)
-    if (strchr (argv[i], ' '))
-      {
-	char *quoted = alloca (strlen (argv[i]) + 3);
-	sprintf (quoted, "\"%s\"", argv[i]);
-	argv[i] = quoted;
-      }
-
-  return execvp (path, argv);
-}
-
-# undef execvp
-# define execvp w32_execvp
-
-/* Emulation of ttyname for Windows.  */
-const char *ttyname (int);
-const char *
-ttyname (int fd)
-{
-  return "CONOUT$";
-}
-
-#endif /* WINDOWSNT */
-
-/* Display a normal or error message.
-   On Windows, use a message box if compiled as a Windows app.  */
+/* Display a normal or error message on stdout/stderr.  */
 static void message (bool, const char *, ...) ATTRIBUTE_FORMAT_PRINTF (2, 3);
 static void
 message (bool is_error, const char *format, ...)
@@ -464,27 +275,10 @@ message (bool is_error, const char *format, ...)
   va_list args;
 
   va_start (args, format);
+  FILE *f = is_error ? stderr : stdout;
 
-#ifdef WINDOWSNT
-  if (w32_window_app ())
-    {
-      char msg[2048];
-      vsnprintf (msg, sizeof msg, format, args);
-      msg[sizeof msg - 1] = '\0';
-
-      if (is_error)
-	MessageBox (NULL, msg, "Emacsclient ERROR", MB_ICONERROR);
-      else
-	MessageBox (NULL, msg, "Emacsclient", MB_ICONINFORMATION);
-    }
-  else
-#endif
-    {
-      FILE *f = is_error ? stderr : stdout;
-
-      vfprintf (f, format, args);
-      fflush (f);
-    }
+  vfprintf (f, format, args);
+  fflush (f);
 
   va_end (args);
 }
@@ -619,31 +413,18 @@ decode_options (int argc, char **argv)
      display in DISPLAY (if any).  */
   if (create_frame && !tty && !display)
     {
-#ifndef HAVE_ANDROID
-      /* Set these here so we use a default_display only when the user
-         didn't give us an explicit display.  */
-#if defined (NS_IMPL_COCOA)
+#ifdef NS_IMPL_COCOA
       alt_display = "ns";
-#elif defined (HAVE_NTGUI)
-      alt_display = "w32";
-#elif defined (HAVE_HAIKU)
-      alt_display = "be";
-#endif /* NS_IMPL_COCOA */
-
+#endif
 #ifdef HAVE_PGTK
       display = egetenv ("WAYLAND_DISPLAY");
-      alt_display = egetenv ("DISPLAY");
-#else /* !HAVE_PGTK */
+      if (!display)
+        display = egetenv ("DISPLAY");
+      else
+        alt_display = egetenv ("DISPLAY");
+#else
       display = egetenv ("DISPLAY");
-#endif /* HAVE_PGTK */
-#else /* HAVE_ANDROID */
-      /* Disregard the DISPLAY environment variable under Android.
-         Several terminal emulator programs furnish their own X
-         servers and set DISPLAY, but an Android build is incapable of
-         displaying X frames.  */
-      alt_display = NULL;
-      display = "android";
-#endif /* !HAVE_ANDROID */
+#endif
     }
 
   if (!display)
@@ -659,20 +440,6 @@ decode_options (int argc, char **argv)
   /* If no display is available, new frames are tty frames.  */
   if (create_frame && !display)
     tty = true;
-
-#ifdef WINDOWSNT
-  /* Emacs on Windows does not support graphical and text terminal
-     frames in the same instance.  So, treat the -t and -c options as
-     equivalent, and open a new frame on the server's terminal.
-     Ideally, we would set tty = true only if the server is running in a
-     console, but alas we don't know that.  As a workaround, always
-     ask for a tty frame, and let server.el figure it out.  */
-  if (create_frame)
-    {
-      display = NULL;
-      tty = true;
-    }
-#endif /* WINDOWSNT */
 }
 
 
@@ -680,9 +447,7 @@ static _Noreturn void
 print_help_and_exit (void)
 {
   /* Spaces and tabs are significant in this message; they're chosen so the
-     message aligns properly both in a tty and in a Windows message box.
-     Please try to preserve them; otherwise the output is very hard to read
-     when using emacsclientw.  */
+     message aligns properly in a terminal.  */
   message (false,
 	   "Usage: %s [OPTIONS] FILE...\n%s%s%s", progname, "\
 Tell the Emacs server to visit the specified files.\n\
@@ -788,26 +553,7 @@ enum { AUTH_KEY_LENGTH = 64 };
 static void
 sock_err_message (const char *function_name)
 {
-#ifdef WINDOWSNT
-  /* On Windows, the socket library was historically separate from the
-     standard C library, so errors are handled differently.  */
-
-  if (w32_window_app () && alternate_editor)
-    return;
-
-  char *msg = NULL;
-
-  FormatMessage (FORMAT_MESSAGE_FROM_SYSTEM
-                 | FORMAT_MESSAGE_ALLOCATE_BUFFER
-                 | FORMAT_MESSAGE_ARGUMENT_ARRAY,
-                 NULL, WSAGetLastError (), 0, (LPTSTR)&msg, 0, NULL);
-
-  message (true, "%s: %s: %s\n", progname, function_name, msg);
-
-  LocalFree (msg);
-#else
   message (true, "%s: %s: %s\n", progname, function_name, strerror (errno));
-#endif
 }
 
 
@@ -919,32 +665,6 @@ unquote_argument (char *str)
 }
 
 
-#ifdef WINDOWSNT
-/* Wrapper to make WSACleanup a cdecl, as required by atexit.  */
-void __cdecl close_winsock (void);
-void __cdecl
-close_winsock (void)
-{
-  WSACleanup ();
-}
-
-/* Initialize the WinSock2 library.  */
-void initialize_sockets (void);
-void
-initialize_sockets (void)
-{
-  WSADATA wsaData;
-
-  if (WSAStartup (MAKEWORD (2, 0), &wsaData))
-    {
-      message (true, "%s: error initializing WinSock2\n", progname);
-      exit (EXIT_FAILURE);
-    }
-
-  atexit (close_winsock);
-}
-#endif /* WINDOWSNT */
-
 
 /* If the home directory is HOME, and XDG_CONFIG_HOME's value is XDG,
    return the configuration file with basename CONFIG_FILE.  Fail if
@@ -1000,10 +720,6 @@ get_server_config (const char *config_file, struct sockaddr_in *server,
     {
       char const *xdg = egetenv ("XDG_CONFIG_HOME");
       config = open_config (egetenv ("HOME"), xdg, config_file);
-#ifdef WINDOWSNT
-      if (!config)
-	config = open_config (egetenv ("APPDATA"), xdg, config_file);
-#endif
     }
 
   if (! config)
@@ -1044,10 +760,8 @@ cloexec_socket (int domain, int type, int protocol)
   return socket (domain, type | SOCK_CLOEXEC, protocol);
 #else
   HSOCKET s = socket (domain, type, protocol);
-# ifndef WINDOWSNT
   if (0 <= s)
     fcntl (s, F_SETFD, FD_CLOEXEC);
-# endif
   return s;
 #endif
 }
@@ -1507,7 +1221,6 @@ set_local_socket (char const *server_name)
     }
   else
     {
-#ifndef HAVE_ANDROID
       /* socket_name is a file name component.  */
       char const *xdg_runtime_dir = egetenv ("XDG_RUNTIME_DIR");
       if (xdg_runtime_dir)
@@ -1542,30 +1255,6 @@ set_local_socket (char const *server_name)
 					uid, server_name);
 	  tmpdir_used = true;
 	}
-#else /* HAVE_ANDROID */
-      char const *tmpdir;
-      int socknamelen;
-      uintmax_t uidmax;
-
-      /* The TMPDIR of any process to which this binary is
-	 accessible must be reserved for Emacs, so the checks in
-	 local_sockname and the like are redundant.  */
-      tmpdir = egetenv ("TMPDIR");
-
-      /* Resort to the usual location of the cache directory, though
-	 this location is not guaranteed to remain stable over
-	 future releases of Android.  */
-      if (!tmpdir)
-	tmpdir = "/data/data/org.gnu.emacs/cache";
-
-      uidmax = uid;
-      socknamelen = snprintf (sockname, socknamesize,
-			      "%s/emacs%"PRIuMAX"/%s",
-			      tmpdir, uidmax, server_name);
-      sock_status = (0 <= socknamelen && socknamelen < socknamesize
-		     ? connect_socket (AT_FDCWD, sockname, s, 0)
-		     : ENAMETOOLONG);
-#endif /* !HAVE_ANDROID */
     }
 
   if (sock_status == 0)
@@ -1810,7 +1499,6 @@ w32_give_focus (void)
 static HSOCKET
 start_daemon_and_retry_set_socket (void)
 {
-#ifndef WINDOWSNT
   pid_t dpid;
   int status;
 
@@ -1859,71 +1547,6 @@ start_daemon_and_retry_set_socket (void)
       message (true, "%s: error starting emacs daemon\n", progname);
       exit (EXIT_FAILURE);
     }
-#else  /* WINDOWSNT */
-  DWORD wait_result;
-  HANDLE w32_daemon_event;
-  STARTUPINFO si;
-  PROCESS_INFORMATION pi;
-
-  ZeroMemory (&si, sizeof si);
-  si.cb = sizeof si;
-  ZeroMemory (&pi, sizeof pi);
-
-  /* We start Emacs in daemon mode, and then wait for it to signal us
-     it is ready to accept client connections, by asserting an event
-     whose name is known to the daemon (defined by nt/inc/ms-w32.h).  */
-
-  if (!CreateProcess (NULL, (LPSTR)"emacs --daemon", NULL, NULL, FALSE,
-                      CREATE_NO_WINDOW, NULL, NULL, &si, &pi))
-    {
-      char* msg = NULL;
-
-      FormatMessage (FORMAT_MESSAGE_FROM_SYSTEM
-		     | FORMAT_MESSAGE_ALLOCATE_BUFFER
-		     | FORMAT_MESSAGE_ARGUMENT_ARRAY,
-		     NULL, GetLastError (), 0, (LPTSTR)&msg, 0, NULL);
-      message (true, "%s: error starting emacs daemon (%s)\n", progname, msg);
-      exit (EXIT_FAILURE);
-    }
-
-  w32_daemon_event = CreateEvent (NULL, TRUE, FALSE, W32_DAEMON_EVENT);
-  if (w32_daemon_event == NULL)
-    {
-      message (true, "Couldn't create Windows daemon event");
-      exit (EXIT_FAILURE);
-    }
-  if ((wait_result = WaitForSingleObject (w32_daemon_event, INFINITE))
-      != WAIT_OBJECT_0)
-    {
-      const char *msg = NULL;
-
-      switch (wait_result)
-	{
-	case WAIT_ABANDONED:
-	  msg = "The daemon exited unexpectedly";
-	  break;
-	case WAIT_TIMEOUT:
-	  /* Can't happen due to INFINITE.  */
-	default:
-	case WAIT_FAILED:
-	  FormatMessage (FORMAT_MESSAGE_FROM_SYSTEM
-			 | FORMAT_MESSAGE_ALLOCATE_BUFFER
-			 | FORMAT_MESSAGE_ARGUMENT_ARRAY,
-			 NULL, GetLastError (), 0, (LPTSTR)&msg, 0, NULL);
-	  break;
-	}
-      message (true, "Error: Could not start the Emacs daemon: %s\n", msg);
-      exit (EXIT_FAILURE);
-    }
-  CloseHandle (w32_daemon_event);
-
-  /* Try connecting, the daemon should have started by now.  */
-  /* It's just a progress message, so don't pop a dialog if this is
-     emacsclientw.  */
-  if (!quiet && !w32_window_app ())
-    message (true,
-	     "Emacs daemon should have started, trying to connect again\n");
-#endif /* WINDOWSNT */
 
   HSOCKET emacs_socket = set_socket (true);
   if (emacs_socket == INVALID_SOCKET)
@@ -1940,20 +1563,10 @@ set_socket_timeout (HSOCKET socket, int seconds)
 {
   int ret;
 
-#ifndef WINDOWSNT
   struct timeval timeout;
   timeout.tv_sec = seconds;
   timeout.tv_usec = 0;
   ret = setsockopt (socket, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof timeout);
-#else
-  DWORD timeout;
-
-  if (seconds > INT_MAX / 1000)
-    timeout = INT_MAX;
-  else
-    timeout = seconds * 1000;
-  ret = setsockopt (socket, SOL_SOCKET, SO_RCVTIMEO, (char *) &timeout, sizeof timeout);
-#endif
 
   if (ret < 0)
     sock_err_message ("setsockopt");
@@ -1962,14 +1575,9 @@ set_socket_timeout (HSOCKET socket, int seconds)
 static bool
 check_socket_timeout (int rl)
 {
-#ifndef WINDOWSNT
   return (rl == -1)
     && (errno == EAGAIN)
     && (errno == EWOULDBLOCK);
-#else
-  return (rl == SOCKET_ERROR)
-    && (WSAGetLastError() == WSAETIMEDOUT);
-#endif
 }
 
 int
@@ -2139,27 +1747,6 @@ main (int argc, char **argv)
                   continue;
                 }
             }
-#ifdef WINDOWSNT
-	  else if (! IS_ABSOLUTE_FILE_NAME (argv[i])
-		   && (c_isalpha (argv[i][0]) && argv[i][1] == ':'))
-	    /* Windows can have a different default directory for each
-	       drive, so the cwd passed via "-dir" is not sufficient
-	       to account for that.
-	       If the user uses <drive>:<relpath>, we hence need to be
-	       careful to expand <relpath> with the default directory
-	       corresponding to <drive>.  */
-	    {
-	      char *filename = xmalloc (MAX_PATH);
-	      DWORD size;
-
-	      size = GetFullPathName (argv[i], MAX_PATH, filename, NULL);
-	      if (size > 0 && size < MAX_PATH)
-		argv[i] = filename;
-	      else
-		free (filename);
-	    }
-#endif
-
           send_to_emacs (emacs_socket, "-file ");
 	  if (tramp_prefix && IS_ABSOLUTE_FILE_NAME (argv[i]))
 	    quote_argument (emacs_socket, tramp_prefix);
@@ -2289,7 +1876,6 @@ main (int argc, char **argv)
 	        skiplf = str[strlen (str) - 1] == '\n';
               exit_status = EXIT_FAILURE;
             }
-#ifndef WINDOWSNT
 	  else if (strprefix ("-suspend ", p))
 	    {
 	      /* -suspend: Suspend this terminal, i.e., stop the process. */
@@ -2298,7 +1884,6 @@ main (int argc, char **argv)
 	      skiplf = true;
 	      kill (0, SIGSTOP);
 	    }
-#endif
 	  else
 	    {
 	      /* Unknown command. */
