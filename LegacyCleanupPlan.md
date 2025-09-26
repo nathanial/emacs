@@ -31,14 +31,14 @@ Rationalize the Emacs source tree for a codebase that only targets modern macOS 
 | Windows/MS-DOS residual glue: `src/conf_post.h` (legacy guards), `lisp/term/common-win.el` (old Windows branches), `admin/CPP-DEFINES` entries | Leftover conditionals for retired ports. | Major shims (`src/w16select.c`, `lisp/term/pc-win.el`) are gone, and `common-win.el` no longer checks `system-type 'windows-nt`. | Continue pruning `WINDOWSNT`/`MSDOS` branches in C and Lisp sources as they are encountered during Phase 3. |
 
 ## Additional Cleanup Opportunities
-- Check `lisp/term/` for platform-specific terminal definitions that only exist for retired platforms (e.g., `pc-win.el`, `android-win.el`, `haiku-win.el`) and prune them while keeping the shared TTY support we still rely on.
-- Remove conditional compilation blocks guarded by `WINDOWSNT`, `DOS_NT`, `HAVE_ANDROID`, `HAVE_HAIKU`, etc., once their implementations are gone.
-- Review `admin/` scripts that package legacy installers or Android artifacts (`admin/download-android-deps.sh`) so they don't linger in release tarballs.
+- Continue trimming platform-specific conditionals (e.g., `WINDOWSNT`, `DOS_NT`) that are now permanently false after the legacy removals.
+- Audit manuals and user-facing docs for residual references to the retired Android/Haiku ports and update wording accordingly.
+- Revisit CI job definitions once Android/Haiku artifacts are absent to ensure no stale cache paths remain.
 
 ## Phased Execution Plan
 - **Phase 1 – Scope Lockdown (Week of 2025-09-29):** Update INSTALL/README/CONTRIBUTE to state the macOS (Cocoa) and Linux (GTK/PGTK) focus; make `./configure` fail fast for unsupported switches such as `--with-android`, `--with-gs`, and Windows options, then regenerate via `autogen.sh all`; align NEWS and CI matrices with the new scope while keeping TTY coverage.
 - **Phase 2 – Retired Platform Shims (Completed 2025-09-26):** Removed the remaining Windows/MS-DOS shims (`src/w16select.c`, `lisp/term/pc-win.el`), scrubbed the MSDOS/MinGW guards in `src/conf_post.h`, trimmed Windows-only logic from `lisp/term/common-win.el`, dropped the `etc/NEXTSTEP` historical doc, refreshed `admin/CPP-DEFINES`, regenerated `configure` via `autogen.sh`, and rebuilt with `./configure --with-ns --with-modules` followed by `make -j` and `make check` on macOS (GUI build succeeded; `make check` still reports known Eglot/rust-analyzer failures in the local environment).
-- **Phase 3 – Android and Haiku Retirement (Mid October 2025):** Excise Android sources (`src/android*.c`, headers, Lisp/tests, admin scripts) and strip `HAVE_ANDROID` logic; drop Haiku UI support (`src/haiku*`, `lisp/term/haiku-win.el`) while verifying GTK/PGTK and NS builds still pass bootstrap, test, and GUI smoke checks on Linux and macOS; archive or tag the removed code as needed.
+- **Phase 3 – Android and Haiku Retirement (Completed 2025-09-26):** Deleted the Android and Haiku runtime trees (`src/android*`, `src/haiku*`, `lisp/term/android-win.el`, `lisp/term/haiku-win.el`, `test/infra/android/`, `admin/download-android-deps.sh`), pruned configure flags and Autotools logic for both platforms, refreshed makefiles and `admin/CPP-DEFINES`, and updated documentation to reflect the macOS/Linux-only policy.  Regenerated the build system (`./autogen.sh all`), reconfigured with `./configure --with-ns --with-modules`, and rebuilt successfully with `make -j`.  Follow-up: continue simplifying residual source guards that mention the removed platforms and expand doc clean-up passes.
 
 ## Sequencing Recommendations
 1. **Plan the order**: Continue pruning remaining platform directories (e.g., legacy documentation) so downstream references can be removed methodically.

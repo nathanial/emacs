@@ -30,11 +30,6 @@
 ;;; Code:
 
 ;;;###autoload
-(defvar lpr-windows-system
-  (memq system-type '(ms-dos windows-nt))
-  "Non-nil if running on MS-DOS or MS Windows.")
-
-;;;###autoload
 (defvar lpr-lp-system
   (memq system-type '(usg-unix-v hpux))
   "Non-nil if running on a system type that uses the \"lp\" command.")
@@ -45,20 +40,12 @@
 
 ;;;###autoload
 (defcustom printer-name
-  (and (eq system-type 'ms-dos) "PRN")
+  nil
   "The name of a local printer to which data is sent for printing.
 \(Note that PostScript files are sent to `ps-printer-name', which see.)
 
 On Unix-like systems, a string value should be a name understood by
-lpr's -P option; otherwise the value should be nil.
-
-On MS-DOS and MS-Windows systems, a string value is taken as the name of
-a printer device or port, provided `lpr-command' is set to \"\".
-Typical non-default settings would be \"LPT1\" to \"LPT3\" for parallel
-printers, or \"COM1\" to \"COM4\" or \"AUX\" for serial printers, or
-\"//hostname/printer\" for a shared network printer.  You can also set
-it to the name of a file, in which case the output gets appended to that
-file.  If you want to discard the printed output, set this to \"NUL\"."
+lpr's -P option; otherwise the value should be nil."
   :type '(choice :menu-tag "Printer Name"
 		 :tag "Printer Name"
 		 (const :tag "Default" nil)
@@ -95,21 +82,14 @@ This switch is used in conjunction with `printer-name'."
 ;;;###autoload
 (defcustom lpr-command
   (cond
-   (lpr-windows-system
-    "")
    (lpr-lp-system
     "lp")
    (t
     "lpr"))
   "Name of program for printing a file.
 
-On MS-DOS and MS-Windows systems, if the value is an empty string then
-Emacs will write directly to the printer port named by `printer-name'.
-The programs `print' and `nprint' (the standard print programs on
-Windows NT and Novell Netware respectively) are handled specially, using
-`printer-name' as the destination for output; any other program is
-treated like `lpr' except that an explicit filename is given as the last
-argument."
+The value should be a program that accepts input on standard input and
+forwards it to the desired printer."
   :type 'string)
 
 ;; Default is nil, because that enables us to use pr -f
@@ -122,12 +102,7 @@ and print the result."
 		 (string :tag "Single argument")
                  (repeat :tag "Multiple arguments" (string :tag "Argument"))))
 
-(defcustom print-region-function
-  (if (memq system-type '(ms-dos windows-nt))
-      (progn
-        (declare-function w32-direct-print-region-function "dos-w32")
-        #'w32-direct-print-region-function)
-    #'call-process-region)
+(defcustom print-region-function #'call-process-region
   "Function to call to print the region on a printer.
 See definition of `print-region-1' for calling conventions."
   :type 'function)

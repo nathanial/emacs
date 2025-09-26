@@ -110,7 +110,7 @@ HAVE_BE_APP = @HAVE_BE_APP@
 HAVE_PGTK = @HAVE_PGTK@
 HAVE_GSETTINGS = @HAVE_GSETTINGS@
 
-ANDROID = @ANDROID@
+ANDROID =
 
 # ==================== Where To Install Things ====================
 

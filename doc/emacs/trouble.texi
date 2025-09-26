@@ -20,7 +20,6 @@ also considered.
 
 @table @kbd
 @item C-g
-@itemx C-@key{Break} @r{(MS-DOS only)}
 Quit: cancel running or partially typed command.
 @item C-]
 Abort innermost recursive editing level and cancel the command which
@@ -63,18 +62,6 @@ most recently opened one (which can happen when
 @code{minibuffer-follows-selected-frame} is @code{nil} (@pxref{Basic
 Minibuffer})), @kbd{C-g} also closes the more recently opened ones,
 quitting their associated commands, after asking you for confirmation.
-
-  On MS-DOS, the character @kbd{C-@key{Break}} serves as a quit character
-like @kbd{C-g}.  The reason is that it is not feasible, on MS-DOS, to
-recognize @kbd{C-g} while a command is running, between interactions
-with the user.  By contrast, it @emph{is} feasible to recognize
-@kbd{C-@key{Break}} at all times.
-@iftex
-@xref{MS-DOS Keyboard,,,emacs-xtra, Specialized Emacs Features}.
-@end iftex
-@ifnottex
-@xref{MS-DOS Keyboard}.
-@end ifnottex
 
 @findex keyboard-quit
   @kbd{C-g} works by setting the variable @code{quit-flag} to @code{t}
@@ -336,13 +323,12 @@ command to show the source-code line number is
 
 @noindent
 Here, @var{backtrace} is the name of a text file containing a copy of
-the backtrace (on MS-Windows, @file{emacs_backtrace.txt} in the
-directory where Emacs was started), @var{bindir} is the name of the
-directory that contains the Emacs executable, and @var{emacs-binary}
-is the name of the Emacs executable file, normally @file{emacs} on GNU
-and Unix systems and @file{emacs.exe} on MS-Windows and MS-DOS@.  Omit
-the @option{-p} option if your version of @command{addr2line} is too
-old to have it.
+the backtrace, @var{bindir} is the name of the directory that contains
+the Emacs executable, and @var{emacs-binary} is the name of the Emacs
+executable file (typically @file{emacs} on GNU/Linux systems or
+@file{Emacs.app/Contents/MacOS/Emacs} on macOS).  Omit the
+@option{-p} option if your version of @command{addr2line} is too old to
+have it.
 
 @cindex core dump
   Optionally, Emacs can generate a @dfn{core dump} when it crashes, on
@@ -449,10 +435,6 @@ state.  The quit you requested will happen by and by.
   Emergency escape is active only for text terminals.  On graphical
 displays, you can use the mouse to kill Emacs or switch to another
 program.
-
-  On MS-DOS, you must type @kbd{C-@key{Break}} (twice) to cause
-emergency escape---but there are cases where it won't work, when a
-system call hangs or when Emacs is stuck in a tight loop in C code.
 
 @node DEL Does Not Delete
 @subsection If @key{DEL} Fails to Delete
@@ -657,8 +639,8 @@ buffer or change how it is displayed, are not responsible.
 
   Taking forever to complete a command can be a bug, but you must make
 sure that it is really Emacs's fault.  Some commands simply take a
-long time.  Type @kbd{C-g} (@kbd{C-@key{Break}} on MS-DOS) and then
-@kbd{C-h l} to see whether the input Emacs received was what you
+long time.  Type @kbd{C-g} and then @kbd{C-h l} to see whether the
+input Emacs received was what you
 intended to type; if the input was such that you @emph{know} it should
 have been processed quickly, report a bug.  If you don't know whether
 the command should take a long time, find out by looking in the manual

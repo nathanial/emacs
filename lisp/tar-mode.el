@@ -1014,12 +1014,11 @@ actually appear on disk when you save the tar-file's buffer."
                          (and set-auto-coding-function
                               (funcall set-auto-coding-function
                                        name (- end start)))
-                         ;; The following binding causes
-                         ;; find-buffer-file-type-coding-system
-                         ;; (defined on dos-w32.el) to act as if
-                         ;; the file being extracted existed, so
-                         ;; that the file's contents' encoding and
-                         ;; EOL format are auto-detected.
+                         ;; The following binding makes the
+                         ;; coding-system detection act as if the
+                         ;; extracted file were visited from disk, so
+                         ;; that the file's encoding and EOL format
+                         ;; are auto-detected.
                          (let ((file-name-handler-alist
                                 '(("" . tar-file-name-handler))))
                            (car (find-operation-coding-system

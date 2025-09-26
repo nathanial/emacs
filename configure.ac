@@ -229,19 +229,17 @@ AC_ARG_WITH([mailutils],
       installed])],
   [],
   [AS_IF([test "$with_features" != "no"],
-   [with_mailutils=yes-unless-android
+   [with_mailutils=yes
     (movemail --version) >/dev/null 2>&1 || with_mailutils=no])])
 
 AC_ARG_WITH([pop],
   [AS_HELP_STRING([--with-pop],
      [Support POP mail retrieval if Emacs movemail is used (not recommended,
       as Emacs movemail POP is insecure).  This is the default only on
-      native MS-Windows and Android.])],
+      native MS-Windows.])],
   [],
-  dnl Enable movemail POP support on Android as GNU Mailutils is
-  dnl normally unavailable on that platform.
   [AS_CASE([$host],
-     [*-mingw*|*android*], [with_pop=yes],
+     [*-mingw*], [with_pop=yes],
      [with_pop=no-by-default])])
 if test "$with_pop" = yes; then
    AC_DEFINE([MAIL_USE_POP])
@@ -448,17 +446,6 @@ OPTION_DEFAULT_ON([threads],[don't compile with elisp threading support])
 OPTION_DEFAULT_OFF([cygwin32-native-compilation],[use native compilation on 32-bit Cygwin])
 OPTION_DEFAULT_ON([xinput2],[don't use version 2 of the X Input Extension for input])
 OPTION_DEFAULT_OFF([small-ja-dic],[generate a smaller-size Japanese dictionary])
-OPTION_DEFAULT_OFF([android],[cross-compile Android application package])
-OPTION_DEFAULT_ON([android-debug],[don't build Emacs as a debug package on Android])
-
-# Find out of Android support is enabled and mailutils has defaulted
-# to `yes-unless-android'.  Disable it if so.
-
-AS_IF([test "x$with_mailutils" = "xyes-unless-android"],
-  [AS_IF([test "x$with_android" != "xno"],
-     [with_mailutils=no],
-     [with_mailutils=yes])])
-
 # Clear with_mailutils if it's set to no.
 
 AS_IF([test "$with_mailutils" = no],
@@ -693,56 +680,6 @@ EOF
     [WARN_JAVAFLAGS="$WARN_JAVAFLAGS -Xlint:$1"])
 ])
 
-# Start Android configuration.  This is done in three steps:
-
-# First, the SDK tools needed to build the Android package on the host
-# are found.
-
-# Then, configure is called inside itself with the NDK C and C++
-# compilers, and the Makefiles generated, along with config.h, are
-# renamed to end with .android.
-
-# Finally, configure continues to configure the Emacs binary that will
-# run on the host.
-
-ANDROID=
-JAVAC=
-AAPT=
-JARSIGNER=
-APKSIGNER=
-ZIPALIGN=
-DX=
-ANDROID_JAR=
-ANDROID_ABI=
-WARN_JAVAFLAGS=
-ANDROID_SHARED_USER_ID=
-ANDROID_SHARED_USER_NAME=
-IS_D8_R8=
-
-# This is a list of Makefiles that have alternative versions for
-# Android.
-android_makefiles="lib/Makefile lib/gnulib.mk lib-src/Makefile src/Makefile"
-
-# This is whether or not to package mailutils into the executable.
-emacs_use_mailutils=
-
-AC_ARG_VAR([ANDROID_CC], [The Android C cross-compiler.])
-AC_ARG_VAR([SDK_BUILD_TOOLS], [Name of directory holding Android SDK build-tools.])
-AC_ARG_VAR([ANDROID_CFLAGS], [Flags given to the Android C cross-compiler.])
-AC_ARG_VAR([JAVAC], [Java compiler path.  Used for Android.])
-AC_ARG_VAR([JARSIGNER], [Java package signer path.  Used for Android.])
-AC_ARG_VAR([APKSIGNER], [Android package signer path.  Used for Android.])
-AC_ARG_VAR([SDK_BUILD_TOOLS], [Path to the Android SDK build tools.])
-AC_ARG_VAR([ZIP], [Path to the `zip' utility.])
-
-AC_ARG_WITH([android],
-  [AS_HELP_STRING([--with-android],
-                  [OBSOLETE: Android packaging support has been removed; builds now target macOS (Cocoa) and GNU/Linux (GTK/PGTK) only.])],
-  [],
-  [with_android=no])
-AS_IF([test "x$with_android" != "xno"],
-  [AC_MSG_ERROR([Android support has been removed.  Reconfigure without '--with-android' or build on a supported macOS/GNU/Linux host.])])
-
 AC_ARG_WITH([gnustep],
   [AS_HELP_STRING([--with-gnustep],
                   [OBSOLETE: the GNUstep port has been removed; the macOS Cocoa port remains available via '--with-ns' on Darwin only.])],
@@ -767,17 +704,6 @@ AC_ARG_WITH([w32],
 AS_IF([test "x$with_w32" != "xno"],
   [AC_MSG_ERROR([MS-Windows support has been removed.  Builds now target macOS (Cocoa) and GNU/Linux (GTK/PGTK) only.])])
 
-ANDROID=no
-
-AC_SUBST([ANDROID])
-AC_SUBST([JAVAC])
-AC_SUBST([AAPT])
-AC_SUBST([D8])
-AC_SUBST([ZIPALIGN])
-AC_SUBST([ANDROID_JAR])
-AC_SUBST([ANDROID_ABI])
-AC_SUBST([IS_D8_R8])
-
 dnl This used to use changequote, but, apart from 'changequote is evil'
 dnl per the autoconf manual, we can speed up autoconf somewhat by quoting
 dnl the great gob of text.  Thus it's not processed for possible expansion.
@@ -800,12 +726,6 @@ dnl quotation begins
 
 opsys='' unported=no
 case "${canonical}" in
-
-  ## Android
-  *linux-android* )
-    opsys=android
-    unported=yes
-  ;;
 
   ## GNU/Linux and similar ports
   *-*-linux* )
@@ -902,11 +822,6 @@ case "${canonical}" in
   ## QNX Neutrino
   *-nto-qnx* )
     opsys=qnxnto
-    unported=yes
-  ;;
-
-  *-haiku )
-    opsys=haiku
     unported=yes
   ;;
 
@@ -1036,7 +951,7 @@ if test "$ac_test_CFLAGS" != set; then
     fi
     # Haiku also needs -gdwarf-2 because its GDB is too old
     # to understand newer formats.
-    if test $opsys = mingw32 || test $opsys = haiku; then
+    if test $opsys = mingw32; then
       CFLAGS="$CFLAGS -gdwarf-2"
     fi
   fi
@@ -1220,13 +1135,6 @@ AS_IF([test $gl_gcc_warnings = no],
   if test $opsys = mingw32; then
     nw="$nw -Wsuggest-attribute=format"
   fi
-
-  # If Emacs is being built for Android and many functions are
-  # currently stubbed out for operation on the build machine, disable
-  # -Wsuggest-attribute=noreturn.
-
-  AS_IF([test "$ANDROID" = "yes"],
-    [nw="$nw -Wsuggest-attribute=noreturn"])
 
   gl_MANYWARN_ALL_GCC([ws])
   gl_MANYWARN_COMPLEMENT([ws], [$ws], [$nw])
@@ -1662,7 +1570,6 @@ case "$opsys" in
   unixware) LIBS_SYSTEM="-lsocket -lnsl -lelf -lgen" ;;
 
   # Haiku needs -lbsd for cfsetspeed.
-  haiku) LIBS_SYSTEM="-lnetwork -lbsd" ;;
 esac
 
 AC_SUBST([LIBS_SYSTEM])
@@ -1781,10 +1688,7 @@ AC_SUBST([SYSTEM_TYPE])
 pre_PKG_CONFIG_CFLAGS=$CFLAGS
 pre_PKG_CONFIG_LIBS=$LIBS
 
-dnl pkg-config does not work when cross-compiling for Android.
-if test "${ANDROID}" != "yes"; then
-  PKG_PROG_PKG_CONFIG([0.9.0])
-fi
+PKG_PROG_PKG_CONFIG([0.9.0])
 
 dnl EMACS_CHECK_MODULES([GSTUFF], [gtk+-2.0 >= 1.3 glib = 1.3.4])
 dnl acts like PKG_CHECK_MODULES([GSTUFF], [gtk+-2.0 >= 1.3 glib = 1.3.4],
@@ -1802,10 +1706,7 @@ AC_DEFUN([EMACS_CHECK_MODULES],
 dnl EMACS_CHECK_LIB(NAME, FUNCTION, ACTION-IF-FOUND, ACTION-IF-NOT-FOUND,
 dnl OTHER-LIBRARIES, INCLUDES)
 dnl ---------------------------------------------------------------------
-dnl This is like AC_CHECK_LIB; however, there is no default action, and
-dnl when cross-configuring for Android, AC_CHECK_DECLS is called with NAME
-dnl and INCLUDES instead, as the library being checked against will likely
-dnl be built together with Emacs.
+dnl This is like AC_CHECK_LIB; however, there is no default action.
 AC_DEFUN([EMACS_CHECK_LIB],
   [AC_CHECK_LIB([$1], [$2], [$3], [$4], [$5])])
 
@@ -1980,89 +1881,24 @@ AC_SUBST([AUTO_DEPEND])
 
 window_system=none
 
-ANDROID_OBJ=
-ANDROID_LIBS=
-# ANDROID_CFLAGS is a precious variable used to pass information to
-# the cross-compiler.
-ANDROID_BUILD_CFLAGS=
-REALLY_ANDROID=
 CM_OBJ="cm.o"
-
-if test "$ANDROID" = "yes"; then
-  window_system=android
-  no_x=yes
-  ANDROID_OBJ="androidterm.o androidfns.o androidfont.o androidmenu.o"
-  ANDROID_OBJ="$ANDROID_OBJ android.o"
-  ANDROID_LIBS=
-  CM_OBJ=
-
-  AC_DEFINE([HAVE_ANDROID], [1], [Define to 1 if Emacs is being built
-with Android support])
-
-    # Emacs will be built as a shared library, and a wrapper around it
-    # will also be built for the benefit of applications.  This
-    # requires Emacs be built as a position independent executable.
-    ANDROID_BUILD_CFLAGS="-fPIC -fvisibility=hidden"
-
-    # Graphics code in sfntfont-android.c benefits heavily from
-    # vectorization.
-    ANDROID_BUILD_CFLAGS="$ANDROID_BUILD_CFLAGS -ftree-vectorize"
-
-    # Link with libraries required for Android support.
-    # API 9 and later require `-landroid' for the asset manager.
-    # API 8 uses an emulation via the JNI.
-    AS_IF([test "$ANDROID_SDK" -lt "9"],
-      [ANDROID_LIBS="-llog -ljnigraphics"],
-      [ANDROID_LIBS="-landroid -llog -ljnigraphics"])
-
-    # This is required to make the system load emacs.apk's libpng
-    # (among others) instead of the system's own.  But it doesn't work
-    # on all Android versions yet, so for now just suffix shared
-    # libraries with _emacs.
-    # ANDROID_LDFLAGS="-Wl,-rpath,'\$\$ORIGIN'"
-
-    # Link with the sfnt font library and sfntfont.o, along with
-    # sfntfont-android.o.
-    ANDROID_OBJ="$ANDROID_OBJ sfnt.o sfntfont.o sfntfont-android.o"
-
-    # Build androidselect.o and androidvfs.o.
-    ANDROID_OBJ="$ANDROID_OBJ androidselect.o androidvfs.o"
-
-    # Check for some functions not always present in the NDK.
-    AC_CHECK_DECLS([android_get_device_api_level])
-
-    # Mention this build is really for Android.
-    REALLY_ANDROID=yes
-fi
-
-AC_SUBST([ANDROID])
-AC_SUBST([ANDROID_OBJ])
-AC_SUBST([ANDROID_LIBS])
-AC_SUBST([ANDROID_LDFLAGS])
-AC_SUBST([ANDROID_BUILD_CFLAGS])
-AC_SUBST([ANDROID_SHARED_USER_ID])
-AC_SUBST([ANDROID_SHARED_USER_NAME])
 
 # Check for pw_gecos in struct passwd; this is known to be missing on
 # Android.
 
 AH_TEMPLATE([USER_FULL_NAME], [How to get a user's full name.])
 AC_CHECK_MEMBERS([struct passwd.pw_gecos], [], [], [#include <pwd.h>])
-AS_IF([test x"$REALLY_ANDROID" = "xyes"],
-  [AC_DEFINE([USER_FULL_NAME], [android_user_full_name (pw)])],
-  [AS_IF([test x"$ac_cv_member_struct_passwd_pw_gecos" = "xyes"],
-    [AC_DEFINE([USER_FULL_NAME], [pw->pw_gecos])],
-    [AC_DEFINE([USER_FULL_NAME], [NULL])])])
+AS_IF([test x"$ac_cv_member_struct_passwd_pw_gecos" = "xyes"],
+  [AC_DEFINE([USER_FULL_NAME], [pw->pw_gecos])],
+  [AC_DEFINE([USER_FULL_NAME], [NULL])])
 
 if test "${with_pgtk}" = "yes"; then
   window_system=pgtk
 fi
 
-if test "${ANDROID}" != "yes"; then
-  AC_PATH_X
-  if test "$no_x" != yes && test "${with_pgtk}" != "yes"; then
-    window_system=x11
-  fi
+AC_PATH_X
+if test "$no_x" != yes && test "${with_pgtk}" != "yes"; then
+  window_system=x11
 fi
 
 LD_SWITCH_X_SITE_RPATH=
@@ -2259,68 +2095,7 @@ if test "${HAVE_NS}" = yes; then
   AC_LANG_POP([Objective C])
 fi
 
-HAVE_BE_APP=no
-if test "${opsys}" = "haiku" && test "${with_be_app}" = "yes"; then
-   dnl Only GCC is supported.  Clang might work, but it's
-   dnl not reliable, so don't check for it here.
-   AC_PROG_CXX([gcc g++])
-   CXXFLAGS="$CXXFLAGS $emacs_g3_CFLAGS"
-   AC_LANG_PUSH([C++])
-   AC_CHECK_HEADER([app/Application.h], [HAVE_BE_APP=yes],
-                   [AC_MSG_ERROR([The Application Kit headers required for building
-with the Application Kit were not found or cannot be compiled. Either fix this, or
-re-configure with the option '--without-be-app'.])])
-   AC_CACHE_CHECK([whether BObjectList accepts ownership as a template parameter],
-     [emacs_cv_bobjectlist_ownership_is_template_parameter],
-     [AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-			   #include <support/ObjectList.h>
-			   #include <interface/StringItem.h>
-			   static BObjectList<BStringItem, true> test;]], [])],
-        [emacs_cv_bobjectlist_ownership_is_template_parameter=yes],
-	[emacs_cv_bobjectlist_ownership_is_template_parameter=no])])
-   AS_IF([test "x$emacs_cv_bobjectlist_ownership_is_template_parameter" = "xyes"],
-     [AC_DEFINE([BOBJECTLIST_OWNERSHIP_IS_TEMPLATE_PARAMETER], [1],
-       [Define to 1 if BObjectList ownership is defined as a template parameter.])])
-   AC_LANG_POP([C++])
-fi
-
-AC_SUBST([HAVE_BE_APP])
-
 HAVE_W32=no
-
-HAIKU_OBJ=
-HAIKU_CXX_OBJ=
-HAIKU_LIBS=
-HAIKU_CFLAGS=
-
-if test "$opsys" = "haiku"; then
-  HAIKU_OBJ="$HAIKU_OBJ haiku.o"
-fi
-
-if test "${HAVE_BE_APP}" = "yes"; then
-  AC_DEFINE([HAVE_HAIKU], [1],
-      [Define if Emacs will be built with Haiku windowing support])
-fi
-
-if test "${HAVE_BE_APP}" = "yes"; then
-  window_system=haiku
-  with_xft=no
-  HAIKU_OBJ="$HAIKU_OBJ haikufns.o haikuterm.o haikumenu.o haikufont.o haikuselect.o haiku_io.o"
-  HAIKU_CXX_OBJ="haiku_support.o haiku_font_support.o haiku_draw_support.o haiku_select.o"
-  HAIKU_LIBS="-lbe -lgame -ltranslation -ltracker" # -lgame is needed for set_mouse_position.
-
-  if test "${with_native_image_api}" = yes; then
-     AC_DEFINE([HAVE_NATIVE_IMAGE_API], [1],
-       [Define to use native OS APIs for images.])
-     NATIVE_IMAGE_API="yes (haiku)"
-     HAIKU_OBJ="$HAIKU_OBJ haikuimage.o"
-  fi
-fi
-
-AC_SUBST([HAIKU_LIBS])
-AC_SUBST([HAIKU_OBJ])
-AC_SUBST([HAIKU_CXX_OBJ])
-AC_SUBST([HAIKU_CFLAGS])
 
 ## $window_system is now set to the window system we will
 ## ultimately use.
@@ -2366,12 +2141,6 @@ dnl use the toolkit if we have gtk, or X11R5 or newer.
     USE_X_TOOLKIT=none
     HAVE_PGTK=yes
     AC_DEFINE([HAVE_PGTK], [1], [Define to 1 if you have pure Gtk+-3.])
-  ;;
-  haiku )
-    term_header=haikuterm.h
-  ;;
-  android )
-    term_header=androidterm.h
   ;;
 esac
 
@@ -2711,13 +2480,10 @@ fi
 HAVE_RSVG=no
 if test "${HAVE_X11}" = "yes" || test "${HAVE_NS}" = "yes" \
    || test "${opsys}" = "mingw32" || test "${HAVE_BE_APP}" = "yes" \
-   || test "${window_system}" = "pgtk" \
-   || test "${REALLY_ANDROID}" = "yes"; then
+   || test "${window_system}" = "pgtk"; then
   if test "${with_rsvg}" != "no"; then
     RSVG_REQUIRED=2.14.0
-    AS_IF([test "${REALLY_ANDROID}" = "yes"],
-      [RSVG_MODULE="librsvg"],
-      [RSVG_MODULE="librsvg-2.0 >= $RSVG_REQUIRED"])
+    RSVG_MODULE="librsvg-2.0 >= $RSVG_REQUIRED"
 
     EMACS_CHECK_MODULES([RSVG], [$RSVG_MODULE])
     AC_SUBST([RSVG_CFLAGS])
@@ -2739,8 +2505,7 @@ HAVE_WEBP=no
 if test "${with_webp}" != "no"; then
    if test "${HAVE_X11}" = "yes" || test "${opsys}" = "mingw32" \
    || test "${HAVE_W32}" = "yes" || test "${HAVE_NS}" = "yes" \
-   || test "${HAVE_BE_APP}" = "yes" || test "${HAVE_PGTK}" = "yes" \
-   || test "${REALLY_ANDROID}" = "yes"; then
+   || test "${HAVE_BE_APP}" = "yes" || test "${HAVE_PGTK}" = "yes"; then
       WEBP_REQUIRED=0.6.0
       WEBP_MODULE="libwebpdemux >= $WEBP_REQUIRED"
 
@@ -2754,13 +2519,12 @@ if test "${with_webp}" != "no"; then
       CFLAGS="$CFLAGS $WEBP_CFLAGS"
       LIBS="$LIBS $WEBP_LIBS"
 
-      AS_IF([test "$REALLY_ANDROID" != "yes"], [
-	AC_CHECK_FUNC([WebPGetInfo], [],
-	  [WEBP_MODULE="$WEBP_MODULE libwebpdecoder >= $WEBP_REQUIRED"
-	   HAVE_WEBP=no
-	   AS_UNSET([WEBP_LIBS])
-	   AS_UNSET([WEBP_CFLAGS])
-	   EMACS_CHECK_MODULES([WEBP], [$WEBP_MODULE])])])
+      AC_CHECK_FUNC([WebPGetInfo], [],
+        [WEBP_MODULE="$WEBP_MODULE libwebpdecoder >= $WEBP_REQUIRED"
+         HAVE_WEBP=no
+         AS_UNSET([WEBP_LIBS])
+         AS_UNSET([WEBP_CFLAGS])
+         EMACS_CHECK_MODULES([WEBP], [$WEBP_MODULE])])
 
       CFLAGS=$OLD_CFLAGS
       LIBS=$OLD_LIBS
@@ -2821,8 +2585,7 @@ AC_SUBST([SQLITE3_CFLAGS])
 
 HAVE_IMAGEMAGICK=no
 if test "${HAVE_X11}" = "yes" || test "${HAVE_NS}" = "yes" || test "${HAVE_W32}" = "yes" || \
-   test "${HAVE_BE_APP}" = "yes" || test "${window_system}" = "pgtk" || \
-   test "${REALLY_ANDROID}" = "yes"; then
+   test "${HAVE_BE_APP}" = "yes" || test "${window_system}" = "pgtk"; then
   if test "${with_imagemagick}" != "no"; then
     if test -n "$BREW"; then
       # Homebrew doesn't link ImageMagick 6 by default, so make sure
@@ -3240,10 +3003,8 @@ case $with_file_notification,$NOTIFY_OBJ in
     fi ;;
 esac
 
-AS_IF([test "$opsys" != "haiku"], [
- dnl kqueue is available on BSD-like systems and Haiku, but Haiku's
- dnl implementation cannot monitor filesystem activity.
- case $with_file_notification,$NOTIFY_OBJ in
+dnl kqueue is available on BSD-like systems.
+case $with_file_notification,$NOTIFY_OBJ in
    kqueue,* | yes,)
      EMACS_CHECK_MODULES([KQUEUE], [libkqueue])
      if test "$HAVE_KQUEUE" = "yes"; then
@@ -3261,7 +3022,7 @@ AS_IF([test "$opsys" != "haiku"], [
 	  NOTIFY_SUMMARY="yes (kqueue)"
 	fi
      fi ;;
- esac])
+ esac
 
 dnl g_file_monitor exists since glib 2.18.  G_FILE_MONITOR_EVENT_MOVED
 dnl has been added in glib 2.24.  It has been tested under
@@ -3658,8 +3419,7 @@ else
 fi
 if test "${HAVE_X11}" = "yes" && test "${HAVE_FREETYPE}" = "yes" \
         || test "$window_system" = "pgtk" \
-        || test "${HAVE_W32}" = "yes" \
-	|| test "$REALLY_ANDROID" = "yes"; then
+        || test "${HAVE_W32}" = "yes"; then
   if test "${with_harfbuzz}" != "no"; then
     EMACS_CHECK_MODULES([HARFBUZZ], [harfbuzz >= $harfbuzz_required_ver])
     AS_IF([test "$HAVE_HARFBUZZ" = "yes"],[
@@ -4218,9 +3978,9 @@ if test "${with_native_compilation}" != "no"; then
     case "${opsys}" in
       # mingw32 loads the library dynamically.
       mingw32) ;;
-      # Neither NetBSD, OpenBSD nor Haiku have libdl, with all dynamic
+      # Neither NetBSD nor OpenBSD have libdl, with all dynamic
       # linker functions placed within libc.
-      netbsd|openbsd|haiku)
+      netbsd|openbsd)
         LIBGCCJIT_LIBS="-lgccjit" ;;
       darwin)
         LIBGCCJIT_CFLAGS="${MAC_CFLAGS}"
@@ -4257,8 +4017,7 @@ if test "${with_png}" != no; then
     AC_CHECK_HEADER([png.h], [HAVE_PNG=yes])
   elif test "${HAVE_X11}" = "yes" || test "${HAVE_W32}" = "yes" \
        || test "${HAVE_NS}" = "yes" || test "${HAVE_BE_APP}" = "yes" \
-       || test "$window_system" = "pgtk" \
-       || test "${REALLY_ANDROID}" = "yes"; then
+       || test "$window_system" = "pgtk"; then
     EMACS_CHECK_MODULES([PNG], [libpng >= 1.0.0])
     if test $HAVE_PNG = yes; then
       LIBPNG=$PNG_LIBS
@@ -4864,11 +4623,7 @@ endpwent getgrent endgrent \
 cfmakeraw cfsetspeed __executable_start log2 pthread_setname_np \
 pthread_set_name_np])
 
-# getpwent is not present in older versions of Android.  (bug#65319)
-gl_CHECK_FUNCS_ANDROID([getpwent], [[#include <pwd.h>]])
-
-# renameat2 is not present in older versions of Android.
-gl_CHECK_FUNCS_ANDROID([renameat2], [[#include <stdio.h>]])
+AC_CHECK_FUNCS([getpwent renameat2])
 
 if test "$ac_cv_func_cfmakeraw" != "yes"; then
   # On some systems (Android), cfmakeraw is inline, so AC_CHECK_FUNCS
@@ -4995,7 +4750,7 @@ AC_DEFUN([tputs_link_source], [
 # than to expect to find it in ncurses.
 # Also we need tputs and friends to be able to build at all.
 AC_CACHE_CHECK([for library containing tputs], [emacs_cv_tputs_lib],
-[if test "${opsys}" = "mingw32" || test x"$REALLY_ANDROID" = "xyes"; then
+[if test "${opsys}" = "mingw32"; then
   emacs_cv_tputs_lib='none required'
 else
   # curses precedes termcap because of AIX (Bug#9736#35) and OpenIndiana.
@@ -5033,7 +4788,7 @@ TERMINFO=yes
 ## LIBS_TERMCAP="-lncurses", this overrides LIBS_TERMCAP = -ltinfo,
 ## if that was found above to have tputs.
 ## Should we use the gnu* logic everywhere?
-case "$opsys$REALLY_ANDROID" in
+case "$opsys" in
   ## darwin: Prevents crashes when running Emacs in Terminal.app under 10.2.
   ##  The ncurses library has been moved out of the System framework in
   ##  Mac OS X 10.2.  So if configure detects it, set the command-line
@@ -5062,10 +4817,7 @@ fail;
     fi
     ;;
 
-  # The case condition is a concatenation of both $opsys and
-  # $REALLY_ANDROID.  Only disable termcap if building a GUI program.
-  # (bug#65340)
-  mingw32 | androidyes)
+  mingw32)
     TERMINFO=no
     LIBS_TERMCAP=
     ;;
@@ -5272,10 +5024,12 @@ dnl posix_spawn.  The chdir and setsid functionality is relatively
 dnl recent, so we check for it specifically.
 AC_CHECK_HEADERS([spawn.h])
 AC_SUBST([HAVE_SPAWN_H])
-gl_CHECK_FUNCS_ANDROID([posix_spawn], [#include <spawn.h>])
-gl_CHECK_FUNCS_ANDROID([posix_spawn_file_actions_addchdir], [#include <spawn.h>])
-gl_CHECK_FUNCS_ANDROID([posix_spawn_file_actions_addchdir_np], [#include <spawn.h>])
-gl_CHECK_FUNCS_ANDROID([posix_spawnattr_setflags], [#include <spawn.h>])
+AC_CHECK_FUNCS([posix_spawn posix_spawn_file_actions_addchdir \
+               posix_spawn_file_actions_addchdir_np posix_spawnattr_setflags])
+HAVE_POSIX_SPAWN=$ac_cv_func_posix_spawn
+HAVE_POSIX_SPAWN_FILE_ACTIONS_ADDCHDIR=$ac_cv_func_posix_spawn_file_actions_addchdir
+HAVE_POSIX_SPAWN_FILE_ACTIONS_ADDCHDIR_NP=$ac_cv_func_posix_spawn_file_actions_addchdir_np
+HAVE_POSIX_SPAWNATTR_SETFLAGS=$ac_cv_func_posix_spawnattr_setflags
 AC_SUBST([HAVE_POSIX_SPAWN])
 AC_SUBST([HAVE_POSIX_SPAWN_FILE_ACTIONS_ADDCHDIR])
 AC_SUBST([HAVE_POSIX_SPAWN_FILE_ACTIONS_ADDCHDIR_NP])
@@ -5513,7 +5267,7 @@ case $opsys in
 esac
 
 case $opsys in
-  gnu-* | android | solaris | cygwin )
+  gnu-* | solaris | cygwin )
     dnl FIXME Can't we test if this exists (eg /proc/$$)?
     AC_DEFINE([HAVE_PROCFS], [1], [Define if you have the /proc filesystem.])
   ;;
@@ -5613,25 +5367,6 @@ case $opsys in
     AC_DEFINE([FIRST_PTY_LETTER], ['p'])
     ;;
 
-  android )
-    AC_DEFINE([PTY_ITERATION], [int i; for (i = 0; i < 1; ++i)])
-    dnl grantpt may be defined in libc but not declared.  The same
-    dnl goes for posix_openpt.  When that is the case, it means that
-    dnl grantpt or posix_openpt cannot actually be used.
-    AC_CHECK_DECLS([grantpt, posix_openpt])
-    AS_IF([test "x$ac_cv_have_decl_grantpt" = xyes],
-      [AC_DEFINE([PTY_TTY_NAME_SPRINTF],
-        [{ char *ptyname = 0; sigset_t blocked; sigemptyset (&blocked); sigaddset (&blocked, SIGCHLD); pthread_sigmask (SIG_BLOCK, &blocked, 0); if (grantpt (fd) != -1 && unlockpt (fd) != -1) ptyname = ptsname(fd); pthread_sigmask (SIG_UNBLOCK, &blocked, 0); if (!ptyname) { emacs_close (fd); return -1; } snprintf (pty_name, PTY_NAME_SIZE, "%s", ptyname); }])],
-      [AC_DEFINE([PTY_TTY_NAME_SPRINTF],
-        [{ char *ptyname = 0; sigset_t blocked; sigemptyset (&blocked); sigaddset (&blocked, SIGCHLD); pthread_sigmask (SIG_BLOCK, &blocked, 0); if (unlockpt (fd) != -1) ptyname = ptsname(fd); pthread_sigmask (SIG_UNBLOCK, &blocked, 0); if (!ptyname) { emacs_close (fd); return -1; } snprintf (pty_name, PTY_NAME_SIZE, "%s", ptyname); }])])
-    AS_IF([test "x$ac_cv_have_decl_posix_openpt" = xyes],
-      [AC_DEFINE([PTY_OPEN],
-        [do { fd = posix_openpt (O_RDWR | O_CLOEXEC | O_NOCTTY); if (fd < 0 && errno == EINVAL) fd = posix_openpt (O_RDWR | O_NOCTTY); } while (false)])
-       AC_DEFINE([PTY_NAME_SPRINTF], [])],
-      [AC_DEFINE([PTY_NAME_SPRINTF], [])
-       AC_DEFINE([PTY_OPEN], [fd = getpt ()])])
-    ;;
-
   gnu-linux | gnu-kfreebsd | dragonfly | freebsd | openbsd | netbsd | darwin | nacl )
     dnl if HAVE_GRANTPT
     if test "x$ac_cv_func_grantpt" = xyes; then
@@ -5683,14 +5418,6 @@ case $opsys in
       [{ char *ptsname (int), *ptyname; int grantpt_result; sigset_t blocked; sigemptyset (&blocked); sigaddset (&blocked, SIGCHLD); pthread_sigmask (SIG_BLOCK, &blocked, 0); grantpt_result = grantpt (fd); pthread_sigmask (SIG_UNBLOCK, &blocked, 0); if (grantpt_result == -1) fatal("could not grant slave pty"); if (unlockpt(fd) == -1) fatal("could not unlock slave pty"); if (!(ptyname = ptsname(fd))) fatal ("could not enable slave pty"); snprintf (pty_name, PTY_NAME_SIZE, "%s", ptyname); }])
     ;;
 
-  haiku*)
-    AC_DEFINE([FIRST_PTY_LETTER], ['s'])
-    AC_DEFINE([PTY_NAME_SPRINTF], [])
-    dnl on Haiku pty names aren't distinctive, thus the use of posix_openpt
-    AC_DEFINE([PTY_OPEN], [fd = posix_openpt (O_RDWR | O_NONBLOCK)])
-    AC_DEFINE([PTY_TTY_NAME_SPRINTF],
-      [{ char *ptyname; int grantpt_result; sigset_t blocked; sigemptyset (&blocked); sigaddset (&blocked, SIGCHLD); pthread_sigmask (SIG_BLOCK, &blocked, 0); grantpt_result = grantpt (fd); pthread_sigmask (SIG_UNBLOCK, &blocked, 0); if (grantpt_result == -1) fatal("could not grant slave pty"); if (unlockpt(fd) == -1) fatal("could not unlock slave pty"); if (!(ptyname = ptsname(fd))) fatal ("could not enable slave pty"); snprintf (pty_name, PTY_NAME_SIZE, "%s", ptyname); }])
-    ;;
 esac
 
 
@@ -5923,17 +5650,13 @@ case $opsys in
     AC_DEFINE([USG5_4], [])
     ;;
 
-  haiku)
-    AC_DEFINE([HAIKU], [], [Define if the system is Haiku.])
-    ;;
 esac
 
 AC_SYS_POSIX_TERMIOS
 if test $ac_cv_sys_posix_termios = yes; then
   AC_CHECK_SIZEOF([speed_t], [], [#include <termios.h>])
-  dnl on Haiku, and possibly other platforms, speed_t is defined to
-  dnl unsigned char, even when speeds greater than 200 baud are
-  dnl defined.
+  dnl On some platforms speed_t is defined to unsigned char, even
+  dnl when speeds greater than 200 baud are defined.
 
   if test ${ac_cv_sizeof_speed_t} -lt 2; then
     AC_DEFINE([HAVE_TINY_SPEED_T], [1],
@@ -6329,7 +6052,7 @@ if test "$window_system" != "none"; then
     [Define if you poll periodically to detect C-g.])
   WINDOW_SYSTEM_OBJ="fontset.o fringe.o image.o"
 
-  if test "$window_system" = "x11" || test "$REALLY_ANDROID" = "yes"; then
+  if test "$window_system" = "x11"; then
     AC_DEFINE([HAVE_TEXT_CONVERSION], [1],
       [Define if the window system has text conversion support.])
     WINDOW_SYSTEM_OBJ="$WINDOW_SYSTEM_OBJ textconv.o"
@@ -6457,12 +6180,7 @@ done
 AC_DEFINE_UNQUOTED([EMACS_CONFIG_FEATURES], ["${emacs_config_features}"],
   [Summary of some of the main features enabled by configure.])
 
-# This is just a printable representation of the shared user ID.
-android_shared_user=
-AS_IF([test -n "$with_shared_user_id"],[android_shared_user="($with_shared_user_id)"])
-
 AS_ECHO(["  Does Emacs use -lXaw3d?                                 ${HAVE_XAW3D}
-  Is Emacs being built for Android?                       ${ANDROID} ${android_shared_user}
   Does Emacs use the X Double Buffer Extension?           ${HAVE_XDBE}
   Does Emacs use -lXpm?                                   ${HAVE_XPM}
   Does Emacs use -ljpeg?                                  ${HAVE_JPEG}

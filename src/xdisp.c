@@ -17190,10 +17190,6 @@ redisplay_internal (void)
     return;
 #endif
 
-#if defined (HAVE_HAIKU)
-  if (popup_activated_p)
-    return;
-#endif
 
   redisplay_counter++;
 
@@ -17239,7 +17235,7 @@ redisplay_internal (void)
 	     area, displaying a different frame means redisplay the
 	     whole thing.  */
 	  SET_FRAME_GARBAGED (sf);
-#if !defined DOS_NT && !defined HAVE_ANDROID
+#if !defined DOS_NT
 	  set_tty_color_mode (FRAME_TTY (sf), sf);
 #endif
 	}
@@ -27392,17 +27388,12 @@ display_menu_bar (struct window *w)
     return;
 #endif /* HAVE_NS */
 
-#ifdef HAVE_HAIKU
-  if (FRAME_HAIKU_P (f))
-    return;
-#endif /* HAVE_HAIKU */
-
 #if defined (USE_X_TOOLKIT) || defined (USE_GTK)
   eassert (!FRAME_WINDOW_P (f));
   init_iterator (&it, w, -1, -1, f->desired_matrix->rows, MENU_FACE_ID);
   it.first_visible_x = 0;
   it.last_visible_x = FRAME_PIXEL_WIDTH (f);
-#elif defined (HAVE_X_WINDOWS) || defined (HAVE_ANDROID)
+#elif defined (HAVE_X_WINDOWS)
   struct window *menu_window = NULL;
   struct face *face = FACE_FROM_ID (f, MENU_FACE_ID);
 
@@ -27520,7 +27511,6 @@ display_menu_bar (struct window *w)
 /* This code is never used on Android where there are only GUI and
    initial frames.  */
 
-#ifndef HAVE_ANDROID
 
 /* Deep copy of a glyph row, including the glyphs.  */
 static void
@@ -27694,8 +27684,6 @@ display_tty_menu_item (const char *item_text, int width, int face_id,
   row->full_width_p = saved_width;
   row->reversed_p = saved_reversed;
 }
-
-#endif
 
 
 /***********************************************************************
@@ -34820,9 +34808,7 @@ draw_row_with_mouse_face (struct window *w, int start_x, struct glyph_row *row,
     }
 #endif
 
-#ifndef HAVE_ANDROID
   tty_draw_row_with_mouse_face (w, row, start_hpos, end_hpos, draw);
-#endif
 }
 
 /* Display the active region described by mouse_face_* according to DRAW.  */
@@ -36311,16 +36297,10 @@ note_fringe_highlight (struct frame *f, Lisp_Object window, int x, int y,
     return;
 
   /* When a menu is active, don't highlight because this looks odd.  */
-#if defined (HAVE_X_WINDOWS) || defined (HAVE_NS) || defined (MSDOS) \
-  || defined (HAVE_ANDROID)
+#if defined (HAVE_X_WINDOWS) || defined (HAVE_NS) || defined (MSDOS)
   if (popup_activated ())
     return;
-#endif /* HAVE_X_WINDOWS || HAVE_NS || MSDOS || HAVE_ANDROID */
-
-#if defined HAVE_HAIKU
-  if (popup_activated_p)
-    return;
-#endif /* HAVE_HAIKU */
+#endif /* HAVE_X_WINDOWS || HAVE_NS || MSDOS */
 
   /* Find a message to display through the help-echo mechanism whenever
      the mouse hovers over a fringe indicator.  Both text properties and
@@ -36398,14 +36378,8 @@ note_mouse_highlight (struct frame *f, int x, int y)
   struct buffer *b;
 
   /* When a menu is active, don't highlight because this looks odd.  */
-#if defined (HAVE_X_WINDOWS) || defined (HAVE_NS) || defined (MSDOS) \
-  || defined (HAVE_ANDROID)
+#if defined (HAVE_X_WINDOWS) || defined (HAVE_NS) || defined (MSDOS)
   if (popup_activated ())
-    return;
-#endif
-
-#if defined (HAVE_HAIKU)
-  if (popup_activated_p)
     return;
 #endif
 

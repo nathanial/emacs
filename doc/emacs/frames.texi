@@ -30,15 +30,8 @@ frames.  On text terminals, many of these features are unavailable.
 However, it is still possible to create multiple frames on text
 terminals; such frames are displayed one at a time, filling the entire
 terminal screen (@pxref{Text Terminals}).  It is also possible to use
-the mouse on some text terminals (@pxref{Text-Only Mouse}, for doing
-so on GNU and Unix systems; and
-@iftex
-@pxref{MS-DOS Mouse,,,emacs-xtra,Specialized Emacs Features},
-@end iftex
-@ifnottex
-@pxref{MS-DOS Mouse},
-@end ifnottex
-for doing so on MS-DOS).  Menus are supported on all text terminals.
+the mouse on some text terminals (@pxref{Text-Only Mouse}).  Menus are
+supported on all text terminals.
 
 @menu
 * Mouse Commands::      Moving, cutting, and pasting, with the mouse.
@@ -654,9 +647,9 @@ resources file to take effect.  @xref{Resources}.  Do not quote
 font names in X resource files.
 
 @item
-If you are running Emacs on the GNOME desktop or Haiku, you can tell
-Emacs to adjust the frame's default font along with changes to the
-default system font by setting the variable
+If you are running Emacs on the GNOME desktop, you can tell Emacs to
+adjust the frame's default font along with changes to the default
+system font by setting the variable
 @code{font-use-system-font} to @code{t} (the default is @code{nil}).
 For this to work, Emacs must have been compiled with support for
 Gsettings (or the older Gconf).  (To be specific, the Gsettings
@@ -1717,8 +1710,8 @@ For additional customization options for displaying tooltips, use
 @kbd{M-x customize-group @key{RET} tooltip @key{RET}}.
 
 @vindex use-system-tooltips
-  If Emacs is built with the GTK+ toolkit, Nextstep windowing, or
-Haiku windowing support, it displays tooltips via the toolkit, using
+  If Emacs is built with the GTK+ toolkit or Nextstep windowing
+support, it displays tooltips via the toolkit, using
 the default appearance of the toolkit's tooltips.@footnote{The
 foreground and background colors of toolkit-created tooltips on
 Nextstep can also be customized by setting the @code{foreground} and
@@ -1830,11 +1823,3 @@ running on your system in order for this to work.  Note that when
 this mode is enabled, you cannot use the mouse to transfer text
 between Emacs and other programs which use GPM@.  This is due to
 limitations in GPM and the Linux kernel.
-
-@iftex
-@xref{MS-DOS Mouse,,,emacs-xtra,Specialized Emacs Features},
-@end iftex
-@ifnottex
-@xref{MS-DOS Mouse},
-@end ifnottex
-for information about mouse support on MS-DOS.

@@ -21,8 +21,7 @@
 @command{emacs}.  From a terminal window running a Unix shell on a GUI
 terminal, you can run Emacs in the background with @kbd{emacs &}; this
 way, Emacs won't tie up the terminal window, so you can use it to run
-other shell commands.  (For comparable methods of starting Emacs on
-MS-Windows, see @ref{Windows Startup}.)
+other shell commands.
 
 @cindex startup screen
   When Emacs starts up, the initial frame displays a special buffer

@@ -47,8 +47,7 @@ extern AppendMenuW_Proc unicode_append_menu;
 static bool
 have_boxes (void)
 {
-#if defined (USE_X_TOOLKIT) || defined (USE_GTK) || defined (HAVE_NTGUI) || defined (HAVE_NS) \
-  || defined (HAVE_HAIKU) || defined (HAVE_ANDROID)
+#if defined (USE_X_TOOLKIT) || defined (USE_GTK) || defined (HAVE_NTGUI) || defined (HAVE_NS)
   if (FRAME_WINDOW_P (XFRAME (Vmenu_updating_frame)))
     return 1;
 #endif
@@ -167,7 +166,7 @@ ensure_menu_items (int items)
     }
 }
 
-#if defined HAVE_EXT_MENU_BAR || defined HAVE_ANDROID
+#if defined HAVE_EXT_MENU_BAR
 
 /* Begin a submenu.  */
 
@@ -191,7 +190,7 @@ push_submenu_end (void)
   menu_items_submenu_depth--;
 }
 
-#endif /* HAVE_EXT_MENU_BAR || HAVE_ANDROID */
+#endif /* HAVE_EXT_MENU_BAR */
 
 /* Indicate boundary between left and right.  */
 
@@ -421,8 +420,7 @@ single_menu_item (Lisp_Object key, Lisp_Object item, Lisp_Object dummy, void *sk
 		  AREF (item_properties, ITEM_PROPERTY_HELP));
 
 #if defined (USE_X_TOOLKIT) || defined (USE_GTK) || defined (HAVE_NS)	\
-  || defined (HAVE_NTGUI) || defined (HAVE_HAIKU) || defined (HAVE_PGTK) \
-  || defined (HAVE_ANDROID)
+  || defined (HAVE_NTGUI) || defined (HAVE_PGTK) \
   /* Display a submenu using the toolkit.  */
   if (FRAME_WINDOW_P (XFRAME (Vmenu_updating_frame))
       && ! (NILP (map) || NILP (enabled)))
@@ -856,7 +854,7 @@ update_submenu_strings (widget_value *first_wv)
 
 #endif /* USE_X_TOOLKIT || USE_GTK || HAVE_NS || HAVE_NTGUI */
 #if defined (USE_X_TOOLKIT) || defined (USE_GTK) || defined (HAVE_NS) \
-  || defined (HAVE_NTGUI) || defined (HAVE_HAIKU)
+  || defined (HAVE_NTGUI)
 
 /* Find the menu selection and store it in the keyboard buffer.
    F is the frame the menu is on.
@@ -945,7 +943,7 @@ find_and_call_menu_selection (struct frame *f, int menu_bar_items_used,
   SAFE_FREE ();
 }
 
-#endif /* USE_X_TOOLKIT || USE_GTK || HAVE_NS || HAVE_NTGUI || HAVE_HAIKU */
+#endif /* USE_X_TOOLKIT || USE_GTK || HAVE_NS || HAVE_NTGUI */
 
 #ifdef HAVE_NS
 /* As above, but return the menu selection instead of storing in kb buffer.

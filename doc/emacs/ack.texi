@@ -1373,9 +1373,10 @@ Joakim Verona implemented ImageMagick support.
 Ulrik Vieth implemented @file{meta-mode.el}, for editing MetaFont code.
 
 @item
-Geoffrey Voelker wrote the Windows NT support.  He also wrote
-@file{dos-w32.el}, functions shared by the MS-DOS and MS-Windows ports
-of Emacs, and @file{w32-fns.el}, MS-Windows specific support functions.
+Geoffrey Voelker wrote the historical Windows NT support, including the
+now-retired @file{dos-w32.el} shared by the former MS-DOS and
+MS-Windows ports of Emacs, and @file{w32-fns.el}, MS-Windows specific
+support functions.
 
 @item
 Johan Vromans wrote @file{forms.el} and its associated files, a mode for

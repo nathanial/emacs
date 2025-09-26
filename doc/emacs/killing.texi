@@ -629,7 +629,7 @@ yanks the contents of the clipboard at point.
 @cindex primary selection
 @cindex selection, primary
 
-  Under the X Window System, PGTK and Haiku, there exists a
+  Under the X Window System and PGTK builds, there exists a
 @dfn{primary selection} containing the last stretch of text selected
 in an X application (usually by dragging the mouse).  Typically, this
 text can be inserted into other X applications by @kbd{mouse-2}

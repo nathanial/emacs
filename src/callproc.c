@@ -92,10 +92,6 @@ extern char **environ;
 #include "pgtkterm.h"
 #endif
 
-#ifdef HAVE_ANDROID
-#include "android.h"
-#endif /* HAVE_ANDROID */
-
 /* Pattern used by call-process-region to make temp files.  */
 static Lisp_Object Vtemp_file_name_pattern;
 
@@ -164,20 +160,6 @@ get_current_directory (bool encode)
      a sensible default. */
   if (NILP (dir))
     dir = build_string ("~");
-
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY
-
-  /* If DIR is an asset directory or a content directory, return
-     the home directory instead.  */
-
-  if (encode
-      && (android_is_special_directory (SSDATA (dir),
-					"/assets")
-	  || android_is_special_directory (SSDATA (dir),
-					   "/content")))
-    dir = build_string ("~");
-
-#endif /* HAVE_ANDROID && ANDROID_STUBIFY */
 
   dir = expand_and_dir_to_file (dir);
   Lisp_Object encoded_dir = ENCODE_FILE (remove_slash_colon (dir));
@@ -1443,18 +1425,6 @@ emacs_spawn (pid_t *newpid, int std_in, int std_out, int std_err,
              const char *pty_name, bool pty_in, bool pty_out,
              const sigset_t *oldset)
 {
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY
-  /* Android 10 and later don't allow directly executing programs
-     installed in the application data directory.  Emacs provides a
-     loader binary which replaces the `execve' system call for it and
-     all its children.  On these systems, rewrite the command line to
-     call that loader binary instead.  */
-
-  if (android_rewrite_spawn_argv ((const char ***) &argv))
-    return 1;
-#endif /* defined HAVE_ANDROID && !defined ANDROID_STUBIFY */
-
-
 #if USABLE_POSIX_SPAWN
   /* Prefer the simpler `posix_spawn' if available.  `posix_spawn'
      doesn't yet support setting up pseudoterminals, so we fall back
@@ -1735,10 +1705,6 @@ getenv_internal (const char *var, ptrdiff_t varlen, char **value,
   }
 #endif
 
-  /* Setting DISPLAY under Android hinders attempts to display other
-     programs within X servers that are available for Android.  */
-
-#ifndef HAVE_ANDROID
   /* For DISPLAY try to get the values from the frame or the initial env.  */
   if (strcmp (var, "DISPLAY") == 0)
     {
@@ -1757,7 +1723,6 @@ getenv_internal (const char *var, ptrdiff_t varlen, char **value,
 			     Vinitial_environment))
 	return *value ? 1 : 0;
     }
-#endif /* !HAVE_ANDROID */
 
   return 0;
 }
@@ -1850,9 +1815,7 @@ make_environment_block (Lisp_Object current_dir)
     register char **new_env;
     char **p, **q;
     register int new_length;
-#ifndef HAVE_ANDROID
     Lisp_Object display = Qnil;
-#endif /* !HAVE_ANDROID */
 
     new_length = 0;
 
@@ -1860,20 +1823,14 @@ make_environment_block (Lisp_Object current_dir)
 	 CONSP (tem) && STRINGP (XCAR (tem));
 	 tem = XCDR (tem))
       {
-#ifndef HAVE_ANDROID
 	if (strncmp (SSDATA (XCAR (tem)), "DISPLAY", 7) == 0
 	    && (SDATA (XCAR (tem)) [7] == '\0'
 		|| SDATA (XCAR (tem)) [7] == '='))
 	  /* DISPLAY is specified in process-environment.  */
 	  display = Qt;
-#endif /* !HAVE_ANDROID */
 	new_length++;
       }
 
-    /* Setting DISPLAY under Android hinders attempts to display other
-       programs within X servers that are available for Android.  */
-
-#ifndef HAVE_ANDROID
     /* If not provided yet, use the frame's DISPLAY.  */
     if (NILP (display))
       {
@@ -1900,7 +1857,6 @@ make_environment_block (Lisp_Object current_dir)
 	    new_length++;
 	  }
       }
-#endif /* !HAVE_ANDROID */
 
     /* new_length + 2 to include PWD and terminating 0.  */
     env = new_env = xnmalloc (new_length + 2, sizeof *env);
@@ -1910,7 +1866,6 @@ make_environment_block (Lisp_Object current_dir)
     if (egetenv ("PWD"))
       *new_env++ = pwd_var;
 
-#ifndef HAVE_ANDROID
     if (STRINGP (display))
       {
 	char *vdata = xmalloc (sizeof "DISPLAY=" + SBYTES (display));
@@ -1918,7 +1873,6 @@ make_environment_block (Lisp_Object current_dir)
 	lispstpcpy (stpcpy (vdata, "DISPLAY="), display);
 	new_env = add_env (env, new_env, vdata);
       }
-#endif /* !HAVE_ANDROID */
 
     /* Overrides.  */
     for (tem = Vprocess_environment;
@@ -2036,12 +1990,7 @@ init_callproc (void)
     dir_warning ("arch-independent data dir", Vdata_directory);
 
   sh = getenv ("SHELL");
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY
-  /* The Android shell is found under /system/bin, not /bin.  */
-  Vshell_file_name = build_string (sh ? sh : "/system/bin/sh");
-#else
   Vshell_file_name = build_string (sh ? sh : "/bin/sh");
-#endif
 
   Lisp_Object gamedir = Qnil;
   if (PATH_GAME)
@@ -2174,32 +2123,20 @@ renamed to comply with executable naming restrictions on the system.  */);
     doc: /* Name of the `etags' program distributed with Emacs.
 Use this instead of calling `etags' directly, as `etags' may have been
 renamed to comply with executable naming restrictions on the system.  */);
-#if !defined HAVE_ANDROID || defined ANDROID_STUBIFY
   Vetags_program_name = build_string ("etags");
-#else
-  Vetags_program_name = build_string ("libetags.so");
-#endif
 
   DEFVAR_LISP ("hexl-program-name", Vhexl_program_name,
     doc: /* Name of the `hexl' program distributed with Emacs.
 Use this instead of calling `hexl' directly, as `hexl' may have been
 renamed to comply with executable naming restrictions on the system.  */);
-#if !defined HAVE_ANDROID || defined ANDROID_STUBIFY
   Vhexl_program_name = build_string ("hexl");
-#else
-  Vhexl_program_name = build_string ("libhexl.so");
-#endif
 
   DEFVAR_LISP ("emacsclient-program-name", Vemacsclient_program_name,
     doc: /* Name of the `emacsclient' program distributed with Emacs.
 Use this instead of calling `emacsclient' directly, as `emacsclient'
 may have been renamed to comply with executable naming restrictions on
 the system.  */);
-#if !defined HAVE_ANDROID || defined ANDROID_STUBIFY
   Vemacsclient_program_name = build_string ("emacsclient");
-#else
-  Vemacsclient_program_name = build_string ("libemacsclient.so");
-#endif
 
   DEFVAR_LISP ("movemail-program-name", Vmovemail_program_name,
     doc: /* Name of the `movemail' program distributed with Emacs.
@@ -2208,34 +2145,21 @@ may have been renamed to comply with executable naming restrictions on
 the system.  */);
   /* Don't change the name of `movemail' if Emacs is being built to
      use movemail from another source.  */
-#if !defined HAVE_ANDROID || defined ANDROID_STUBIFY	\
-  || defined HAVE_MAILUTILS
   Vmovemail_program_name = build_string ("movemail");
-#else
-  Vmovemail_program_name = build_string ("libmovemail.so");
-#endif
 
   DEFVAR_LISP ("ebrowse-program-name", Vebrowse_program_name,
     doc: /* Name of the `ebrowse' program distributed with Emacs.
 Use this instead of calling `ebrowse' directly, as `ebrowse'
 may have been renamed to comply with executable naming restrictions on
 the system.  */);
-#if !defined HAVE_ANDROID || defined ANDROID_STUBIFY
   Vebrowse_program_name = build_string ("ebrowse");
-#else
-  Vebrowse_program_name = build_string ("libebrowse.so");
-#endif
 
   DEFVAR_LISP ("rcs2log-program-name", Vrcs2log_program_name,
     doc: /* Name of the `rcs2log' program distributed with Emacs.
 Use this instead of calling `rcs2log' directly, as `rcs2log'
 may have been renamed to comply with executable naming restrictions on
 the system.  */);
-#if !defined HAVE_ANDROID || defined ANDROID_STUBIFY
   Vrcs2log_program_name = build_string ("rcs2log");
-#else /* HAVE_ANDROID && !ANDROID_STUBIFY */
-  Vrcs2log_program_name = build_string ("librcs2log.so");
-#endif /* !HAVE_ANDROID || ANDROID_STUBIFY */
 
   defsubr (&Scall_process);
   defsubr (&Sgetenv_internal);

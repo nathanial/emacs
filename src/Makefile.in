@@ -334,16 +334,6 @@ RUN_TEMACS = ./temacs
 # Whether builds should contain details. '--no-build-details' or empty.
 BUILD_DETAILS = @BUILD_DETAILS@
 
-HAIKU_OBJ = @HAIKU_OBJ@
-HAIKU_CXX_OBJ = @HAIKU_CXX_OBJ@
-HAIKU_LIBS = @HAIKU_LIBS@
-HAIKU_CFLAGS = @HAIKU_CFLAGS@
-
-ANDROID_OBJ = @ANDROID_OBJ@
-ANDROID_LIBS = @ANDROID_LIBS@
-ANDROID_LDFLAGS = @ANDROID_LDFLAGS@
-ANDROID_BUILD_CFLAGS = @ANDROID_BUILD_CFLAGS@
-
 LIBGMP_CFLAGS = @LIBGMP_CFLAGS@
 
 DUMPING=@DUMPING@
@@ -388,8 +378,8 @@ EMACS_CFLAGS=-Demacs $(MYCPPFLAGS) -I. -I$(srcdir) \
   $(HARFBUZZ_CFLAGS) $(LIBOTF_CFLAGS) $(M17N_FLT_CFLAGS) $(DEPFLAGS) \
   $(LIBSYSTEMD_CFLAGS) $(XSYNC_CFLAGS) $(TREE_SITTER_CFLAGS) \
   $(LIBGNUTLS_CFLAGS) $(NOTIFY_CFLAGS) $(CAIRO_CFLAGS) \
-  $(WERROR_CFLAGS) $(HAIKU_CFLAGS) $(XCOMPOSITE_CFLAGS) $(XSHAPE_CFLAGS) \
-  $(ANDROID_BUILD_CFLAGS) $(GIF_CFLAGS) $(JPEG_CFLAGS) $(SQLITE3_CFLAGS) \
+  $(WERROR_CFLAGS) $(XCOMPOSITE_CFLAGS) $(XSHAPE_CFLAGS) \
+  $(GIF_CFLAGS) $(JPEG_CFLAGS) $(SQLITE3_CFLAGS) \
   $(LIBGMP_CFLAGS) $(TIFF_CFLAGS) $(LIBSELINUX_CFLAGS)
 ALL_CFLAGS = $(EMACS_CFLAGS) $(WARN_CFLAGS) $(CFLAGS)
 ALL_OBJC_CFLAGS = $(EMACS_CFLAGS) \
@@ -424,9 +414,9 @@ base_obj = dispnew.o frame.o scroll.o xdisp.o menu.o $(XMENU_OBJ) window.o     \
 	itree.o json.o 							       \
 	$(NS_OBJ) $(CYGWIN_OBJ) $(FONT_OBJ)        \
 	$(WINDOW_SYSTEM_OBJ) $(XGSELOBJ)			       \
-	$(HAIKU_OBJ) $(PGTK_OBJ) $(ANDROID_OBJ)
+	$(PGTK_OBJ)
 doc_obj = $(base_obj) $(NS_OBJC_OBJ)
-obj = $(doc_obj) $(HAIKU_CXX_OBJ)
+obj = $(doc_obj)
 
 ## Object files used on some machine or other.
 ## These go in the DOC file on all machines in case they are needed.
@@ -439,8 +429,7 @@ SOME_MACHINE_OBJECTS = \
   nsxwidget.o \
   widget.o xfont.o ftfont.o xftfont.o gtkutil.o \
   xsettings.o xgselect.o termcap.o hbfont.o \
-  haikuterm.o haikufns.o haikumenu.o haikufont.o androidterm.o androidfns.o \
-  androidfont.o androidselect.c androidvfs.c sfntfont-android.c sfntfont.c
+  sfntfont.c
 
 ## gmalloc.o if !SYSTEM_MALLOC && !DOUG_LEA_MALLOC, else empty.
 GMALLOC_OBJ=@GMALLOC_OBJ@
@@ -538,9 +527,8 @@ LIBES = $(LIBS) $(PGTK_LIBS) $(LIBX_BASE) $(LIBIMAGE) \
    $(FREETYPE_LIBS) $(FONTCONFIG_LIBS) $(HARFBUZZ_LIBS) $(LIBOTF_LIBS) $(M17N_FLT_LIBS) \
    $(LIBGNUTLS_LIBS) $(LIB_PTHREAD) $(GETADDRINFO_A_LIBS) $(LCMS2_LIBS) \
    $(NOTIFY_LIBS) $(LIB_MATH) $(LIBZ) $(LIBMODULES) $(LIBSYSTEMD_LIBS) \
-   $(LIBGMP) $(LIBGCCJIT_LIBS) $(XINPUT_LIBS) $(HAIKU_LIBS) \
-   $(TREE_SITTER_LIBS) $(SQLITE3_LIBS) $(XCOMPOSITE_LIBS) $(XSHAPE_LIBS) \
-   $(ANDROID_LIBS)
+   $(LIBGMP) $(LIBGCCJIT_LIBS) $(XINPUT_LIBS) \
+   $(TREE_SITTER_LIBS) $(SQLITE3_LIBS) $(XCOMPOSITE_LIBS) $(XSHAPE_LIBS)
 
 ## FORCE it so that admin/unidata can decide whether this file is
 ## up-to-date.  Although since charprop depends on bootstrap-emacs,
@@ -700,7 +688,7 @@ ns-app: emacs$(EXEEXT) $(pdmp)
 .PHONY: versionclean
 
 mostlyclean:
-	rm -f android-emacs libemacs.so
+	rm -f libemacs.so
 	rm -f temacs$(EXEEXT) core ./*.core \#* ./*.o build-counter.c
 	rm -f dmpstruct.h
 	rm -f emacs.pdmp

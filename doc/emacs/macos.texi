@@ -258,10 +258,3 @@ and return the result as a string.  You can also use the Lisp function
 @code{ns-perform-service} to pass arbitrary strings to arbitrary
 services and receive the results back.  Note that you may need to
 restart Emacs to access newly-available services.
-
-@node GNUstep Support
-@section GNUstep Support
-
-Older releases of Emacs could also be built with the free GNUstep
-libraries.  That configuration has now been retired, and the
-documentation above applies solely to the native macOS (Cocoa) port.

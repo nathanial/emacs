@@ -2154,12 +2154,6 @@ C-c} in a client frame.  If Emacs cannot create a new graphical frame
 text terminal client frame, as though you had supplied the @samp{-t}
 option instead.
 
-On MS-Windows, a single Emacs session cannot display frames on both
-graphical and text terminals, nor on multiple text terminals.  Thus,
-if the Emacs server is running on a text terminal, the @samp{-c}
-option, like the @samp{-t} option, creates a new frame in the server's
-current text terminal.  @xref{Windows Startup}.
-
 If you omit a filename argument while supplying the @samp{-c} option,
 the new frame displays the @file{*scratch*} buffer by default.  You
 can customize this behavior with the variable @code{initial-buffer-choice}

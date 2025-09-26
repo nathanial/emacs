@@ -312,19 +312,6 @@
       (load "term/common-win")
       (load "term/x-win")))
 
-(if (featurep 'haiku)
-    (progn
-      (load "term/common-win")
-      (load "term/haiku-win")))
-
-(if (featurep 'android)
-    (progn
-      (load "ls-lisp")
-      (load "touch-screen")
-      (load "term/common-win")
-      (load "term/android-win")))
-
-
 (if (featurep 'ns)
     (progn
       (load "term/common-win")

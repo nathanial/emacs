@@ -341,15 +341,6 @@ enum event_kind
      which the monitors changed.  */
   , MONITORS_CHANGED_EVENT
 
-#ifdef HAVE_HAIKU
-  /* In a NOTIFICATION_CLICKED_EVENT, .arg is an integer identifying
-     the notification that was clicked.  */
-  , NOTIFICATION_CLICKED_EVENT
-#endif /* HAVE_HAIKU */
-#ifdef HAVE_ANDROID
-  /* In a NOTIFICATION_EVENT, .arg is a lambda to evaluate.  */
-  , NOTIFICATION_EVENT
-#endif /* HAVE_ANDROID */
 };
 
 /* Bit width of an enum event_kind tag at the start of structs and unions.  */
@@ -609,8 +600,7 @@ struct terminal
      BGCOLOR.  */
   void (*query_frame_background_color) (struct frame *f, Emacs_Color *bgcolor);
 
-#if defined (HAVE_X_WINDOWS) || defined (HAVE_NTGUI) || defined (HAVE_PGTK) \
-  || defined (HAVE_ANDROID)
+#if defined (HAVE_X_WINDOWS) || defined (HAVE_NTGUI) || defined (HAVE_PGTK)
   /* On frame F, translate pixel colors to RGB values for the NCOLORS
      colors in COLORS.  Use cached information, if available.  */
 
@@ -942,12 +932,6 @@ extern struct terminal *terminal_list;
 #elif defined (HAVE_PGTK)
 #define TERMINAL_FONT_CACHE(t)						\
   (t->type == output_pgtk ? t->display_info.pgtk->name_list_element : Qnil)
-#elif defined (HAVE_HAIKU)
-#define TERMINAL_FONT_CACHE(t)						\
-  (t->type == output_haiku ? t->display_info.haiku->name_list_element : Qnil)
-#elif defined (HAVE_ANDROID)
-#define TERMINAL_FONT_CACHE(t)						\
-  (t->type == output_android ? t->display_info.android->name_list_element : Qnil)
 #endif
 
 extern struct terminal *decode_live_terminal (Lisp_Object);

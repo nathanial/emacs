@@ -1387,53 +1387,6 @@ The optional argument NEW-WINDOW is not used."
 
 (function-put 'browse-url-webpositive 'browse-url-browser-kind 'external)
 
-(declare-function haiku-roster-launch "haikuselect.c")
-
-;;;###autoload
-(defun browse-url-default-haiku-browser (url &optional _new-window)
-  "Browse URL with the system default browser.
-Default to the URL around or before point."
-  (interactive (browse-url-interactive-arg "URL: "))
-  (setq url (browse-url-encode-url url))
-  (let* ((scheme (save-match-data
-                   (if (string-match "\\(.+\\):/" url)
-                       (match-string 1 url)
-                     browse-url-default-scheme)))
-         (mime (concat "application/x-vnd.Be.URL." scheme)))
-    (haiku-roster-launch mime (vector url))))
-
-(function-put 'browse-url-default-haiku-browser
-              'browse-url-browser-kind 'external)
-
-(defcustom browse-url-android-share nil
-  "If non-nil, share URLs on Android systems instead of opening them.
-When non-nil, `browse-url-default-android-browser' will try to
-share the URL being browsed through programs such as mail clients
-and instant messengers instead of opening it in a web browser."
-  :type 'boolean
-  :version "30.1")
-
-(declare-function android-browse-url "../term/android-win")
-
-;;;###autoload
-(defun browse-url-default-android-browser (url &optional _new-window)
-  "Browse URL with the system default browser.
-If `browse-url-android-share' is non-nil, try to share URL using
-an external program instead.  Default to the URL around or before
-point."
-  (interactive (browse-url-interactive-arg "URL: "))
-  (unless browse-url-android-share
-    ;; The URL shouldn't be encoded if it's being shared through
-    ;; another program.
-    (setq url (browse-url-encode-url url)))
-  ;; Make sure the URL starts with an appropriate scheme.
-  (unless (string-match "\\(.+\\):/" url)
-    (setq url (concat browse-url-default-scheme "://" url)))
-  (android-browse-url url browse-url-android-share))
-
-(function-put 'browse-url-default-android-browser
-              'browse-url-browser-kind 'external)
-
 (declare-function x-gtk-launch-uri "pgtkfns.c")
 
 ;;;###autoload

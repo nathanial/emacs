@@ -1054,9 +1054,9 @@ using `make-temp-file', and the generated name is returned."
 		    (save-excursion
 		      (funcall set-auto-coding-function
 			       filename (- (point-max) (point-min)))))
-	       ;; The following let-binding of file-name-handler-alist forces
-	       ;; find-file-not-found-set-buffer-file-coding-system to ignore
-	       ;; the file's name (see dos-w32.el).
+	       ;; The following let-binding forces the
+	       ;; file-not-found handlers to ignore the archive entry's
+	       ;; synthetic name when detecting coding systems.
 	       (let ((file-name-handler-alist
 		      '(("" . archive-file-name-handler))))
 		 (car (find-operation-coding-system
