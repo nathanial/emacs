@@ -1,4 +1,4 @@
-/* Image support for the NeXT/Open/GNUstep and macOS window system.
+/* Image support for the NeXT/Open and macOS window system.
    Copyright (C) 1989, 1992-1994, 2005-2006, 2008-2025 Free Software
    Foundation, Inc.
 
@@ -22,7 +22,7 @@ Originally by Carl Edman
 Updated by Christian Limpach (chris@nice.ch)
 OpenStep/Rhapsody port by Scott Bender (sbender@harmony-ds.com)
 macOS/Aqua port by Christophe de Dinechin (descubes@earthlink.net)
-GNUstep port and post-20 update by Adrian Robert (arobert@cogsci.ucsd.edu)
+Historical GNUstep port and post-20 update by Adrian Robert (arobert@cogsci.ucsd.edu)
 */
 
 /* This should be the first include, as it may set up #defines affecting
@@ -39,7 +39,7 @@ GNUstep port and post-20 update by Adrian Robert (arobert@cogsci.ucsd.edu)
 #include <CoreGraphics/CoreGraphics.h>
 #endif
 
-#if defined (NS_IMPL_GNUSTEP) || MAC_OS_X_VERSION_MAX_ALLOWED < 1070
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1070
 # define COLORSPACE_NAME NSCalibratedRGBColorSpace
 #else
 # define COLORSPACE_NAME                                                \

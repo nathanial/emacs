@@ -47,7 +47,7 @@
     (png . ,(find-image '((:file "splash.png" :type png))))
     (pbm . ,(find-image '((:file "splash.pbm" :type pbm))))
     (tiff . ,(expand-file-name
-              "nextstep/GNUstep/Emacs.base/Resources/emacs.tiff"
+              "nextstep/Cocoa/Emacs.base/Contents/Resources/Emacs.icns"
               source-directory))
     (webp . ,(expand-file-name "test/data/image/black.webp"
                                source-directory))

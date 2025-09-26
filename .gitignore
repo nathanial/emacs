@@ -220,8 +220,6 @@ lib-src/update-game-score
 nextstep/Cocoa/Emacs.base/Contents/Info.plist
 nextstep/Cocoa/Emacs.base/Contents/Resources/English.lproj
 nextstep/Emacs.app/
-nextstep/GNUstep/Emacs.base/Resources/Emacs.desktop
-nextstep/GNUstep/Emacs.base/Resources/Info-gnustep.plist
 src/bootstrap-emacs
 src/emacs
 src/emacs-[0-9]*

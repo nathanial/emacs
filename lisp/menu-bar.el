@@ -566,8 +566,8 @@ in the tool bar will close the current window where possible."
                                "\\[cua-paste]"
                              "\\[yank]"))))
     (define-key menu [copy]
-      ;; ns-win.el said: Substitute a Copy function that works better
-      ;; under X (for GNUstep).
+      ;; ns-win.el said: Substitute a Copy function that integrates well
+      ;; with the native selection.
       `(menu-item "Copy" ,(if (featurep 'ns)
                               'ns-copy-including-secondary
                             'kill-ring-save)

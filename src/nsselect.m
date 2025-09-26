@@ -1,4 +1,4 @@
-/* NeXT/Open/GNUstep / macOS Cocoa selection processing for emacs.
+/* NeXT/Open / macOS Cocoa selection processing for Emacs.
    Copyright (C) 1993-1994, 2005-2006, 2008-2025 Free Software
    Foundation, Inc.
 
@@ -21,7 +21,7 @@ along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.  */
    Updated by Christian Limpach (chris@nice.ch)
    OpenStep/Rhapsody port by Scott Bender (sbender@harmony-ds.com)
    macOS/Aqua port by Christophe de Dinechin (descubes@earthlink.net)
-   GNUstep port and post-20 update by Adrian Robert (arobert@cogsci.ucsd.edu)  */
+   (Historical note: Adrian Robert maintained the former GNUstep port.)  */
 
 /* This should be the first include, as it may set up #defines affecting
    interpretation of even the system includes.  */

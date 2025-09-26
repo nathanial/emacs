@@ -129,8 +129,7 @@ down and up respectively."
 When the buffer has an associated file, it can be dragged from
 the buffer name portion of its mode line to other programs.
 
-This option is only supported on X, Haiku and Nextstep (GNUstep
-or macOS)."
+This option is only supported on X, Haiku and Nextstep (macOS)."
   :type 'boolean
   :version "29.1")
 
@@ -603,7 +602,7 @@ Some context functions add menu items below the separator."
   (when mark-active
     (define-key-after menu [copy]
       ;; ns-win.el said: Substitute a Copy function that works better
-      ;; under X (for GNUstep).
+      ;; under X (for the old GNUstep port).
       `(menu-item "Copy" ,(if (featurep 'ns)
                               'ns-copy-including-secondary
                             'kill-ring-save)

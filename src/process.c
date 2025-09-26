@@ -7640,7 +7640,7 @@ child_signal_notify (void)
 /* LIB_CHILD_HANDLER is a SIGCHLD handler that Emacs calls while doing
    its own SIGCHLD handling.  On POSIXish systems lacking
    pidfd_open+waitid or using Glib 2.73.1-, Glib needs this to
-   keep track of its own children.  GNUstep is similar.  */
+   keep track of its own children.  */
 
 static void dummy_handler (int sig) {}
 static signal_handler_t volatile lib_child_handler;
@@ -7750,11 +7750,6 @@ handle_child_signal (int sig)
     child_signal_notify ();
 
   lib_child_handler (sig);
-#ifdef NS_IMPL_GNUSTEP
-  /* NSTask in GNUstep sets its child handler each time it is called.
-     So we must re-set ours.  */
-  catch_child_signal ();
-#endif
 }
 
 static void
@@ -8616,8 +8611,8 @@ DEFUN ("signal-names", Fsignal_names, Ssignal_names, 0, 0, 0,
 
 #ifdef subprocesses
 /* Arrange to catch SIGCHLD if this hasn't already been arranged.
-   Invoke this after init_process_emacs, and after Glib and/or GNUstep
-   futz with the SIGCHLD handler, but before Emacs forks any children.
+   Invoke this after init_process_emacs, and after Glib (if present)
+   futzes with the SIGCHLD handler, but before Emacs forks any children.
    This function's caller should block SIGCHLD.  */
 
 void

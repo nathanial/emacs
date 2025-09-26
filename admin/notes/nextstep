@@ -5,6 +5,8 @@ Currently it summarizes the state as of:
 
   summer 2008 shortly after merging to trunk
 
+The GNUstep-specific details describe a historical configuration that
+is no longer maintained; the active code now targets macOS Cocoa only.
 
 
 Startup

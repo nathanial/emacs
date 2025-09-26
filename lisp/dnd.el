@@ -460,7 +460,7 @@ This function might return immediately if no mouse buttons are
 currently being held down.  It should only be called upon a
 `down-mouse-1' (or similar) event.
 
-This function is only supported on X Windows, macOS/GNUstep, and Haiku;
+This function is only supported on X Windows, macOS, and Haiku;
 on all other platforms it will signal an error."
   (unless (fboundp 'x-begin-drag)
     (error "Dragging text from Emacs is not supported by this window system"))
@@ -523,7 +523,7 @@ This function might return immediately if no mouse buttons are
 currently being held down.  It should only be called upon a
 `down-mouse-1' (or similar) event.
 
-This function is only supported on X Windows, macOS/GNUstep, and Haiku;
+This function is only supported on X Windows, macOS, and Haiku;
 on all other platforms it will signal an error."
   (unless (fboundp 'x-begin-drag)
     (error "Dragging files from Emacs is not supported by this window system"))
@@ -593,7 +593,7 @@ FILES is a list of files that will be dragged.  If the drop
 target doesn't support dropping multiple files, the first file in
 FILES will be dragged.
 
-This function is only supported on X Windows, macOS/GNUstep, and Haiku;
+This function is only supported on X Windows, macOS, and Haiku;
 on all other platforms it will signal an error."
   (unless (fboundp 'x-begin-drag)
     (error "Dragging files from Emacs is not supported by this window system"))

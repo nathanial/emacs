@@ -930,7 +930,7 @@ MESSAGE is the type of the ClientMessage that was sent."
                          ;; The no-toolkit Emacs build can actually
                          ;; receive drops from programs that speak
                          ;; versions of XDND earlier than 3 (such as
-                         ;; GNUstep), since the toplevel window is the
+                         ;; old GNUstep port), since the toplevel window is the
                          ;; innermost window.
 		         (if (>= version 2)
                              (or reply-action 0)

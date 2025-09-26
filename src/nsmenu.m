@@ -1,4 +1,4 @@
-/* NeXT/Open/GNUstep and macOS Cocoa menu and toolbar module.
+/* NeXT/Open and macOS Cocoa menu and toolbar module.
    Copyright (C) 2007-2025 Free Software Foundation, Inc.
 
 This file is part of GNU Emacs.
@@ -102,23 +102,14 @@ popup_activated (void)
 
 /* --------------------------------------------------------------------------
     Update menubar.  Three cases:
-    1) ! deep_p, submenu = nil: Fresh switch onto a frame -- either set up
-       just top-level menu strings (macOS), or goto case (2) (GNUstep).
+    1) ! deep_p, submenu = nil: Fresh switch onto a frame -- set up just
+       the top-level menu strings.
     2) deep_p, submenu = nil: Recompute all submenus.
     3) deep_p, submenu = non-nil: Update contents of a single submenu.
    -------------------------------------------------------------------------- */
 static void
 ns_update_menubar (struct frame *f, bool deep_p)
 {
-#ifdef NS_IMPL_GNUSTEP
-  static int inside = 0;
-
-  if (inside)
-    return;
-
-  inside++;
-#endif
-
   BOOL needsSet = NO;
   id menu = [NSApp mainMenu];
   bool owfi;
@@ -139,9 +130,6 @@ ns_update_menubar (struct frame *f, bool deep_p)
 
   if (f != SELECTED_FRAME () || FRAME_EXTERNAL_MENU_BAR (f) == 0)
     {
-#ifdef NS_IMPL_GNUSTEP
-      inside--;
-#endif
       return;
     }
 
@@ -292,9 +280,6 @@ ns_update_menubar (struct frame *f, bool deep_p)
 	  free_menubar_widget_value_tree (first_wv);
 	  discard_menu_items ();
 	  unbind_to (specpdl_count, Qnil);
-#ifdef NS_IMPL_GNUSTEP
-	  inside--;
-#endif
 	  return;
 	}
 
@@ -381,9 +366,6 @@ ns_update_menubar (struct frame *f, bool deep_p)
           NSMenuItem *item = (NSMenuItem *)[menu itemAtIndex:i];
           submenu = (EmacsMenu *)[item submenu];
 
-#ifdef NS_IMPL_GNUSTEP
-          [submenu close];
-#endif
 
           [item setTitle:titleStr];
           [submenu setTitle:titleStr];
@@ -406,12 +388,6 @@ ns_update_menubar (struct frame *f, bool deep_p)
   while (i < [menu numberOfItems])
     {
       /* Remove any extra items.  */
-#ifdef NS_IMPL_GNUSTEP
-      NSMenuItem *item = (NSMenuItem *)[menu itemAtIndex:i];
-      EmacsMenu *submenu = (EmacsMenu *)[item submenu];
-      [submenu close];
-#endif
-
       [menu removeItemAtIndex:i];
     }
 
@@ -428,9 +404,6 @@ ns_update_menubar (struct frame *f, bool deep_p)
   if (needsSet)
     [NSApp setMainMenu: menu];
 
-#ifdef NS_IMPL_GNUSTEP
-  inside--;
-#endif
 
   unblock_input ();
 
@@ -484,35 +457,14 @@ set_frame_menubar (struct frame *f, bool deep_p)
   if (context_menu_value != 0)
     return;
 
-#ifdef NS_IMPL_GNUSTEP
-  static int inside = 0;
-#endif
-
   if (!FRAME_LIVE_P (SELECTED_FRAME ()))
     return;
 
-#ifdef NS_IMPL_GNUSTEP
-  /* GNUstep calls this method when the menu is still being built
-     which results in a recursive stack overflow, which this variable
-     prevents.  */
-
-  if (!inside)
-    ++inside;
-  else
-    return;
-#endif
-
   if (needsUpdate)
     {
-#ifdef NS_IMPL_GNUSTEP
       needsUpdate = NO;
-#endif
       ns_update_menubar (SELECTED_FRAME (), true);
     }
-
-#ifdef NS_IMPL_GNUSTEP
-  --inside;
-#endif
 }
 
 
@@ -581,17 +533,7 @@ set_frame_menubar (struct frame *f, bool deep_p)
 /* convenience */
 -(void)removeAllItems
 {
-#ifdef NS_IMPL_COCOA
   [super removeAllItems];
-#else
-  /* GNUstep doesn't have removeAllItems yet, so do it
-     manually.  */
-  int n;
-
-  for (n = [self numberOfItems]-1; n >= 0; n--)
-    [self removeItemAtIndex: n];
-#endif
-
   needsUpdate = YES;
 }
 
@@ -725,10 +667,6 @@ prettify_key (const char *key)
 
   needsUpdate = NO;
 
-#ifdef NS_IMPL_GNUSTEP
-  if ([[self window] isVisible])
-    [self sizeToFit];
-#endif
 }
 
 
@@ -818,58 +756,6 @@ prettify_key (const char *key)
   popup_activated_flag--;
 }
 
-#ifdef NS_IMPL_GNUSTEP
-- (void) close
-{
-    /* Close all the submenus.  This has the unfortunate side-effect of
-     breaking tear-off menus, however if we don't do this then we get
-     a crash when the menus are removed during updates.  */
-  for (int i = 0 ; i < [self numberOfItems] ; i++)
-    {
-      NSMenuItem *item = [self itemAtIndex:i];
-      if ([item hasSubmenu])
-        [(EmacsMenu *)[item submenu] close];
-    }
-
-  [super close];
-}
-
-/* GNUstep seems to have a number of required methods in
-   NSMenuDelegate that are optional in Cocoa.  */
-
-- (BOOL) menu: (NSMenu*) menu updateItem: (NSMenuItem*) item
-      atIndex: (NSInteger) index shouldCancel: (BOOL) shouldCancel
-{
-  return YES;
-}
-
-- (BOOL) menuHasKeyEquivalent: (NSMenu*) menu
-		     forEvent: (NSEvent*) event
-		       target: (id*) target
-		       action: (SEL*) action
-{
-  return NO;
-}
-
-- (NSInteger) numberOfItemsInMenu: (NSMenu*) menu
-{
-  return [super numberOfItemsInMenu: menu];
-}
-
-- (void) menuWillOpen:(NSMenu *)menu
-{
-}
-
-- (void) menuDidClose:(NSMenu *)menu
-{
-}
-
-- (NSRect)confinementRectForMenu:(NSMenu *)menu
-                        onScreen:(NSScreen *)screen
-{
-  return NSZeroRect;
-}
-#endif
 
 @end  /* EmacsMenu */
 
@@ -1068,8 +954,6 @@ ns_menu_show (struct frame *f, int x, int y, int menuflags,
 
   pmenu = [[EmacsMenu alloc] initWithTitle:
                    NILP (title) ? @"" : [NSString stringWithLispString: title]];
-  /* On GNUstep, this call makes menu_items nil for whatever reason
-     when displaying a context menu from `context-menu-mode'.  */
   Lisp_Object items = menu_items;
   [pmenu fillWithWidgetValue: first_wv->contents];
   menu_items = items;
@@ -1159,9 +1043,9 @@ update_frame_tool_bar_1 (struct frame *f, EmacsToolbar *toolbar)
       /* Check if this is a separator.  */
       if (EQ (TOOLPROP (TOOL_BAR_ITEM_TYPE), Qt))
         {
-          /* Skip separators.  Newer macOS don't show them, and on
-             GNUstep they are wide as a button, thus overflowing the
-             toolbar most of the time.  */
+          /* Skip separators.  Recent macOS versions don't render
+             toolbar separators, so keeping them would just consume
+             layout space.  */
           continue;
         }
 
@@ -1345,10 +1229,6 @@ update_frame_tool_bar (struct frame *f)
       [item setAction: @selector (toolbarClicked:)];
       [identifierToItem setObject: item forKey: identifier];
     }
-
-#ifdef NS_IMPL_GNUSTEP
-  [self insertItemWithItemIdentifier: identifier atIndex: idx];
-#endif
 
   [item setTag: tag];
   [item setEnabled: enabled];

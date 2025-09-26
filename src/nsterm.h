@@ -1,5 +1,5 @@
 /* -*- objc -*- */
-/* Definitions and headers for communication with NeXT/Open/GNUstep API.
+/* Definitions and headers for communication with the NeXT/Open API.
    Copyright (C) 1989, 1993, 2005, 2008-2025 Free Software Foundation,
    Inc.
 
@@ -29,20 +29,11 @@ along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.  */
 #ifdef HAVE_NS
 #ifdef __OBJC__
 
-/* CGFloat on GNUstep may be 4 or 8 byte, but functions expect float* for some
-   versions.
-   On Cocoa >= 10.5, functions expect CGFloat *.  Make compatible type.  */
-#ifdef NS_IMPL_COCOA
+/* Make a typedef so we can refer to CGFloat uniformly.  */
 typedef CGFloat EmacsCGFloat;
-#elif GNUSTEP_GUI_MAJOR_VERSION > 0 || GNUSTEP_GUI_MINOR_VERSION >= 22
-typedef CGFloat EmacsCGFloat;
-#else
-typedef float EmacsCGFloat;
-#endif
 
 /* NSFilenamesPboardType is deprecated in macOS 10.14, but
-   NSPasteboardTypeFileURL is only available in 10.13 (and GNUstep
-   probably lacks it too).  */
+   NSPasteboardTypeFileURL is only available in 10.13.  */
 #if defined NS_IMPL_COCOA && MAC_OS_X_VERSION_MIN_REQUIRED >= 101300
 #define NS_USE_NSPasteboardTypeFileURL 1
 #else
@@ -381,9 +372,6 @@ typedef id instancetype;
   BOOL shouldKeepRunning;
   BOOL isFirst;
 #endif
-#ifdef NS_IMPL_GNUSTEP
-  BOOL applicationDidFinishLaunchingCalled;
-#endif
 @public
   int nextappdefined;
 }
@@ -395,18 +383,7 @@ typedef id instancetype;
 - (void)fd_handler: (id)unused;
 - (void)timeout_handler: (NSTimer *)timedEntry;
 - (BOOL)fulfillService: (NSString *)name withArg: (NSString *)arg;
-#ifdef NS_IMPL_GNUSTEP
-- (void)sendFromMainThread:(id)unused;
-#endif
 @end
-
-#ifdef NS_IMPL_GNUSTEP
-/* Dummy class to get rid of startup warnings.  */
-@interface EmacsDocument : NSDocument
-{
-}
-@end
-#endif
 
 enum ns_return_frame_mode
   {
@@ -428,10 +405,6 @@ enum ns_return_frame_mode
   BOOL dnd_allow_same_frame;
   BOOL dnd_move_tooltip_with_frame;
 }
-
-#ifdef NS_IMPL_GNUSTEP
-- (NSInteger) orderedIndex;
-#endif
 
 - (instancetype) initWithEmacsFrame: (struct frame *) f;
 - (instancetype) initWithEmacsFrame: (struct frame *) f
@@ -509,9 +482,6 @@ enum ns_return_frame_mode
 - (void) updateCollectionBehavior;
 #endif
 
-#ifdef NS_IMPL_GNUSTEP
-- (void)windowDidMove: (id)sender;
-#endif
 - (Lisp_Object) showFontPanel;
 - (int)fullscreenState;
 
@@ -819,35 +789,6 @@ struct ns_bitmap_record
   int height, width, depth;
 };
 
-#ifdef NS_IMPL_GNUSTEP
-/* this extends font backend font */
-struct nsfont_info
-{
-  struct font font;
-
-  char *name;  /* PostScript name, uniquely identifies on NS systems.  */
-
-  /* The following metrics are stored as float rather than int.  */
-
-  float width;  /* Maximum advance for the font.  */
-  float height;
-  float underpos;
-  float underwidth;
-  float size;
-#ifdef __OBJC__
-  NSFont *nsfont;
-#else /* ! OBJC */
-  void *nsfont;
-#endif
-  char bold, ital;  /* convenience flags */
-  char synthItal;
-  XCharStruct max_bounds;
-  /* We compute glyph codes and metrics on-demand in blocks of 256 indexed
-     by hibyte, lobyte.  */
-  unsigned int **glyphs; /* map Unicode index to glyph */
-  struct font_metrics **metrics;
-};
-#endif
 
 /* Initialized in ns_initialize_display_info ().  */
 struct ns_display_info
@@ -1014,11 +955,6 @@ struct ns_output
   bool double_buffered;
 #endif
 
-#ifdef NS_IMPL_GNUSTEP
-  /* Zero if this is the first time a toolbar has been updated on this
-     frame.  */
-  int tool_bar_adjusted;
-#endif
 };
 
 /* This dummy declaration needed to support TTYs.  */
@@ -1107,16 +1043,6 @@ struct x_output
 
 extern struct ns_display_info *ns_term_init (Lisp_Object display_name);
 extern void ns_term_shutdown (int sig);
-
-#ifdef NS_IMPL_GNUSTEP
-/* In nsfont.m, called from fontset.c.  */
-extern void nsfont_make_fontset_for_font (Lisp_Object name,
-                                         Lisp_Object font_object);
-
-/* In nsfont.m, for debugging.  */
-struct glyph_string;
-void ns_dump_glyphstring (struct glyph_string *s) EXTERNALLY_VISIBLE;
-#endif
 
 /* Implemented in nsterm.m, published in or needed from nsfns.m.  */
 extern Lisp_Object ns_list_fonts (struct frame *f, Lisp_Object pattern,
@@ -1260,10 +1186,6 @@ extern double ns_frame_scale_factor (struct frame *);
 
 extern frame_parm_handler ns_frame_parm_handlers[];
 
-#ifdef NS_IMPL_GNUSTEP
-extern char gnustep_base_version[];  /* version tracking */
-#endif
-
 #define MINWIDTH 10
 #define MINHEIGHT 10
 
@@ -1368,8 +1290,8 @@ enum NSWindowTabbingMode
 
 #if !defined (NS_IMPL_COCOA) || !defined (MAC_OS_X_VERSION_10_14)
 /* Deprecated in macOS 10.14.  */
-/* FIXME: Some of these new names, if not all, are actually available
-   in some recent version of GNUstep.  */
+/* FIXME: Some of these new names, if not all, were available in certain
+   historical GNUstep versions.  */
 #define NSPasteboardTypeString NSStringPboardType
 #define NSPasteboardTypeTabularText NSTabularTextPboardType
 #define NSPasteboardTypeURL NSURLPboardType

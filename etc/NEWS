@@ -30,6 +30,12 @@ The traditional unexec dumper, deprecated since Emacs 27, has been
 removed.
 
 +++
+** GNUstep port removed.
+Support for building and running Emacs via the historical GNUstep
+port has been removed.  The macOS Cocoa port remains available under
+the `--with-ns` configuration option.
+
+++
 ** MS-DOS port removed.
 Support for building and running Emacs via the legacy DJGPP/MS-DOS port has been removed.  Related build scripts, documentation, and platform-specific code have been deleted.
 

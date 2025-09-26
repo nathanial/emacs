@@ -62,7 +62,7 @@ The frame is displayed on an X graphical terminal.
 @item w32
 The frame is displayed on a MS-Windows graphical terminal.
 @item ns
-The frame is displayed on a GNUstep or Macintosh Cocoa graphical
+The frame is displayed on a macOS Cocoa graphical
 terminal.
 @item pc
 The frame is displayed on an MS-DOS terminal.

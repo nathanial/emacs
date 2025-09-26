@@ -12,7 +12,7 @@ This document summarizes the major directories and files in the Emacs source tre
 - `modules/` – Example and test dynamic modules demonstrating the Emacs module API.
 
 ## Platform-Specific Support
-- `nextstep/` – Files for the macOS (Cocoa) and GNUstep GUI ports. After `make install`, the self-contained macOS bundle lives at `nextstep/Emacs.app`.
+- `nextstep/` – Files for the macOS (Cocoa) GUI port. After `make install`, the self-contained macOS bundle lives at `nextstep/Emacs.app`.
 
 ## Build System and Tooling
 - `autogen.sh`, `configure.ac`, `GNUmakefile`, `Makefile.in` – Entry points for generating and running the Autotools-based build system.

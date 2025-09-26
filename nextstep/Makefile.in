@@ -35,13 +35,9 @@ MKDIR_P = @MKDIR_P@
 
 ## Emacs.app.
 ns_appdir = @ns_appdir@
-## GNUstep: ns_appdir; macOS: ns_appdir/Contents/MacOS
 ns_appbindir = @ns_appbindir@
 ns_applibexecdir = @ns_applibexecdir@
-## GNUstep/Emacs.base or Cocoa/Emacs.base.
 ns_appsrc = @ns_appsrc@
-## GNUstep: GNUstep/Emacs.base/Resources/Info-gnustep.plist
-## macOS: Cocoa/Emacs.base/Contents/Info.plist
 ns_check_file = @ns_appdir@/@ns_check_file@
 
 .PHONY: all
@@ -60,9 +56,6 @@ ${ns_appdir}: ${srcdir}/${ns_appsrc} ${ns_appsrc}
 	    ( cd ${ns_appdir} ; umask 022; tar xf - )
 	touch ${ns_appdir}
 
-## Don't create ns_appbindir via an order-only prerequisite, because
-## on GNUstep ns_appbindir and ns_bindir are the same, so
-## the rule for ns_appbindir would conflict with that for ns_appdir.
 ${ns_appbindir}/Emacs: ${ns_appdir} ${ns_check_file} ../src/emacs${EXEEXT}
 	${MKDIR_P} ${ns_appbindir}
 	cp -f ../src/emacs${EXEEXT} $@
@@ -100,9 +93,7 @@ clean:
 
 distclean: clean
 	rm -f Makefile
-	rm -f GNUstep/Emacs.base/Resources/Info-gnustep.plist \
-	  GNUstep/Emacs.base/Resources/Emacs.desktop \
-	  Cocoa/Emacs.base/Contents/Info.plist \
+	rm -f Cocoa/Emacs.base/Contents/Info.plist \
 	  Cocoa/Emacs.base/Contents/Resources/English.lproj/InfoPlist.strings
 
 bootstrap-clean maintainer-clean: distclean

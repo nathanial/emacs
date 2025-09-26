@@ -85,7 +85,7 @@ There are several subdirectories:
 'doc/lispintro' holds the source code for the Introduction to Programming
                 in Emacs Lisp manual.
 'nextstep'  holds instructions and some other files for compiling the
-            Nextstep port of Emacs, for GNUstep and macOS Cocoa.
+            Nextstep port of Emacs, for macOS Cocoa.
 'test'      holds tests for various aspects of Emacs's functionality.
 'modules'   holds the modhelp.py helper script.
 'admin'     holds files used by Emacs developers, and Unicode data files.

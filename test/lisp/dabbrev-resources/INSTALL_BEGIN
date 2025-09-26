@@ -10,7 +10,7 @@ instructions in this file should be sufficient.  For other
 configurations, we have additional specialized files:
 
   . INSTALL.REPO if you build from a Git checkout
-  . nextstep/INSTALL if you build for GNUstep/macOS
+  . nextstep/INSTALL if you build for macOS
 
 
 BASIC INSTALLATION

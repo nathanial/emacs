@@ -496,8 +496,6 @@ Changes to files matching one of the regexps in this list are not listed.")
     "vpath.sed"
     "Cocoa/Emacs.base/Contents/Info.plist"
     "Cocoa/Emacs.base/Contents/Resources/English.lproj/InfoPlist.strings"
-    "GNUstep/Emacs.base/Resources/Info-gnustep.plist"
-    "GNUstep/Emacs.base/Resources/Emacs.desktop"
     "Cocoa/Emacs.base/Contents/Resources/English.lproj"
     ;; Only existed briefly, then deleted:
     "coccinelle/overlay.cocci" "coccinelle/symbol.cocci"

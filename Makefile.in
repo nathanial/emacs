@@ -114,7 +114,7 @@ ANDROID = @ANDROID@
 
 # ==================== Where To Install Things ====================
 
-# Location to install Emacs.app under GNUstep / macOS.
+# Location to install Emacs.app on macOS.
 # Later values may use these.
 ns_appdir=@ns_appdir@
 ns_appbindir=@ns_appbindir@
@@ -475,7 +475,7 @@ epaths-force:
 # hard-coding paths try to generate them at run-time.
 #
 # The paths are mostly the same, and the bundle paths are different
-# between macOS and GNUstep, so just replace any references to the app
+# between macOS build outputs, so just replace any references to the app
 # bundle root itself with the relative path.
 epaths-force-ns-self-contained: epaths-force
 	@(sed < src/epaths.h > epaths.h.$$$$		\

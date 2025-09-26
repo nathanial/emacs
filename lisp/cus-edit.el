@@ -3635,7 +3635,7 @@ MS Windows.")
 					   w32)
 				    (const :format "NS "
 					   :sibling-args (:help-echo "\
-GNUstep or Macintosh OS Cocoa interface.")
+macOS Cocoa interface.")
 					   ns)
 				    (const :format "PGTK "
 					   :sibling-args (:help-echo "\

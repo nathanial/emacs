@@ -72,7 +72,7 @@ enum font_property_index
     /* FONT-TYPE is a symbol indicating a font backend; currently `x',
        `xft', `xfthb', `ftrc', and `ftcrhb' are available on X;
        `harfbuzz', `uniscribe', and `gdi' on Windows, and `ns' under
-       Cocoa / GNUstep.  */
+       Cocoa.  */
     FONT_TYPE_INDEX,
 
     /* FONT-FOUNDRY is a foundry name (symbol).  */
@@ -982,8 +982,6 @@ extern struct font_driver harfbuzz_font_driver;
 extern void syms_of_w32font (void);
 #endif	/* HAVE_NTGUI */
 #ifdef HAVE_NS
-extern struct font_driver const nsfont_driver;
-extern void syms_of_nsfont (void);
 extern void syms_of_macfont (void);
 #endif	/* HAVE_NS */
 #if defined (USE_CAIRO) || defined (USE_BE_CAIRO)

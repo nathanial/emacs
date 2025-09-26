@@ -4277,7 +4277,7 @@ The symbol that specifies the @dfn{font backend} used to draw the
 characters.  The possible values depend on the platform and on how
 Emacs was configured at build time.  Typical values include
 @code{ftcrhb} and @code{xfthb} on X, @code{harfbuzz} on MS-Windows,
-@code{ns} on GNUstep, etc.  It can also be @code{nil} if left
+@code{ns} on macOS, etc.  It can also be @code{nil} if left
 unspecified, typically in a font-spec.
 @end table
 @end defun
@@ -9162,7 +9162,7 @@ Emacs is displaying the frame using X.
 Emacs is displaying the frame using native MS-Windows GUI.
 @item ns
 Emacs is displaying the frame using the Nextstep interface (used on
-GNUstep and macOS).
+macOS).
 @item pc
 Emacs is displaying the frame using MS-DOS direct screen writes.
 @item haiku

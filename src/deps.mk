@@ -145,7 +145,6 @@ minibuf.o: minibuf.c syntax.h frame.h window.h keyboard.h systime.h \
 nsfns.o: nsfns.m charset.h nsterm.h nsgui.h frame.h window.h buffer.h \
    dispextern.h fontset.h $(INTERVALS_H) keyboard.h blockinput.h \
    atimer.h systime.h epaths.h termhooks.h coding.h systime.h lisp.h $(config_h)
-nsfont.o: nsterm.h dispextern.h frame.h lisp.h lisp.h $(config_h)
 nsimage.o: nsimage.m nsterm.h lisp.h $(config_h)
 nsmenu.o: nsmenu.m termhooks.h frame.h window.h dispextern.h \
    nsgui.h keyboard.h blockinput.h atimer.h systime.h buffer.h \

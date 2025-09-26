@@ -1,8 +1,8 @@
   NS -- the Cocoa interface for macOS and compatible systems
   ----------------------------------------------------------
 
-This directory contains files needed to build Emacs on system based on
-NextStep (NS), including macOS and GNUstep, using the Cocoa API.
+This directory contains files needed to build Emacs on systems based on
+NeXTSTEP (NS), specifically modern macOS using the Cocoa API.
 
 
   HISTORY
@@ -10,12 +10,12 @@ NextStep (NS), including macOS and GNUstep, using the Cocoa API.
 
 The Nextstep (NS) interface of GNU Emacs was originally written in
 1994 for NeXTSTEP systems running Emacs 19 and subsequently ported to
-OpenStep and then Rhapsody, which became Mac OS X.  In 2004 it was
-adapted to GNUstep, a free OpenStep implementation, and in 2008 it was
-merged to the GNU Emacs trunk and released with Emacs 23.  Around the
-same time a separate Mac-only port using the Carbon APIs and
-descending from a 2001 Mac OS 8/9 port of Emacs 21 was removed.  (It
-remains available externally under the name "mac".)
+OpenStep and then Rhapsody, which became Mac OS X.  A GNUstep variant
+followed in 2004, but the mainline now targets only Apple's Cocoa API.
+In 2008 the port was merged to the GNU Emacs trunk and released with
+Emacs 23.  Around the same time a separate Mac-only port using the
+Carbon APIs and descending from a 2001 Mac OS 8/9 port of Emacs 21 was
+removed.  (It remains available externally under the name "mac".)
 
 
   OVERVIEW OF COCOA AND OBJECTIVE-C
@@ -72,23 +72,6 @@ call tree of selected functions in the Cocoa interface, plus various
 extra information.  It can be enabled by uncommenting the line
 defining 'NSTRACE_ENABLED' in "nsterm.h".  To enable more output,
 uncomment the lines defining symbols starting with 'NSTRACE_GROUP'.
-
-
-  GNUSTEP AND OTHER COMPATIBLE SYSTEMS
-
-The NS interface works on systems compatible with macOS, for example
-GNUstep.  Even though they are less frequently used, this is important
-for a number of reasons:
-
-* It supports the GNUstep project and provides an Emacs with the same
-  look and feel as the rest of the system.
-
-* This allows other Emacs developers to test their changes on the NS
-  interface without having access to a macOS machine.
-
-* If a feature in the NS interface work on free systems like GNUstep,
-  this meets the FSF requirement that features in GNU software should
-  not only be available on non-free systems.
 
 
   SEE ALSO

@@ -1,4 +1,4 @@
-;;; ns-win.el --- lisp side of interface with NeXT/Open/GNUstep/macOS window system  -*- lexical-binding: t -*-
+;;; ns-win.el --- lisp side of interface with NeXT/Open/macOS window system  -*- lexical-binding: t -*-
 
 ;; Copyright (C) 1993-1994, 2005-2025 Free Software Foundation, Inc.
 
@@ -41,7 +41,7 @@
 ;;; Code:
 (eval-when-compile (require 'cl-lib))
 (or (featurep 'ns)
-    (error "%s: Loading ns-win.el but not compiled for GNUstep/macOS"
+    (error "%s: Loading ns-win.el but not compiled for macOS"
            invocation-name))
 
 ;; Documentation-purposes only: actually loaded in loadup.el.
@@ -53,7 +53,7 @@
 (require 'ucs-normalize)
 
 (defgroup ns nil
-  "GNUstep/macOS specific features."
+  "macOS specific features."
   :group 'environment)
 
 ;;;; Command line argument handling.
@@ -661,7 +661,7 @@ This defines a fontset consisting of the Courier and other fonts that
 come with macOS.
 See the documentation of `create-fontset-from-fontset-spec' for the format.")
 
-(defvar ns-reg-to-script)               ; nsfont.m
+(defvar ns-reg-to-script)
 
 ;; This maps font registries (not exposed by NS APIs for font selection) to
 ;; Unicode scripts (which can be mapped to Unicode character ranges which are).
@@ -806,7 +806,7 @@ See the documentation of `create-fontset-from-fontset-spec' for the format.")
 ;; defines functions and variables that we use now.
 (cl-defmethod window-system-initialization (&context (window-system ns)
                                             &optional _display)
-  "Initialize Emacs for Nextstep (Cocoa / GNUstep) windowing."
+  "Initialize Emacs for Nextstep (Cocoa) windowing."
   (cl-assert (not ns-initialized))
 
   ;; PENDING: not needed?
@@ -824,24 +824,16 @@ See the documentation of `create-fontset-from-fontset-spec' for the format.")
 
   (x-open-connection (or (system-name) "") x-command-line-resources t)
 
-  ;; Add GNUstep menu items Services, Hide and Quit.  Rename Help to Info
-  ;; and put it first (i.e. omit from menu-bar-final-items.
-  (if (featurep 'gnustep)
-      (progn
-	(setq menu-bar-final-items '(buffer services hide-app quit))
-
-	;; If running under GNUstep, "Help" is moved and renamed "Info".
-        (define-key global-map [menu-bar help-menu]
-	  (cons "Info" menu-bar-help-menu))
-        (define-key global-map [menu-bar quit]
-	  '(menu-item "Quit" save-buffers-kill-emacs
-		      :help "Save unsaved buffers, then exit"))
-        (define-key global-map [menu-bar hide-app]
-	  '(menu-item "Hide" ns-do-hide-emacs
-		      :help "Hide Emacs"))
-        (define-key global-map [menu-bar services]
-	  (cons "Services" (make-sparse-keymap "Services")))))
-
+  ;; Populate application-level menu entries such as Services, Hide, and Quit.
+  (setq menu-bar-final-items '(buffer services hide-app quit))
+  (define-key global-map [menu-bar quit]
+    '(menu-item "Quit" save-buffers-kill-emacs
+                :help "Save unsaved buffers, then exit"))
+  (define-key global-map [menu-bar hide-app]
+    '(menu-item "Hide" ns-do-hide-emacs
+                :help "Hide Emacs"))
+  (define-key global-map [menu-bar services]
+    (cons "Services" (make-sparse-keymap "Services")))
 
   (dolist (service (ns-list-services))
       (if (eq (car service) 'undefined)

@@ -275,7 +275,7 @@ Value is:
   t for a termcap frame (a character-only terminal),
  `x' for an Emacs frame that is really an X window,
  `w32' for an Emacs frame that is a window on MS-Windows display,
- `ns' for an Emacs frame on a GNUstep or Macintosh Cocoa display,
+ `ns' for an Emacs frame on a macOS Cocoa display,
  `pc' for a direct-write MS-DOS frame,
  `pgtk' for an Emacs frame running on pure GTK.
  `haiku' for an Emacs frame running in Haiku.
@@ -329,7 +329,7 @@ The value is a symbol:
  nil for a termcap frame (a character-only terminal),
  `x' for an Emacs frame that is really an X window,
  `w32' for an Emacs frame that is a window on MS-Windows display,
- `ns' for an Emacs frame on a GNUstep or Macintosh Cocoa display,
+ `ns' for an Emacs frame on a macOS Cocoa display,
  `pc' for a direct-write MS-DOS frame.
  `pgtk' for an Emacs frame using pure GTK facilities.
  `haiku' for an Emacs frame running in Haiku.

@@ -1571,9 +1571,10 @@ Emacs can be started as a daemon in the background.
 @cindex GNUstep port
 @cindex macOS Cocoa
 @item
-There is a new NeXTstep port of Emacs.  This supports GNUstep and Mac OS
-X (via the Cocoa libraries).  The Carbon port of Emacs, which supported
-Mac OS X in Emacs 22, has been removed.
+There is a NeXTstep port of Emacs targeting macOS (via the Cocoa
+libraries).  The Carbon port of Emacs, which supported Mac OS X in
+Emacs 22, has been removed, and the historical GNUstep variant is no
+longer maintained.
 
 @cindex Directory-local variables
 @item
@@ -3851,8 +3852,9 @@ This codebase no longer targets Microsoft Windows; the legacy
 MS-Windows FAQ has been retired along with that platform support.
 
 @cindex GNUstep, Emacs for
-Emacs supports GNUstep natively.  See the file @file{nextstep/INSTALL}
-in the distribution.
+Older releases of Emacs supported GNUstep natively.  Current versions
+focus on macOS; see the file @file{nextstep/INSTALL} in the
+distribution for details on the Cocoa build.
 
 @cindex MS-DOS, Emacs for
 @cindex DOS, Emacs for

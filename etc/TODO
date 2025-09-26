@@ -663,8 +663,9 @@ encode it as utf-8 and gtk can display the result.  Maybe making
 Lucid menus work like Gtk's (i.e. just force utf-8) is good enough now
 that Emacs can encode most chars into utf-8.
 
-** The GNUstep port needs some serious attention
-Ideally from someone familiar with GNUstep and Objective C.
+** Historical note on the GNUstep port
+The GNUstep variant is no longer maintained.  Future work would require
+restarting the port based on the current macOS code.
 
 * Other features we would like
 

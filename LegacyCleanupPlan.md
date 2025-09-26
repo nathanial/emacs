@@ -15,6 +15,7 @@ Rationalize the Emacs source tree for a codebase that only targets modern macOS 
 - [x] Removed `cross/` cross-compilation scaffolding and build glue on 2025-09-26.
 - [x] Removed `oldXMenu/` legacy X11 menu library and ended non-toolkit X builds on 2025-09-26.
 - [x] Removed `lwlib/` Lucid widget toolkit implementation on 2025-09-26.
+- [x] Removed `nextstep/GNUstep/` GNUstep bundle assets and support on 2025-09-26.
 
 ## Candidate Directories to Retire
 | Directory | Primary Purpose | Why It Can Likely Be Removed | Follow-Up Tasks & Risks |
@@ -24,16 +25,15 @@ Rationalize the Emacs source tree for a codebase that only targets modern macOS 
 | `java/` | Android port scaffolding and Gradle project. | Removed on 2025-09-26; Android packages are no longer built from this tree. | Continue auditing `--with-android` configure logic and `HAVE_ANDROID` code for retirement in future passes. |
 | `cross/` | Cross-compilation helper configs for niche targets (e.g., MIPS, ARM). | Removed on 2025-09-26; cross-compilation scaffolding is no longer supported. | Double-check configuration help text (`--with-android`, `--with-ndk-*`) and contributor docs to reflect the narrower platform scope. |
 | `lwlib/` | Lucid Widget library (Motif-style X toolkit). | Removed on 2025-09-26; GTK/PGTK now provide the supported X GUI paths. | Documentation pruning (e.g., `xresources` Lucid appendix) still pending; source code references guarded by `USE_LUCID`/`USE_MOTIF` were scrubbed on 2025-09-26. |
-| `nextstep/GNUstep/` | GNUstep variant of the Nextstep port. | Target macOS Cocoa only; GNUstep (for non-mac platforms) can be dropped. | Keep `nextstep/Cocoa/`; prune configure checks for GNUstep, and update `nextstep/Makefile.in`. |
 | `doc/misc/efaq-w32.texi`, `doc/misc/ntfaq.texi`, related w32 docs | Manuals for legacy platforms. | Once Windows support is removed, these manuals become obsolete clutter. | Delete the files, update `doc/misc/Makefile.in`, and scrub references from the Info directory map. |
 
 ## Additional Cleanup Opportunities
 - Check `lisp/term/` for platform-specific terminal definitions (`pc-win.el`) and remove them alongside any remaining platform-specific back ends.
-- Remove conditional compilation blocks guarded by `WINDOWSNT`, `DOS_NT`, `HAVE_ANDROID`, `NS_IMPL_GNUSTEP`, etc., once their directories disappear.
+- Remove conditional compilation blocks guarded by `WINDOWSNT`, `DOS_NT`, `HAVE_ANDROID`, etc., once their directories disappear.
 - Review `admin/` scripts that package legacy installers or Android artifacts (`admin/android/`).
 
 ## Sequencing Recommendations
-1. **Plan the order**: Continue pruning remaining platform directories (e.g., `nextstep/GNUstep/`) so downstream references can be removed methodically.
+1. **Plan the order**: Continue pruning remaining platform directories (e.g., legacy documentation) so downstream references can be removed methodically.
 2. **Adjust the build system**: Update `configure.ac`, regenerate `configure` with `autogen.sh`, and remove related options from `INSTALL.REPO`.
 3. **Remove dependent source paths**: Use `rg`/`git grep` to eliminate residual `#ifdef` branches and load-path entries referencing the removed directories.
 4. **Prune documentation**: Delete the obsolete manuals and update `doc/` indices to avoid build failures in the Info manuals.

@@ -524,16 +524,6 @@ case ${with_gameuser} in
   *) gameuser=${with_gameuser} ;;
 esac
 
-AC_ARG_WITH([gnustep-conf],
-[AS_HELP_STRING([--with-gnustep-conf=FILENAME],
-   [name of GNUstep configuration file to use on systems where the command
-    'gnustep-config' does not work; default $GNUSTEP_CONFIG_FILE, or
-    /etc/GNUstep/GNUstep.conf])])
-test "X${with_gnustep_conf}" != X && test "${with_gnustep_conf}" != yes && \
-  GNUSTEP_CONFIG_FILE="${with_gnustep_conf}"
-test "X$GNUSTEP_CONFIG_FILE" = "X" && \
-     GNUSTEP_CONFIG_FILE=/etc/GNUstep/GNUstep.conf
-
 AC_ARG_ENABLE([ns-self-contained],
 [AS_HELP_STRING([--disable-ns-self-contained],
                 [disable self contained build under NeXTstep])],
@@ -2090,83 +2080,28 @@ NATIVE_IMAGE_API=no
 
 test "${with_ns}" = maybe && test "${opsys}" != darwin && with_ns=no
 HAVE_NS=no
-NS_GNUSTEP_CONFIG=no
 NS_IMPL_COCOA=no
-NS_IMPL_GNUSTEP=no
 tmp_CPPFLAGS="$CPPFLAGS"
 tmp_CFLAGS="$CFLAGS"
 CPPFLAGS="$CPPFLAGS -x objective-c"
 CFLAGS="$CFLAGS -x objective-c"
 GNU_OBJC_CFLAGS=""
-LIBS_GNUSTEP=
 if test "${with_ns}" != no; then
-  # macfont.o requires macuvs.h which is absent after 'make extraclean',
-  # so avoid NS_IMPL_COCOA if macuvs.h is absent.
-  # Even a headless Emacs can build macuvs.h, so this should let you bootstrap.
-  if test "${opsys}" = darwin && test -f "$srcdir/src/macuvs.h"; then
-     NS_IMPL_COCOA=yes
-     ns_appdir=`pwd`/nextstep/Emacs.app
-     ns_appbindir=${ns_appdir}/Contents/MacOS
-     ns_applibexecdir=${ns_appdir}/Contents/MacOS/libexec
-     ns_applibdir=${ns_appdir}/Contents/Frameworks
-     ns_appresdir=${ns_appdir}/Contents/Resources
-     ns_appsrc=Cocoa/Emacs.base
-     ns_fontfile=macfont.o
-  elif flags=`(gnustep-config --objc-flags) 2>/dev/null`; then
-     NS_IMPL_GNUSTEP=yes
-     NS_GNUSTEP_CONFIG=yes
-     GNU_OBJC_CFLAGS="$flags"
-     LIBS_GNUSTEP=`gnustep-config --gui-libs || exit`
-  elif test -f $GNUSTEP_CONFIG_FILE; then
-     NS_IMPL_GNUSTEP=yes
-     dnl FIXME sourcing this several times in subshells seems inefficient.
-     GNUSTEP_SYSTEM_HEADERS=`. $GNUSTEP_CONFIG_FILE \
-       && AS_ECHO(["$GNUSTEP_SYSTEM_HEADERS"])`
-     GNUSTEP_SYSTEM_LIBRARIES=` . $GNUSTEP_CONFIG_FILE \
-       && AS_ECHO(["$GNUSTEP_SYSTEM_LIBRARIES"])`
-     dnl I seemed to need these as well with GNUstep-startup 0.25.
-     GNUSTEP_LOCAL_HEADERS=`. $GNUSTEP_CONFIG_FILE \
-       && AS_ECHO(["$GNUSTEP_LOCAL_HEADERS"])`
-     GNUSTEP_LOCAL_LIBRARIES=`. $GNUSTEP_CONFIG_FILE \
-       && AS_ECHO(["$GNUSTEP_LOCAL_LIBRARIES"])`
-     test "x${GNUSTEP_LOCAL_HEADERS}" != "x" && \
-       GNUSTEP_LOCAL_HEADERS="-I${GNUSTEP_LOCAL_HEADERS}"
-     test "x${GNUSTEP_LOCAL_LIBRARIES}" != "x" && \
-       GNUSTEP_LOCAL_LIBRARIES="-L${GNUSTEP_LOCAL_LIBRARIES}"
-     CPPFLAGS="$CPPFLAGS -isystem ${GNUSTEP_SYSTEM_HEADERS} ${GNUSTEP_LOCAL_HEADERS}"
-     CFLAGS="$CFLAGS -isystem ${GNUSTEP_SYSTEM_HEADERS} ${GNUSTEP_LOCAL_HEADERS}"
-     LDFLAGS="$LDFLAGS -L${GNUSTEP_SYSTEM_LIBRARIES} ${GNUSTEP_LOCAL_LIBRARIES}"
-     LIBS_GNUSTEP="-lgnustep-gui -lgnustep-base -lobjc -lpthread"
-     dnl GNUstep defines BASE_NATIVE_OBJC_EXCEPTIONS to 0 or 1.
-     dnl If they had chosen to either define it or not, we could have
-     dnl just used AC_CHECK_DECL here.
-     AC_CACHE_CHECK([if GNUstep defines BASE_NATIVE_OBJC_EXCEPTIONS],
-       [emacs_cv_objc_exceptions],
-       [AC_COMPILE_IFELSE(
-	  [AC_LANG_PROGRAM([[#include <GNUstepBase/GSConfig.h>]],
-[[#if defined BASE_NATIVE_OBJC_EXCEPTIONS && BASE_NATIVE_OBJC_EXCEPTIONS > 0
-1;
-#else
-fail;
-#endif]])],
-       [emacs_cv_objc_exceptions=yes],
-       [emacs_cv_objc_exceptions=no])])
-     if test $emacs_cv_objc_exceptions = yes; then
-       dnl _NATIVE_OBJC_EXCEPTIONS is used by the GNUstep headers.
-       AC_DEFINE([_NATIVE_OBJC_EXCEPTIONS], [1],
-         [Define if GNUstep uses ObjC exceptions.])
-       GNU_OBJC_CFLAGS="$GNU_OBJC_CFLAGS -fobjc-exceptions"
-     fi
+  if test "${opsys}" != darwin; then
+     AC_MSG_ERROR([Nextstep builds now require macOS; re-configure without '--with-ns' or build on Darwin.])
   fi
-  if test $NS_IMPL_GNUSTEP = yes; then
-     ns_appdir=`pwd`/nextstep/Emacs.app
-     ns_appbindir=${ns_appdir}
-     ns_applibexecdir=${ns_appdir}/libexec
-     ns_applibdir=${ns_appdir}/Frameworks
-     ns_appresdir=${ns_appdir}/Resources
-     ns_appsrc=GNUstep/Emacs.base
-     ns_fontfile=nsfont.o
+  if test ! -f "$srcdir/src/macuvs.h"; then
+     AC_MSG_ERROR([src/macuvs.h is missing; run 'make src/macuvs.h' before configuring with '--with-ns'.])
   fi
+
+  NS_IMPL_COCOA=yes
+  ns_appdir=`pwd`/nextstep/Emacs.app
+  ns_appbindir=${ns_appdir}/Contents/MacOS
+  ns_applibexecdir=${ns_appdir}/Contents/MacOS/libexec
+  ns_applibdir=${ns_appdir}/Contents/Frameworks
+  ns_appresdir=${ns_appdir}/Contents/Resources
+  ns_appsrc=Cocoa/Emacs.base
+  ns_fontfile=macfont.o
 
   dnl This is only used while we test the NS headers, it gets reset below.
   CPPFLAGS="$CPPFLAGS $GNU_OBJC_CFLAGS"
@@ -2177,11 +2112,9 @@ fail;
 are required for a Nextstep build are missing or cannot be compiled.
 Either fix this, or re-configure with the option '--without-ns'.])])
 
-  macfont_file=""
-  if test "${NS_IMPL_COCOA}" = "yes"; then
-    AC_MSG_CHECKING([for Mac OS X 10.6 or newer])
-    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include <AppKit/AppKit.h>],
-                                     [
+  AC_MSG_CHECKING([for Mac OS X 10.6 or newer])
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([#include <AppKit/AppKit.h>],
+                                   [
 #ifdef MAC_OS_X_VERSION_MAX_ALLOWED
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 1060
  ; /* OK */
@@ -2192,11 +2125,10 @@ Either fix this, or re-configure with the option '--without-ns'.])])
 		    ])],
 		    [ns_osx_have_106=yes],
 		    [ns_osx_have_106=no])
-    AC_MSG_RESULT([$ns_osx_have_106])
+  AC_MSG_RESULT([$ns_osx_have_106])
 
-    if test $ns_osx_have_106 = no; then
-       AC_MSG_ERROR([Mac OS X 10.6 or newer is required]);
-    fi
+  if test $ns_osx_have_106 = no; then
+     AC_MSG_ERROR([Mac OS X 10.6 or newer is required]);
   fi
 
   AC_CACHE_CHECK([for Mac OS X 12.0 or later],
@@ -2215,8 +2147,6 @@ Mac OS X 12.x or later.
      NATIVE_IMAGE_API="yes (ns)"
   fi
 fi
-
-AC_SUBST([LIBS_GNUSTEP])
 
 INSTALL_ARCH_INDEP_EXTRA=install-etc
 ns_self_contained=no
@@ -4509,27 +4439,12 @@ AC_SUBST([LIBGPM])
 dnl Check for malloc/malloc.h on darwin
 AC_CHECK_HEADERS_ONCE([malloc/malloc.h])
 
-GNUSTEP_CFLAGS=
 ### Use NeXTstep API to implement GUI.
 if test "${HAVE_NS}" = "yes"; then
   AC_DEFINE([HAVE_NS], [1],
-    [Define to 1 if you are using the NeXTstep API,
-     either GNUstep or Cocoa on macOS.])
-  if test "${NS_IMPL_COCOA}" = "yes"; then
-    AC_DEFINE([NS_IMPL_COCOA], [1],
-      [Define to 1 if you are using NS windowing under macOS.])
-  fi
-  if test "${NS_IMPL_GNUSTEP}" = "yes"; then
-    AC_DEFINE([NS_IMPL_GNUSTEP], [1],
-      [Define to 1 if you are using NS windowing under GNUstep.])
-    if test $NS_GNUSTEP_CONFIG != yes; then
-      # See also .m.o rule in src/Makefile.in.  */
-      # FIXME: are all these flags really needed?  Document here why.  */
-      GNUSTEP_CFLAGS="-D_REENTRANT -fPIC -fno-strict-aliasing -I${GNUSTEP_SYSTEM_HEADERS} ${GNUSTEP_LOCAL_HEADERS}"
-      ## Extra CFLAGS applied to src/*.m files.
-      GNU_OBJC_CFLAGS="$GNU_OBJC_CFLAGS -fgnu-runtime -Wno-import -fconstant-string-class=NSConstantString -DGNUSTEP_BASE_LIBRARY=1 -DGNU_GUI_LIBRARY=1 -DGNU_RUNTIME=1 -DGSWARN -DGSDIAGNOSE"
-    fi
-  fi
+    [Define to 1 if you are using the NeXTstep (Cocoa) API on macOS.])
+  AC_DEFINE([NS_IMPL_COCOA], [1],
+    [Define to 1 if you are using NS windowing under macOS.])
   OTHER_FILES=ns-app
 fi
 
@@ -6120,7 +6035,6 @@ AC_SUBST([gamegroup])
 ## end of LIBX_BASE, but nothing ever set it.
 AC_SUBST([LD_SWITCH_X_SITE])
 AC_SUBST([C_SWITCH_X_SITE])
-AC_SUBST([GNUSTEP_CFLAGS])
 AC_SUBST([CFLAGS])
 ## Historical X toolkit marker; retained for generated files that still
 ## substitute @X_TOOLKIT_TYPE@.
@@ -6596,15 +6510,9 @@ case $exec_prefix in
 esac
 
 if test "$HAVE_NS" = "yes"; then
-  if test "$NS_IMPL_GNUSTEP" = yes; then
-    AC_CONFIG_FILES([nextstep/GNUstep/Emacs.base/Resources/Info-gnustep.plist:nextstep/templates/Info-gnustep.plist.in \
-      nextstep/GNUstep/Emacs.base/Resources/Emacs.desktop:nextstep/templates/Emacs.desktop.in])
-    ns_check_file=Resources/Info-gnustep.plist
-  else
-    AC_CONFIG_FILES([nextstep/Cocoa/Emacs.base/Contents/Info.plist:nextstep/templates/Info.plist.in \
-      nextstep/Cocoa/Emacs.base/Contents/Resources/English.lproj/InfoPlist.strings:nextstep/templates/InfoPlist.strings.in])
-    ns_check_file=Contents/Info.plist
-  fi
+  AC_CONFIG_FILES([nextstep/Cocoa/Emacs.base/Contents/Info.plist:nextstep/templates/Info.plist.in \
+    nextstep/Cocoa/Emacs.base/Contents/Resources/English.lproj/InfoPlist.strings:nextstep/templates/InfoPlist.strings.in])
+  ns_check_file=Contents/Info.plist
   AC_SUBST([ns_check_file])
 fi
 

@@ -4227,7 +4227,7 @@ for the specific meanings as below:
 
   The value of :type is a symbol that identifies the font backend to be
   used, such as `ftcrhb' or `xfthb' on X , `harfbuzz' or `uniscribe' on
-  MS-Windows, `ns' on Cocoa/GNUstep, etc.
+  MS-Windows, `ns' on Cocoa, etc.
 
   The value of :combining-capability is non-nil if the font-backend of
   FONT supports rendering of combining characters for non-OTF fonts.  */)

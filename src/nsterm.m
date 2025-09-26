@@ -62,11 +62,6 @@ GNUstep port and post-20 update by Adrian Robert (arobert@cogsci.ucsd.edu)
 #include "font.h"
 #include "pdumper.h"
 
-#ifdef NS_IMPL_GNUSTEP
-#include "process.h"
-#import <GNUstepGUI/GSDisplayServer.h>
-#endif
-
 #ifdef NS_IMPL_COCOA
 #include "macfont.h"
 #include <Carbon/Carbon.h>
@@ -821,7 +816,7 @@ ns_row_rect (struct window *w, struct glyph_row *row,
 double
 ns_frame_scale_factor (struct frame *f)
 {
-#if defined (NS_IMPL_GNUSTEP) || !defined (MAC_OS_X_VERSION_10_7)
+#if !defined (MAC_OS_X_VERSION_10_7)
   return [[FRAME_NS_VIEW (f) window] userSpaceScaleFactor];
 #elif MAC_OS_X_VERSION_MIN_REQUIRED < 1070
   if ([[FRAME_NS_VIEW (f) window]
@@ -1099,7 +1094,7 @@ ns_update_end (struct frame *f)
   block_input ();
 
   [view unlockFocus];
-#if defined (NS_IMPL_GNUSTEP) || MAC_OS_X_VERSION_MIN_REQUIRED < 101400
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 101400
   [[view window] flushWindow];
 #endif
 
@@ -1166,7 +1161,7 @@ ns_unfocus (struct frame *f)
     {
       EmacsView *view = FRAME_NS_VIEW (f);
       [view unlockFocus];
-#if defined (NS_IMPL_GNUSTEP) || MAC_OS_X_VERSION_MIN_REQUIRED < 101400
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 101400
       [[view window] flushWindow];
 #endif
     }
@@ -1221,21 +1216,9 @@ ns_unfocus (struct frame *f)
     {
       nestCount = 0;
       isAttached = false;
-#ifdef NS_IMPL_GNUSTEP
-      // GNUstep doesn't provide named images.  This was reported in
-      // 2011, see https://savannah.gnu.org/bugs/?33396
-      //
-      // As a drop in replacement, a semitransparent gray square is used.
-      self.image = [[NSImage alloc] initWithSize:NSMakeSize(32 * 5, 32 * 5)];
-      [self.image lockFocus];
-      [[NSColor colorForEmacsRed:0.5 green:0.5 blue:0.5 alpha:0.5] set];
-      NSRectFill(NSMakeRect(0, 0, 32, 32));
-      [self.image unlockFocus];
-#else
       self.image = [NSImage imageNamed:NSImageNameCaution];
       [self.image setSize:NSMakeSize(self.image.size.width * 5,
                                      self.image.size.height * 5)];
-#endif
     }
   return self;
 }
@@ -1712,14 +1695,6 @@ ns_set_offset (struct frame *f, int xoff, int yoff, int change_grav)
   else
     topLeft.y = NSMaxY ([[[NSScreen screens] objectAtIndex:0] frame]) - yoff;
 
-#ifdef NS_IMPL_GNUSTEP
-  /* Don't overlap the menu.
-
-     FIXME: Surely there's a better way than just hardcoding 100 in
-     here?  */
-  if (topLeft.x < 100)
-    topLeft.x = 100;
-#endif
 
   NSTRACE_POINT ("setFrameTopLeftPoint", topLeft);
   [[view window] setFrameTopLeftPoint:topLeft];
@@ -2085,12 +2060,6 @@ ns_get_color (const char *name, NSColor **col)
     NSString *name;
     NSColorList *clist;
 
-#ifdef NS_IMPL_GNUSTEP
-    /* XXX: who is wrong, the requestor or the implementation?  */
-    if ([nsname compare: @"Highlight" options: NSCaseInsensitiveSearch]
-        == NSOrderedSame)
-      nsname = @"highlightColor";
-#endif
 
     lenum = [[NSColorList availableColorLists] objectEnumerator];
     while ( (clist = [lenum nextObject]) && new == nil)
@@ -2583,22 +2552,6 @@ ns_get_shifted_character (NSEvent *event)
    ========================================================================== */
 
 
-#ifdef NS_IMPL_GNUSTEP
-static void
-ns_redraw_scroll_bars (struct frame *f)
-{
-  int i;
-  id view;
-  NSArray *subviews = [[FRAME_NS_VIEW (f) superview] subviews];
-  NSTRACE ("ns_redraw_scroll_bars");
-  for (i =[subviews count]-1; i >= 0; i--)
-    {
-      view = [subviews objectAtIndex: i];
-      if (![view isKindOfClass: [EmacsScroller class]]) continue;
-      [view display];
-    }
-}
-#endif
 
 
 void
@@ -2628,9 +2581,6 @@ ns_clear_frame (struct frame *f)
   NSRectFill (r);
   ns_unfocus (f);
 
-#ifdef NS_IMPL_GNUSTEP
-  ns_redraw_scroll_bars (f);
-#endif
   unblock_input ();
 }
 
@@ -3187,11 +3137,7 @@ ns_draw_window_cursor (struct window *w, struct glyph_row *glyph_row,
 
   NSGraphicsContext *ctx = [NSGraphicsContext currentContext];
   [ctx saveGraphicsState];
-#ifdef NS_IMPL_GNUSTEP
-  GSRectClipList (ctx, &r, 1);
-#else
   NSRectClip (r);
-#endif
 
   [FRAME_CURSOR_COLOR (f) set];
 
@@ -4735,20 +4681,10 @@ ns_draw_glyph_string (struct glyph_string *s)
 	    NSRectClip (r);
 	    if (n)
 	      NSRectClip (rc);
-#ifdef NS_IMPL_GNUSTEP
-	    DPSgsave ([NSGraphicsContext currentContext]);
-	    DPSrectclip ([NSGraphicsContext currentContext], s->x, s->y,
-			 s->width, s->height);
-	    DPSrectclip ([NSGraphicsContext currentContext], NSMinX (rc),
-			 NSMinY (rc), NSWidth (rc), NSHeight (rc));
-#endif
 	    if (prev->first_glyph->type == CHAR_GLYPH)
 	      ns_draw_glyph_string_foreground (prev);
 	    else
 	      ns_draw_composite_glyph_string_foreground (prev);
-#ifdef NS_IMPL_GNUSTEP
-	    DPSgrestore ([NSGraphicsContext currentContext]);
-#endif
 	    [[NSGraphicsContext currentContext] restoreGraphicsState];
 	    prev->hl = save;
 	  }
@@ -4775,20 +4711,10 @@ ns_draw_glyph_string (struct glyph_string *s)
 	    [[NSGraphicsContext currentContext] saveGraphicsState];
 	    NSRectClip (r);
 	    NSRectClip (rc);
-#ifdef NS_IMPL_GNUSTEP
-	    DPSgsave ([NSGraphicsContext currentContext]);
-	    DPSrectclip ([NSGraphicsContext currentContext], s->x, s->y,
-			 s->width, s->height);
-	    DPSrectclip ([NSGraphicsContext currentContext], NSMinX (rc),
-			 NSMinY (rc), NSWidth (rc), NSHeight (rc));
-#endif
 	    if (next->first_glyph->type == CHAR_GLYPH)
 	      ns_draw_glyph_string_foreground (next);
 	    else
 	      ns_draw_composite_glyph_string_foreground (next);
-#ifdef NS_IMPL_GNUSTEP
-	    DPSgrestore ([NSGraphicsContext currentContext]);
-#endif
 	    [[NSGraphicsContext currentContext] restoreGraphicsState];
 	    next->hl = save;
 	    next->clip_head = s->next;
@@ -5555,16 +5481,6 @@ ns_default_font_parameter (struct frame *f, Lisp_Object parms)
 {
 }
 
-#ifdef NS_IMPL_GNUSTEP
-static void
-ns_update_window_end (struct window *w, bool cursor_on_p,
-		      bool mouse_face_overwritten_p)
-{
-  NSTRACE ("ns_update_window_end (cursor_on_p = %d)", cursor_on_p);
-
-  ns_redraw_scroll_bars (WINDOW_XFRAME (w));
-}
-#endif
 
 static void
 ns_flush_display (struct frame *f)
@@ -5592,11 +5508,7 @@ static struct redisplay_interface ns_redisplay_interface =
   ns_scroll_run,
   ns_after_update_window_line,
   NULL, /* update_window_begin */
-#ifndef NS_IMPL_GNUSTEP
   NULL, /* update_window_end   */
-#else
-  ns_update_window_end,
-#endif
   ns_flush_display,
   gui_clear_window_mouse_face,
   gui_get_glyph_overhangs,
@@ -5885,7 +5797,7 @@ ns_term_init (Lisp_Object display_name)
 #endif
 #endif /* MAC_OS_X_VERSION_MAX_ALLOWED >= 101100 */
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 101100 \
-  || defined (NS_IMPL_GNUSTEP)
+
           [cl writeToFile: nil];
 #endif
       }
@@ -5989,11 +5901,6 @@ ns_term_init (Lisp_Object display_name)
   [NSApp run];
   ns_do_open_file = YES;
 
-#ifdef NS_IMPL_GNUSTEP
-  /* GNUstep steals SIGCHLD for use in NSTask, but we don't use NSTask.
-     We must re-catch it so subprocess works.  */
-  catch_child_signal ();
-#endif
 
 #ifdef NS_IMPL_COCOA
   /* Begin listening for display reconfiguration, so we can run the
@@ -6045,9 +5952,6 @@ ns_term_shutdown (int sig)
 
 - (id)init
 {
-#ifdef NS_IMPL_GNUSTEP
-  NSNotificationCenter *notification_center;
-#endif
 
   NSTRACE ("[EmacsApp init]");
 
@@ -6056,18 +5960,8 @@ ns_term_shutdown (int sig)
 #ifdef NS_IMPL_COCOA
       self->isFirst = YES;
 #endif
-#ifdef NS_IMPL_GNUSTEP
-      self->applicationDidFinishLaunchingCalled = NO;
-#endif
     }
 
-#ifdef NS_IMPL_GNUSTEP
-  notification_center = [NSNotificationCenter defaultCenter];
-  [notification_center addObserver: self
-			  selector: @selector(updateMonitors:)
-			      name: NSApplicationDidChangeScreenParametersNotification
-			    object: nil];
-#endif
 
   return self;
 }
@@ -6145,15 +6039,6 @@ ns_term_shutdown (int sig)
   NSTRACE_WHEN (NSTRACE_GROUP_EVENTS, "[EmacsApp sendEvent:]");
   NSTRACE_MSG ("Type: %d", type);
 
-#ifdef NS_IMPL_GNUSTEP
-  // Keyboard events aren't propagated to file dialogs for some reason.
-  if ([NSApp modalWindow] != nil &&
-      (type == NSEventTypeKeyDown || type == NSEventTypeKeyUp || type == NSEventTypeFlagsChanged))
-    {
-      [[NSApp modalWindow] sendEvent: theEvent];
-      return;
-    }
-#endif
 
   if (type == NSEventTypeApplicationDefined)
     {
@@ -6269,36 +6154,6 @@ ns_term_shutdown (int sig)
   return YES;
 }
 
-#ifdef NS_IMPL_GNUSTEP
-- (void) updateMonitors: (NSNotification *) notification
-{
-  struct input_event ie;
-  union buffered_input_event *ev;
-  Lisp_Object new_monitors;
-
-  EVENT_INIT (ie);
-
-  new_monitors = Fns_display_monitor_attributes_list (Qnil);
-
-  if (!NILP (Fequal (new_monitors, last_known_monitors)))
-    return;
-
-  last_known_monitors = new_monitors;
-
-  ev = (kbd_store_ptr == kbd_buffer
-	? kbd_buffer + KBD_BUFFER_SIZE - 1
-	: kbd_store_ptr - 1);
-
-  if (kbd_store_ptr != kbd_fetch_ptr
-      && ev->ie.kind == MONITORS_CHANGED_EVENT)
-    return;
-
-  ie.kind = MONITORS_CHANGED_EVENT;
-  XSETTERMINAL (ie.arg, x_display_list->terminal);
-
-  kbd_buffer_store_event (&ie);
-}
-#endif
 
 /* **************************************************************************
 
@@ -6313,9 +6168,6 @@ ns_term_shutdown (int sig)
 {
   NSTRACE ("[EmacsApp applicationDidFinishLaunching:]");
 
-#ifdef NS_IMPL_GNUSTEP
-  ((EmacsApp *)self)->applicationDidFinishLaunchingCalled = YES;
-#endif
   [NSApp setServicesProvider: NSApp];
 
   [self antialiasThresholdDidChange:nil];
@@ -6416,10 +6268,6 @@ runAlertPanel(NSString *title,
               NSString *defaultButton,
               NSString *alternateButton)
 {
-#ifdef NS_IMPL_GNUSTEP
-  return NSRunAlertPanel(title, msgFormat, defaultButton, alternateButton, nil)
-    == NSAlertDefaultReturn;
-#else
   NSAlert *alert = [[NSAlert alloc] init];
   [alert setAlertStyle: NSAlertStyleCritical];
   [alert setMessageText: msgFormat];
@@ -6428,7 +6276,6 @@ runAlertPanel(NSString *title,
   NSInteger ret = [alert runModal];
   [alert release];
   return ret == NSAlertFirstButtonReturn;
-#endif
 }
 
 
@@ -6519,10 +6366,6 @@ not_in_argv (NSString *arg)
 {
   NSTRACE ("[EmacsApp applicationDidBecomeActive:]");
 
-#ifdef NS_IMPL_GNUSTEP
-  if (! applicationDidFinishLaunchingCalled)
-    [self applicationDidFinishLaunching:notification];
-#endif
   // ns_app_active=YES;
 
   ns_update_auto_hide_menu_bar ();
@@ -6728,12 +6571,6 @@ ns_font_desc_to_font_spec (NSFontDescriptor *desc, NSFont *font)
 
       tem = [dict objectForKey: NSFontWeightTrait];
 
-#ifdef NS_IMPL_GNUSTEP
-      if (tem != nil)
-	lweight = ([tem floatValue] > 0
-		   ? Qbold : ([tem floatValue] < -0.4f
-			      ? Qlight : Qnormal));
-#else
       if (tem != nil)
 	{
 	  if ([tem floatValue] >= 0.4)
@@ -6747,7 +6584,6 @@ ns_font_desc_to_font_spec (NSFontDescriptor *desc, NSFont *font)
 	  else
 	    lweight = Qlight;
 	}
-#endif
 
       tem = [dict objectForKey: NSFontWidthTrait];
 
@@ -6854,11 +6690,7 @@ ns_create_font_panel_buttons (id target, SEL select, SEL cancel_action)
   struct font *font = FRAME_OUTPUT_DATA (emacsframe)->font;
   NSFont *nsfont;
 
-#ifdef NS_IMPL_GNUSTEP
-  nsfont = ((struct nsfont_info *) font)->nsfont;
-#else
   nsfont = (NSFont *) macfont_get_nsctfont (font);
-#endif
 
   if (!font_panel_active)
     return;
@@ -6920,11 +6752,7 @@ ns_create_font_panel_buttons (id target, SEL select, SEL cancel_action)
   BOOL canceled;
 #endif
 
-#ifdef NS_IMPL_GNUSTEP
-  nsfont = ((struct nsfont_info *) font)->nsfont;
-#else
   nsfont = (NSFont *) macfont_get_nsctfont (font);
-#endif
 
 #ifdef NS_IMPL_COCOA
   buttons
@@ -6998,7 +6826,7 @@ ns_create_font_panel_buttons (id target, SEL select, SEL cancel_action)
   if (!NSIsEmptyRect (visible))
     [self addCursorRect: visible cursor: currentCursor];
 
-#if defined (NS_IMPL_GNUSTEP) || MAC_OS_X_VERSION_MIN_REQUIRED < 101300
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 101300
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
   if ([currentCursor respondsToSelector: @selector(setOnMouseEntered)])
 #endif
@@ -7081,13 +6909,6 @@ ns_create_font_panel_buttons (id target, SEL select, SEL cancel_action)
           /* COUNTERHACK: map 'Delete' on upper-right main KB to 'Backspace',
              because Emacs treats Delete and KP-Delete same (in simple.el).  */
           if ((fnKeysym == 0xFFFF && [theEvent keyCode] == 0x33)
-#ifdef NS_IMPL_GNUSTEP
-              /*  GNUstep uses incompatible keycodes, even for those that are
-                  supposed to be hardware independent.  Just check for delete.
-                  Keypad delete does not have keysym 0xFFFF.
-                  See https://savannah.gnu.org/bugs/?25395  */
-              || (fnKeysym == 0xFFFF && code == 127)
-#endif
             )
             code = 0xFF08; /* backspace */
           else
@@ -7121,7 +6942,6 @@ ns_create_font_panel_buttons (id target, SEL select, SEL cancel_action)
       Lisp_Object kind = fnKeysym ? QCfunction : QCordinary;
       emacs_event->modifiers = EV_MODIFIERS2 (flags, kind);
 
-#ifndef NS_IMPL_GNUSTEP
       if (NS_KEYLOG)
 	fprintf (stderr,
 		 "keyDown: code = %x\tfnKey = %x\tflags = %x\tmods = "
@@ -7129,7 +6949,6 @@ ns_create_font_panel_buttons (id target, SEL select, SEL cancel_action)
 		 (unsigned int) code, (unsigned int) fnKeysym,
 		 (unsigned int) flags,
 		 (unsigned int) emacs_event->modifiers);
-#endif
 
       /* If it was a function key or had control-like modifiers, pass
          it directly to Emacs.  */
@@ -7451,7 +7270,7 @@ ns_in_echo_area (void)
 #endif
 #endif /* MAC_OS_X_VERSION_MAX_ALLOWED >= 1070 */
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1070 \
-  || defined (NS_IMPL_GNUSTEP)
+
     {
       pt = [[self window] convertBaseToScreen: pt];
       rect.origin = pt;
@@ -7720,7 +7539,7 @@ ns_in_echo_area (void)
       else
 #endif
 #endif /* defined (NS_IMPL_COCOA) && MAC_OS_X_VERSION_MAX_ALLOWED >= 1070 */
-#if defined (NS_IMPL_GNUSTEP) || MAC_OS_X_VERSION_MIN_REQUIRED < 1070
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1070
         {
           CGFloat delta = [theEvent deltaY];
           /* Mac notebooks send wheel events with delta equal to 0
@@ -9171,11 +8990,7 @@ ns_in_echo_area (void)
 
 - (NSDragOperation) draggingUpdated: (id <NSDraggingInfo>) sender
 {
-#ifdef NS_IMPL_GNUSTEP
-  struct input_event ie;
-#else
   Lisp_Object frame;
-#endif
   NSPoint position;
   int x, y;
   NSAutoreleasePool *ap;
@@ -9185,10 +9000,6 @@ ns_in_echo_area (void)
   count = SPECPDL_INDEX ();
   record_unwind_protect_ptr (ns_release_autorelease_pool, ap);
 
-#ifdef NS_IMPL_GNUSTEP
-  EVENT_INIT (ie);
-  ie.kind = DRAG_N_DROP_EVENT;
-#endif
 
   /* Get rid of mouse face.  */
   [self mouseExited: [[self window] currentEvent]];
@@ -9198,15 +9009,6 @@ ns_in_echo_area (void)
   x = lrint (position.x);
   y = lrint (position.y);
 
-#ifdef NS_IMPL_GNUSTEP
-  XSETINT (ie.x, x);
-  XSETINT (ie.y, y);
-  XSETFRAME (ie.frame_or_window, emacsframe);
-  ie.arg = Qlambda;
-  ie.modifiers = 0;
-
-  kbd_buffer_store_event (&ie);
-#else
   /* Input events won't be processed until the drop happens on macOS,
      so call this function instead.  */
   XSETFRAME (frame, emacsframe);
@@ -9215,7 +9017,6 @@ ns_in_echo_area (void)
 	      make_fixnum (x), make_fixnum (y));
 
   redisplay ();
-#endif
 
   unbind_to (count, Qnil);
   return NSDragOperationGeneric;
@@ -9745,14 +9546,6 @@ ns_in_echo_area (void)
 }
 
 
-#ifdef NS_IMPL_GNUSTEP
-/* orderedIndex isn't yet available in GNUstep, but it seems pretty
-   easy to implement.  */
-- (NSInteger) orderedIndex
-{
-  return [[NSApp orderedWindows] indexOfObjectIdenticalTo:self];
-}
-#endif
 
 
 /* The array returned by [NSWindow parentWindow] may already be
@@ -10318,7 +10111,7 @@ nswindow_orderedIndex_sort (id w1, id w2, void *c)
 #endif
 #endif /* MAC_OS_X_VERSION_MAX_ALLOWED >= 1070 */
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 1070 \
-  || defined (NS_IMPL_GNUSTEP)
+
     r = [NSScroller scrollerWidth];
 #endif
   return r;
@@ -10340,11 +10133,7 @@ nswindow_orderedIndex_sort (id w1, id w2, void *c)
   /* Ensure auto resizing of scrollbars occurs within the emacs frame's view
      locked against the top and bottom edges, and right edge on macOS, where
      scrollers are on right.  */
-#ifdef NS_IMPL_GNUSTEP
-  [self setAutoresizingMask: NSViewMaxXMargin | NSViewHeightSizable];
-#else
   [self setAutoresizingMask: NSViewMinXMargin | NSViewHeightSizable];
-#endif
 
   window = XWINDOW (nwin);
   condemned = NO;
@@ -10470,7 +10259,7 @@ nswindow_orderedIndex_sort (id w1, id w2, void *c)
   if (!NSIsEmptyRect (visible))
     [self addCursorRect: visible cursor: [NSCursor arrowCursor]];
 
-#if defined (NS_IMPL_GNUSTEP) || MAC_OS_X_VERSION_MIN_REQUIRED < 101300
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 101300
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
   if ([[NSCursor arrowCursor] respondsToSelector:
                                 @selector(setOnMouseEntered)])
@@ -10619,7 +10408,7 @@ nswindow_orderedIndex_sort (id w1, id w2, void *c)
       last_hit_part = horizontal ? scroll_bar_before_handle : scroll_bar_above_handle; break;
     case NSScrollerIncrementPage:
       last_hit_part = horizontal ? scroll_bar_after_handle : scroll_bar_below_handle; break;
-#if defined (NS_IMPL_GNUSTEP) || MAC_OS_X_VERSION_MIN_REQUIRED < 1070
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1070
     case NSScrollerDecrementLine:
       last_hit_part = horizontal ? scroll_bar_left_arrow : scroll_bar_up_arrow; break;
     case NSScrollerIncrementLine:
@@ -11076,12 +10865,6 @@ nswindow_orderedIndex_sort (id w1, id w2, void *c)
 #endif /* NS_IMPL_COCOA */
 
 
-#ifdef NS_IMPL_GNUSTEP
-/* Dummy class to get rid of startup warnings.  */
-@implementation EmacsDocument
-
-@end
-#endif
 
 
 /* ==========================================================================
@@ -11462,7 +11245,6 @@ respectively.  */);
   Fprovide (Qns, Qnil);
 
   DEFSYM (Qcocoa, "cocoa");
-  DEFSYM (Qgnustep, "gnustep");
   DEFSYM (QCordinary, ":ordinary");
   DEFSYM (QCfunction, ":function");
   DEFSYM (QCmouse, ":mouse");
@@ -11471,13 +11253,8 @@ respectively.  */);
   DEFSYM (Qexpanded, "expanded");
   DEFSYM (Qns_in_echo_area, "ns-in-echo-area");
 
-#ifdef NS_IMPL_COCOA
   Fprovide (Qcocoa, Qnil);
   syms_of_macfont ();
-#else
-  Fprovide (Qgnustep, Qnil);
-  syms_of_nsfont ();
-#endif
 
   last_known_monitors = Qnil;
   staticpro (&last_known_monitors);

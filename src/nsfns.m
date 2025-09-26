@@ -1,4 +1,4 @@
-/* Functions for the NeXT/Open/GNUstep and macOS window system.
+/* Functions for the NeXT/Open and macOS window system.
 
 Copyright (C) 1989, 1992-1994, 2005-2006, 2008-2025 Free Software
 Foundation, Inc.
@@ -23,7 +23,7 @@ Originally by Carl Edman
 Updated by Christian Limpach (chris@nice.ch)
 OpenStep/Rhapsody port by Scott Bender (sbender@harmony-ds.com)
 macOS/Aqua port by Christophe de Dinechin (descubes@earthlink.net)
-GNUstep port and post-20 update by Adrian Robert (arobert@cogsci.ucsd.edu)
+Historical GNUstep port and post-20 update by Adrian Robert (arobert@cogsci.ucsd.edu)
 */
 
 /* This should be the first include, as it may set up #defines affecting
@@ -899,7 +899,6 @@ ns_implicitly_set_icon_type (struct frame *f)
 
   if (image == nil)
     {
-#ifndef NS_IMPL_GNUSTEP
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 120000
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 120000
       if ([workspace respondsToSelector: @selector (iconForContentType:)])
@@ -908,7 +907,6 @@ ns_implicitly_set_icon_type (struct frame *f)
 			      [UTType typeWithIdentifier: @"text"]] retain];
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 120000
       else
-#endif
 #endif
 #endif
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 120000
@@ -990,15 +988,9 @@ ns_appkit_version_str (void)
   NSAutoreleasePool *autorelease;
 
   autorelease = [[NSAutoreleasePool alloc] init];
-#ifdef NS_IMPL_GNUSTEP
-  tmp = [NSString stringWithFormat:@"gnustep-gui-%s", Xstr(GNUSTEP_GUI_VERSION)];
-#elif defined (NS_IMPL_COCOA)
   tmp = [NSString stringWithFormat:@"appkit-%.2f %@",
                   NSAppKitVersionNumber,
                   [[NSProcessInfo processInfo] operatingSystemVersionString]];
-#else
-  tmp = [NSString initWithUTF8String:@"ns-unknown"];
-#endif
   string = [tmp lispString];
   [autorelease release];
 
@@ -1012,22 +1004,17 @@ ns_appkit_version_str (void)
 static int
 ns_appkit_version_int (void)
 {
-#ifdef NS_IMPL_GNUSTEP
-  return GNUSTEP_GUI_MAJOR_VERSION * 100 + GNUSTEP_GUI_MINOR_VERSION;
-#elif defined (NS_IMPL_COCOA)
   return (int)NSAppKitVersionNumber;
-#endif
-  return 0;
 }
 
 
 static void
 ns_icon (struct frame *f, Lisp_Object parms)
 /* --------------------------------------------------------------------------
-   Strangely-named function to set icon position parameters in frame.
-   This is irrelevant under macOS, but might be needed under GNUstep,
-   depending on the window manager used.  Note, this is not a standard
-   frame parameter-setter; it is called directly from x-create-frame.
+   Historical helper to set icon position parameters in a frame.  This is
+   retained for compatibility but has no practical effect on modern macOS.
+   Note, this is not a standard frame parameter-setter; it is called
+   directly from x-create-frame.
    -------------------------------------------------------------------------- */
 {
   Lisp_Object icon_x, icon_y;
@@ -1308,36 +1295,26 @@ DEFUN ("x-create-frame", Fx_create_frame, Sx_create_frame,
 
   block_input ();
 
-#ifdef NS_IMPL_COCOA
   mac_register_font_driver (f);
-#else
-  register_font_driver (&nsfont_driver, f);
-#endif
 
   gui_default_parameter (f, parms, Qfont_backend, Qnil,
                          "fontBackend", "FontBackend", RES_TYPE_STRING);
 
   {
-#ifdef NS_IMPL_COCOA
-    /* use for default font name */
-    id font = [NSFont userFixedPitchFontOfSize: -1.0]; /* default */
-    gui_default_parameter (f, parms, Qfontsize,
-                           make_fixnum (0 /* (int)[font pointSize] */),
-                           "fontSize", "FontSize", RES_TYPE_NUMBER);
-    // Remove ' Regular', not handled by backends.
-    char *fontname = xstrdup ([[font displayName] UTF8String]);
-    int len = strlen (fontname);
-    if (len > 8 && strcmp (fontname + len - 8, " Regular") == 0)
-      fontname[len-8] = '\0';
-    gui_default_parameter (f, parms, Qfont,
-                           build_string (fontname),
-                           "font", "Font", RES_TYPE_STRING);
-    xfree (fontname);
-#else
-    gui_default_parameter (f, parms, Qfont,
-                           build_string ("fixed"),
-                           "font", "Font", RES_TYPE_STRING);
-#endif
+  /* use for default font name */
+  id font = [NSFont userFixedPitchFontOfSize: -1.0]; /* default */
+  gui_default_parameter (f, parms, Qfontsize,
+                         make_fixnum (0 /* (int)[font pointSize] */),
+                         "fontSize", "FontSize", RES_TYPE_NUMBER);
+  // Remove ' Regular', not handled by backends.
+  char *fontname = xstrdup ([[font displayName] UTF8String]);
+  int len = strlen (fontname);
+  if (len > 8 && strcmp (fontname + len - 8, " Regular") == 0)
+    fontname[len-8] = '\0';
+  gui_default_parameter (f, parms, Qfont,
+                         build_string (fontname),
+                         "font", "Font", RES_TYPE_STRING);
+  xfree (fontname);
   }
   unblock_input ();
 
@@ -1356,12 +1333,7 @@ DEFUN ("x-create-frame", Fx_create_frame, Sx_create_frame,
 
   /* default vertical scrollbars on right on Mac */
   {
-      Lisp_Object spos
-#ifdef NS_IMPL_GNUSTEP
-          = Qt;
-#else
-          = Qright;
-#endif
+      Lisp_Object spos = Qright;
       gui_default_parameter (f, parms, Qvertical_scroll_bars, spos,
                              "verticalScrollBars", "VerticalScrollBars",
                              RES_TYPE_SYMBOL);
@@ -1714,33 +1686,13 @@ static struct
 {
   id panel;
   BOOL ret;
-#ifdef NS_IMPL_GNUSTEP
-  NSString *dirS, *initS;
-  BOOL no_types;
-#endif
 } ns_fd_data;
 
 void
 ns_run_file_dialog (void)
 {
   if (ns_fd_data.panel == nil) return;
-#ifdef NS_IMPL_COCOA
   ns_fd_data.ret = [ns_fd_data.panel runModal];
-#else
-  if (ns_fd_data.no_types)
-    {
-      ns_fd_data.ret = [ns_fd_data.panel
-                           runModalForDirectory: ns_fd_data.dirS
-                           file: ns_fd_data.initS];
-    }
-  else
-    {
-      ns_fd_data.ret = [ns_fd_data.panel
-                           runModalForDirectory: ns_fd_data.dirS
-                           file: ns_fd_data.initS
-                           types: nil];
-    }
-#endif
   ns_fd_data.panel = nil;
 }
 
@@ -1957,11 +1909,7 @@ DEFUN ("x-server-vendor", Fx_server_vendor, Sx_server_vendor, 0, 1, 0,
   (Lisp_Object terminal)
 {
   check_ns_display_info (terminal);
-#ifdef NS_IMPL_GNUSTEP
-  return build_string ("GNU");
-#else
   return build_string ("Apple");
-#endif
 }
 
 
@@ -1971,11 +1919,9 @@ DEFUN ("x-server-version", Fx_server_version, Sx_server_version, 0, 1, 0,
 {
   check_ns_display_info (terminal);
   /* NOTE: it is unclear what would best correspond with "protocol";
-           we return 10.3, meaning Panther, since this is roughly the
-           level that GNUstep's APIs correspond to.  The last number
-           is where we distinguish between the Apple and GNUstep
-           implementations ("distributor-specific release number") and
-           give int'ized versions of major.minor.  */
+           we return 10.3, meaning Panther, to preserve historic
+           behavior.  The last number gives the integerized
+           major.minor version.  */
   return list3i (10, 3, ns_appkit_version_int ());
 }
 
@@ -2020,7 +1966,7 @@ DEFUN ("x-display-backing-store", Fx_display_backing_store,
     {
     case NSBackingStoreBuffered:
       return Qbuffered;
-#if defined (NS_IMPL_GNUSTEP) || MAC_OS_X_VERSION_MIN_REQUIRED < 101300
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 101300
     case NSBackingStoreRetained:
       return Qretained;
     case NSBackingStoreNonretained:
@@ -2071,7 +2017,7 @@ DEFUN ("x-display-save-under", Fx_display_save_under,
     case NSBackingStoreBuffered:
       return Qt;
 
-#if defined (NS_IMPL_GNUSTEP) || MAC_OS_X_VERSION_MIN_REQUIRED < 101300
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 101300
     case NSBackingStoreRetained:
     case NSBackingStoreNonretained:
       return Qnil;
@@ -2825,8 +2771,8 @@ compute_tip_xy (struct frame *f, Lisp_Object parms, Lisp_Object dx,
 
          if (CGRectContainsPoint ([screen frame], pt))
 
-     which would be neater, but it causes problems building on old
-     versions of macOS and in GNUstep.  */
+     which would be neater, but it causes problems building on some
+     older macOS SDKs.  */
 
   /* Ensure in bounds.  (Note, screen origin = lower left.) */
   if (FIXNUMP (left) || FIXNUMP (right))
@@ -2915,18 +2861,13 @@ ns_create_tip_frame (struct ns_display_info *dpyinfo, Lisp_Object parms)
   FRAME_DISPLAY_INFO (f) = dpyinfo;
 
   block_input ();
-#ifdef NS_IMPL_COCOA
   mac_register_font_driver (f);
-#else
-  register_font_driver (&nsfont_driver, f);
-#endif
   unblock_input ();
 
   gui_default_parameter (f, parms, Qfont_backend, Qnil,
                          "fontBackend", "FontBackend", RES_TYPE_STRING);
 
   {
-#ifdef NS_IMPL_COCOA
     /* use for default font name */
     id font = [NSFont userFixedPitchFontOfSize: -1.0]; /* default */
     gui_default_parameter (f, parms, Qfontsize,
@@ -2941,11 +2882,6 @@ ns_create_tip_frame (struct ns_display_info *dpyinfo, Lisp_Object parms)
                            build_string (fontname),
                            "font", "Font", RES_TYPE_STRING);
     xfree (fontname);
-#else
-    gui_default_parameter (f, parms, Qfont,
-                           build_string ("fixed"),
-                           "font", "Font", RES_TYPE_STRING);
-#endif
   }
 
   gui_default_parameter (f, parms, Qborder_width, make_fixnum (0),
@@ -3609,8 +3545,6 @@ The coordinates X and Y are interpreted in pixels relative to a position
        (Lisp_Object x, Lisp_Object y)
 {
 #ifdef NS_IMPL_COCOA
-  /* GNUstep doesn't support CGWarpMouseCursorPosition, so none of
-     this will work.  */
   struct frame *f = SELECTED_FRAME ();
   EmacsView *view = FRAME_NS_VIEW (f);
   NSScreen *screen = [[view window] screen];

@@ -1,18 +1,18 @@
 @c This is part of the Emacs manual.
 @c Copyright (C) 2000--2025 Free Software Foundation, Inc.
 @c See file emacs.texi for copying conditions.
-@node Mac OS / GNUstep
-@appendix Emacs and macOS / GNUstep
+@node Mac OS
+@appendix Emacs and macOS
 @cindex macOS
 @cindex Macintosh
-@cindex GNUstep
 
   This section describes the peculiarities of using Emacs built with
-the GNUstep libraries on GNU/Linux or other operating systems, or on
-macOS with native window system support.  On macOS, Emacs can be
-built either without window system support, with X11, or with the
-Cocoa interface; this section only applies to the Cocoa build.  This
-does not support versions before macOS 10.6.
+native window system support on macOS.  On macOS, Emacs can be built
+either without window system support, with X11, or with the Cocoa
+interface; this section only applies to the Cocoa build, and it does
+not support versions before macOS 10.6.  Earlier versions of Emacs
+could also run on top of GNUstep, but that alternative has now been
+retired.
 
   GNUstep is free software; macOS is not.  Because it is a non-free
 operating system, macOS denies its users the freedom that every computer
@@ -27,50 +27,37 @@ we hope this taste of freedom will inspire users to escape from them.
 instance, most of the commands and variables described in this section
 begin with @samp{ns-}, which is short for @samp{Nextstep}.  NeXTstep
 was an application interface released by NeXT Inc.@: during the 1980s,
-of which Cocoa is a direct descendant.  Apart from Cocoa, there is
-another NeXTstep-style system: GNUstep, which is free software.  As of
-this writing, Emacs GNUstep support is in alpha status (@pxref{GNUstep
-Support}), but we hope to improve it in the future.
+of which Cocoa is a direct descendant.
 
 @menu
-* Mac / GNUstep Basics::        Basic Emacs usage under GNUstep or macOS.
-* Mac / GNUstep Customization:: Customizations under GNUstep or macOS.
-* Mac / GNUstep Events::        How window system events are handled.
-* GNUstep Support::             Details on status of GNUstep support.
+* Mac Basics::        Basic Emacs usage under macOS.
+* Mac Customization:: Customizations under macOS.
+* Mac Events::        How window system events are handled.
 @end menu
 
-@node Mac / GNUstep Basics
-@section Basic Emacs usage under macOS and GNUstep
+@node Mac Basics
+@section Basic Emacs usage under macOS
 
 @cindex modifier keys (macOS)
   By default, the @key{Alt} and @key{Option} keys are the same as
 @key{Meta}.  The Mac @key{Cmd} key is the same as @key{Super}, and
 Emacs provides a set of key bindings using this modifier key that mimic
-other Mac / GNUstep applications (@pxref{Mac / GNUstep Events}).  You
+other Mac applications (@pxref{Mac Events}).  You
 can change these bindings in the usual way (@pxref{Key Bindings}).
 The modifiers themselves can be customized;
-@pxref{Mac / GNUstep Customization}.
+@pxref{Mac Customization}.
 
   @kbd{S-mouse-1} adjusts the region to the click position,
 just like @kbd{mouse-3} (@code{mouse-save-then-kill}); it does not pop
 up a menu for changing the default face, as @kbd{S-mouse-1} normally
 does (@pxref{Text Scale}).  This change makes Emacs behave more like
-other Mac / GNUstep applications.
+other Mac applications.
 
   When you open or save files using the menus, or using the
 @kbd{Cmd-o} and @kbd{Cmd-S} bindings, Emacs uses graphical file
 dialogs to read file names.  However, if you use the regular Emacs key
 sequences, such as @kbd{C-x C-f}, Emacs uses the minibuffer to read
 file names.
-
-@cindex copy/paste to/from primary selection (macOS)
-  On GNUstep, in an X-windows environment you need to use @kbd{Cmd-c}
-instead of one of the @kbd{C-w} or @kbd{M-w} commands to transfer text
-to the X primary selection; otherwise, Emacs will use the
-clipboard selection.  Likewise, @kbd{Cmd-y} (instead of @kbd{C-y})
-yanks from the X primary selection instead of the kill-ring or
-clipboard.
-
 
 @subsection Grabbing environment variables
 
@@ -89,8 +76,8 @@ For the PATH and MANPATH variables, a system-wide method
 of setting PATH is recommended on macOS, using the
 @file{/etc/paths} files and the @file{/etc/paths.d} directory.
 
-@node Mac / GNUstep Customization
-@section Mac / GNUstep Customization
+@node Mac Customization
+@section Mac Customization
 
 There are a few customization options that are specific to the
 Nextstep port.  For example, they affect things such as the modifier
@@ -207,8 +194,8 @@ number makes the trackpad less sensitive.
 @c  To make the setting permanent, use @samp{Save Options} in the
 @c Options menu, or run @code{menu-bar-options-save}.
 
-@node Mac / GNUstep Events
-@section Windowing System Events under macOS / GNUstep
+@node Mac Events
+@section Windowing System Events under macOS
 @cindex events on macOS
 
   Nextstep applications receive a number of special events which have
@@ -275,12 +262,6 @@ restart Emacs to access newly-available services.
 @node GNUstep Support
 @section GNUstep Support
 
-Emacs can be built and run under GNUstep, but there are still
-issues to be addressed.  Interested developers should contact
-@ifnothtml
-@email{emacs-devel@@gnu.org}.
-@end ifnothtml
-@ifhtml
-@url{https://lists.gnu.org/mailman/listinfo/emacs-devel, the
-emacs-devel mailing list}.
-@end ifhtml
+Older releases of Emacs could also be built with the free GNUstep
+libraries.  That configuration has now been retired, and the
+documentation above applies solely to the native macOS (Cocoa) port.

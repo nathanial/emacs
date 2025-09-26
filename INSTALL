@@ -10,7 +10,7 @@ instructions in this file should be sufficient.  For other
 configurations, we have additional specialized files:
 
   . INSTALL.REPO if you build from a Git checkout
-  . nextstep/INSTALL if you build for GNUstep/macOS
+  . nextstep/INSTALL if you build for macOS
 
 
 BASIC INSTALLATION
@@ -267,8 +267,9 @@ to force GTK+ to run under Broadway, start Emacs like this:
 
 (where '...' denotes any further options you may want to pass to Emacs).
 
-The GNUstep build also supports the Wayland window system.  If that is
-what you want, see nextstep/INSTALL.
+Older releases also documented a GNUstep build in nextstep/INSTALL.
+That configuration is no longer maintained; the remaining instructions
+in that file pertain to macOS only.
 
 * Native compilation of Lisp files
 
@@ -292,7 +293,7 @@ Lisp code even if your system satisfies the build requirements, use the
 DETAILED BUILDING AND INSTALLATION:
 
 (This is for a Unix or Unix-like system (including Cygwin on
-MS-Windows).  For GNUstep and macOS, see nextstep/INSTALL.  For building
+MS-Windows).  For macOS, see nextstep/INSTALL.  For building
 a native Windows Emacs for non-ancient versions of MS Windows, see the
 file nt/INSTALL.)
 

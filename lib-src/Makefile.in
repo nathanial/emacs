@@ -54,7 +54,7 @@ top_builddir = @top_builddir@
 
 # ==================== Where To Install Things ====================
 
-# Location to install Emacs.app under GNUstep / macOS.
+# Location to install Emacs.app on macOS.
 # Later values may use this.
 ns_appbindir=@ns_appbindir@
 ns_applibexecdir=@ns_applibexecdir@

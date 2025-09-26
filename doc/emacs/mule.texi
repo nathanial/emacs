@@ -1502,7 +1502,7 @@ of @code{standard-fontset-spec}.  This fontset's name is
 @noindent
 or just @samp{fontset-standard} for short.
 
-  On GNUstep and macOS, the standard fontset is created using the value of
+  On macOS, the standard fontset is created using the value of
 @code{ns-standard-fontset-spec}, and on MS Windows it is
 created using the value of @code{w32-standard-fontset-spec}.
 

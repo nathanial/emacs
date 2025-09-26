@@ -272,7 +272,7 @@ Dragging the mouse and then releasing it over the window of
 another program will result in that program opening or creating a
 copy of the file underneath the mouse pointer (or all marked
 files if it was marked).  This feature is supported only on X
-Windows, Haiku, and Nextstep (macOS or GNUstep).
+Windows, Haiku, and Nextstep (macOS).
 
 If the value is `link', then a symbolic link will be created to
 the file instead by the other program (usually a file manager).

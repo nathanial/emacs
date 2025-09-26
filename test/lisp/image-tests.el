@@ -40,7 +40,7 @@
     (svg . ,(expand-file-name "splash.svg"
                               image-tests--emacs-images-directory))
     (tiff . ,(expand-file-name
-              "nextstep/GNUstep/Emacs.base/Resources/emacs.tiff"
+              "nextstep/Cocoa/Emacs.base/Contents/Resources/Emacs.icns"
               source-directory))
     (webp . ,(expand-file-name "test/data/image/black.webp"
                                source-directory))
