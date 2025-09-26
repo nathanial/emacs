@@ -5,9 +5,11 @@ See the end of the file for license conditions.
 This directory tree holds version 31.0.50 of GNU Emacs, the extensible,
 customizable, self-documenting real-time display editor.
 
-The file INSTALL in this directory says how to build and install GNU
-Emacs on various systems, once you have unpacked or checked out the
-entire Emacs file tree.
+The file INSTALL in this directory explains how to build and install
+GNU Emacs on the two supported host families: modern macOS (using the
+Cocoa/Nextstep port) and contemporary GNU/Linux distributions (using
+the GTK or PGTK port).  Builds on other operating systems are no
+longer maintained.
 
 See the file etc/NEWS for information on new features and other
 user-visible changes in recent versions of Emacs.
@@ -36,10 +38,9 @@ letters, which you might consider looking at when installing GNU
 Emacs.
 
 The file 'configure' is a shell script to acclimate Emacs to the
-oddities of your processor and operating system.  It creates the file
-'Makefile' (a script for the 'make' program), which automates the
-process of building and installing Emacs.  See INSTALL for more
-detailed information.
+supported host platforms.  It creates the file 'Makefile' (a script
+for the 'make' program), which automates the process of building and
+installing Emacs.  See INSTALL for more detailed information.
 
 The file 'configure.ac' is the input used by the autoconf program to
 construct the 'configure' script.
@@ -91,12 +92,13 @@ There are several subdirectories:
 'admin'     holds files used by Emacs developers, and Unicode data files.
 'build-aux' holds auxiliary files used during the build.
 'm4'        holds Autoconf macros used for generating the configure script.
-'exec'	    holds the source code to several helper executables used to run
-	    user-installed programs on Android.
+'exec'	    holds helper executables historically used by the Android
+	    port.  They remain only as transitional stubs while the
+	    Android-specific runtime is dismantled.
 
-   Building Emacs on non-Posix platforms requires tools that aren't part
-of the standard distribution of the OS.  The platform-specific README
-files and installation instructions should list the required tools.
+   Building Emacs now targets macOS and GNU/Linux.  Other operating
+systems, including historical Windows, GNUstep, and Android ports,
+are no longer supported.
 
 
 

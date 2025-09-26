@@ -16,7 +16,8 @@ To configure Git for Emacs development, you can run the following:
 	git config --global user.email 'your.name@example.com'
 	git config --global transfer.fsckObjects true
 
-The following shell commands then build and run Emacs from scratch:
+The following shell commands then build and run Emacs from scratch on
+the supported hosts (macOS with the Cocoa port or GNU/Linux with GTK/PGTK):
 
 	git clone https://git.savannah.gnu.org/git/emacs.git
 	cd emacs
@@ -25,7 +26,9 @@ The following shell commands then build and run Emacs from scratch:
 	make
 	src/emacs
 
-For more details, see
+For more details on the currently supported platform matrix, see the
+"Platform Focus" section near the top of INSTALL and README.  For
+general contribution guidance, see
 https://www.emacswiki.org/emacs/GitQuickStartForEmacsDevs and
 https://www.emacswiki.org/emacs/GitForEmacsDevs or see the file
 admin/notes/git-workflow.
@@ -42,6 +45,11 @@ instructions and archives.  You can develop and commit changes in your
 own copy of the repository, and discuss proposed changes on the
 mailing list.  Frequent contributors to Emacs can request write access
 there.
+
+As of September 2025 the project only maintains builds for macOS (Cocoa)
+and GNU/Linux (GTK/PGTK).  Contributions that reintroduce code paths or
+tooling for legacy ports such as Windows, GNUstep, or Android should be
+redirected to downstream forks instead of the mainline repository.
 
 Bug reports and fixes, feature requests and patches/implementations
 should be sent to bug-gnu-emacs@gnu.org, the bug/feature list.  This

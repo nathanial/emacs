@@ -18,19 +18,27 @@ Rationalize the Emacs source tree for a codebase that only targets modern macOS 
 - [x] Removed `nextstep/GNUstep/` GNUstep bundle assets and support on 2025-09-26.
 
 ## Candidate Directories to Retire
-| Directory | Primary Purpose | Why It Can Likely Be Removed | Follow-Up Tasks & Risks |
-|-----------|------------------|------------------------------|--------------------------|
+| Directory / Files | Primary Purpose | Why It Can Likely Be Removed | Follow-Up Tasks & Risks |
+|-------------------|------------------|------------------------------|--------------------------|
 | `msdos/` | MS-DOS port sources, docs, and build glue. | Removed on 2025-09-25; MS-DOS is no longer a supported target. | Ensure any lingering conditionals guarding MS-DOS code paths are cleaned up as subsequent refactors land. |
 | `nt/` | Windows (NT) port including resource files, w32 GUI back-end, installer scripts. | Removed on 2025-09-26; Windows support is no longer part of the target matrix. | Monitor for residual `WINDOWSNT` conditionals that can be simplified in subsequent refactors. |
 | `java/` | Android port scaffolding and Gradle project. | Removed on 2025-09-26; Android packages are no longer built from this tree. | Continue auditing `--with-android` configure logic and `HAVE_ANDROID` code for retirement in future passes. |
 | `cross/` | Cross-compilation helper configs for niche targets (e.g., MIPS, ARM). | Removed on 2025-09-26; cross-compilation scaffolding is no longer supported. | Double-check configuration help text (`--with-android`, `--with-ndk-*`) and contributor docs to reflect the narrower platform scope. |
 | `lwlib/` | Lucid Widget library (Motif-style X toolkit). | Removed on 2025-09-26; GTK/PGTK now provide the supported X GUI paths. | Documentation pruning (e.g., `xresources` Lucid appendix) still pending; source code references guarded by `USE_LUCID`/`USE_MOTIF` were scrubbed on 2025-09-26. |
-| `doc/misc/efaq-w32.texi`, `doc/misc/ntfaq.texi`, related w32 docs | Manuals for legacy platforms. | Once Windows support is removed, these manuals become obsolete clutter. | Delete the files, update `doc/misc/Makefile.in`, and scrub references from the Info directory map. |
+| `src/android*`, `lisp/term/android-win.el`, `test/infra/android/`, `admin/download-android-deps.sh` | Android runtime, Lisp front-ends, and CI helpers. | We no longer target Android, so the runtime stubs, tests, and tooling are dead weight. | Remove `HAVE_ANDROID`/`ANDROID_STUBIFY` guards, drop configure options, and ensure remaining files do not expect JNI or Android assets. |
+| `src/haiku*`, `lisp/term/haiku-win.el`, `src/haiku_*` support files | Haiku window-system implementation. | Haiku is outside the supported macOS/Linux matrix; keeping it increases maintenance burden. | Rip out Haiku-specific code paths, simplify toolkit selection logic, and update docs (`INSTALL`, `etc/NEWS`) accordingly. |
+| Windows/MS-DOS residual glue: `src/conf_post.h` (MSDOS block), `src/w16select.c`, `lisp/term/common-win.el`, `lisp/term/pc-win.el`, `admin/CPP-DEFINES` entries | Leftover runtime shims for ports we have already removed. | With the platform directories gone, these files only add unreachable code and build-time complexity. | Delete the sources, collapse related `#ifdef WINDOWSNT`/`MSDOS` branches, and re-run autoreconf to verify generated files no longer mention these targets. |
+| `etc/NEXTSTEP` and GNUstep historical docs | Documentation for previously supported GNUstep deployment. | GNUstep support has been removed; the doc is purely archival. | Decide whether to move the history to `etc/HISTORY` or prune it; ensure `INSTALL`/`README` no longer reference GNUstep as a viable build. |
 
 ## Additional Cleanup Opportunities
-- Check `lisp/term/` for platform-specific terminal definitions (`pc-win.el`) and remove them alongside any remaining platform-specific back ends.
-- Remove conditional compilation blocks guarded by `WINDOWSNT`, `DOS_NT`, `HAVE_ANDROID`, etc., once their directories disappear.
-- Review `admin/` scripts that package legacy installers or Android artifacts (`admin/android/`).
+- Check `lisp/term/` for platform-specific terminal definitions that only exist for retired platforms (e.g., `pc-win.el`, `android-win.el`, `haiku-win.el`) and prune them while keeping the shared TTY support we still rely on.
+- Remove conditional compilation blocks guarded by `WINDOWSNT`, `DOS_NT`, `HAVE_ANDROID`, `HAVE_HAIKU`, etc., once their implementations are gone.
+- Review `admin/` scripts that package legacy installers or Android artifacts (`admin/download-android-deps.sh`) so they don't linger in release tarballs.
+
+## Phased Execution Plan
+- **Phase 1 – Scope Lockdown (Week of 2025-09-29):** Update INSTALL/README/CONTRIBUTE to state the macOS (Cocoa) and Linux (GTK/PGTK) focus; make `./configure` fail fast for unsupported switches such as `--with-android`, `--with-gs`, and Windows options, then regenerate via `autogen.sh all`; align NEWS and CI matrices with the new scope while keeping TTY coverage.
+- **Phase 2 – Retired Platform Shims (Early October 2025):** Delete Windows/MS-DOS residue (`src/conf_post.h` MSDOS block, `src/w16select.c`, `lisp/term/common-win.el`, `pc-win.el`) and remove GNUstep artifacts (`etc/NEXTSTEP`, stale references in INSTALL/FolderStructure.md); regenerate build files, reconfigure with `--with-ns --with-modules`, and run `make -j` plus `make check` on macOS to confirm stability.
+- **Phase 3 – Android and Haiku Retirement (Mid October 2025):** Excise Android sources (`src/android*.c`, headers, Lisp/tests, admin scripts) and strip `HAVE_ANDROID` logic; drop Haiku UI support (`src/haiku*`, `lisp/term/haiku-win.el`) while verifying GTK/PGTK and NS builds still pass bootstrap, test, and GUI smoke checks on Linux and macOS; archive or tag the removed code as needed.
 
 ## Sequencing Recommendations
 1. **Plan the order**: Continue pruning remaining platform directories (e.g., legacy documentation) so downstream references can be removed methodically.

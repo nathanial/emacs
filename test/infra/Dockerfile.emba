@@ -157,19 +157,6 @@ RUN src/emacs -Q --batch \
         (list (expand-file-name "src/emacs")) treesit-admin--builtin-modes \
         (expand-file-name "compatibility-report.html"))'
 
-FROM emacs-base AS emacs-gnustep
-
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends -o=Dpkg::Use-Pty=0 \
-      gnustep-devel zlib1g-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-COPY . /checkout
-WORKDIR /checkout
-RUN ./autogen.sh autoconf
-RUN ./configure --with-ns
-RUN make -j `nproc` bootstrap
-
 FROM emacs-base AS emacs-native-comp
 
 # The libgccjit version must correspond to the gcc version.

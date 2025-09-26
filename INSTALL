@@ -4,10 +4,13 @@ Inc.
 See the end of the file for license conditions.
 
 
-This file contains general information on building GNU Emacs.  If you
-are building an Emacs release tarball on a Unix or a GNU system, the
-instructions in this file should be sufficient.  For other
-configurations, we have additional specialized files:
+This file contains general information on building GNU Emacs on the
+two supported host families: macOS (via the Cocoa/Nextstep port) and
+modern GNU/Linux distributions (via the GTK or PGTK ports).  Terminal
+builds remain available on those platforms, but non-macOS/non-GNU/Linux
+ports (including historical Windows, MS-DOS, Android, GNUstep, and
+other legacy systems) are no longer maintained.  For additional
+platform-specific details, consult:
 
   . INSTALL.REPO if you build from a Git checkout
   . nextstep/INSTALL if you build for macOS
@@ -15,7 +18,7 @@ configurations, we have additional specialized files:
 
 BASIC INSTALLATION
 
-On most Unix systems, you build Emacs by first running the 'configure'
+On supported systems, you build Emacs by first running the 'configure'
 shell script.  This attempts to deduce the correct values for
 various system-dependent variables and features, and find the
 directories where certain system headers and libraries are kept.

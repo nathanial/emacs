@@ -493,6 +493,9 @@ otherwise for the first of 'inotify', 'kqueue' or 'gfile' that is usable.])
  ],
  [with_file_notification=$with_features])
 
+AS_IF([test "x$with_file_notification" = "xw32"],
+  [AC_MSG_ERROR([The MS-Windows file notification backend has been removed.  Choose 'inotify', 'gfile', or 'no' when configuring on supported hosts.])])
+
 OPTION_DEFAULT_OFF([xwidgets],
   [enable use of xwidgets in Emacs buffers (requires gtk3 or macOS Cocoa)])
 
@@ -732,11 +735,38 @@ AC_ARG_VAR([APKSIGNER], [Android package signer path.  Used for Android.])
 AC_ARG_VAR([SDK_BUILD_TOOLS], [Path to the Android SDK build tools.])
 AC_ARG_VAR([ZIP], [Path to the `zip' utility.])
 
-if test "x$with_android" != "xno" && test "x$with_android" != "x"; then
-  AC_MSG_ERROR([Android cross-build and packaging support have been removed in this configuration. Target platforms are modern macOS and Linux only.])
-fi
+AC_ARG_WITH([android],
+  [AS_HELP_STRING([--with-android],
+                  [OBSOLETE: Android packaging support has been removed; builds now target macOS (Cocoa) and GNU/Linux (GTK/PGTK) only.])],
+  [],
+  [with_android=no])
+AS_IF([test "x$with_android" != "xno"],
+  [AC_MSG_ERROR([Android support has been removed.  Reconfigure without '--with-android' or build on a supported macOS/GNU/Linux host.])])
 
-with_android=no
+AC_ARG_WITH([gnustep],
+  [AS_HELP_STRING([--with-gnustep],
+                  [OBSOLETE: the GNUstep port has been removed; the macOS Cocoa port remains available via '--with-ns' on Darwin only.])],
+  [],
+  [with_gnustep=no])
+AS_IF([test "x$with_gnustep" != "xno"],
+  [AC_MSG_ERROR([GNUstep support has been removed.  Use '--with-ns' on macOS or rely on GTK/PGTK on GNU/Linux.])])
+
+AC_ARG_WITH([gs],
+  [AS_HELP_STRING([--with-gs],
+                  [OBSOLETE alias for the removed GNUstep port.])],
+  [],
+  [with_gs=no])
+AS_IF([test "x$with_gs" != "xno"],
+  [AC_MSG_ERROR([GNUstep support has been removed.  '--with-gs' is no longer accepted.])])
+
+AC_ARG_WITH([w32],
+  [AS_HELP_STRING([--with-w32],
+                  [OBSOLETE: the native MS-Windows build has been removed from this tree.])],
+  [],
+  [with_w32=no])
+AS_IF([test "x$with_w32" != "xno"],
+  [AC_MSG_ERROR([MS-Windows support has been removed.  Builds now target macOS (Cocoa) and GNU/Linux (GTK/PGTK) only.])])
+
 ANDROID=no
 
 AC_SUBST([ANDROID])
@@ -774,6 +804,7 @@ case "${canonical}" in
   ## Android
   *linux-android* )
     opsys=android
+    unported=yes
   ;;
 
   ## GNU/Linux and similar ports
@@ -825,6 +856,7 @@ case "${canonical}" in
   ## Cygwin ports
   *-*-cygwin )
     opsys=cygwin
+    unported=yes
   ;;
 
   ## HP 9000 series 700 and 800, running HP/UX
@@ -870,12 +902,12 @@ case "${canonical}" in
   ## QNX Neutrino
   *-nto-qnx* )
     opsys=qnxnto
-    test -z "$CC" && CC=qcc
-    LDFLAGS="-N2M $LDFLAGS"
+    unported=yes
   ;;
 
   *-haiku )
     opsys=haiku
+    unported=yes
   ;;
 
   ## Intel 386 machines where we don't care about the manufacturer.
@@ -924,6 +956,14 @@ if test $unported = yes; then
 If you think it should, please send a report to ${PACKAGE_BUGREPORT}.
 Check 'etc/MACHINES' for recognized configuration names.])
 fi
+
+case "$opsys" in
+  gnu-linux|darwin)
+    ;;
+  *)
+    AC_MSG_ERROR([This configuration targets '${opsys}', but Emacs now only supports macOS (Cocoa) and GNU/Linux (GTK/PGTK).])
+    ;;
+esac
 
 #### Choose a compiler.
 

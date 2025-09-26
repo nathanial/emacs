@@ -148,8 +148,7 @@ default:
         # gfilemonitor, kqueue
         - src/gfilenotify.c
         - src/kqueue.c
-        # MS Windows
-        - "**w32*"
+        # Cocoa/NS port specifics
         - lisp/term/ns-win.el
         - src/ns*.{h,m}
         - src/macfont.{h,m}

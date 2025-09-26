@@ -102,7 +102,7 @@ This creates the Debian-based image emacs-inotify, based on the
 instructions in the file Dockerfile.emba.  This image is good for the
 majority of tests.  However, there are also other image build
 instructions like emacs-filenotify-gio, emacs-eglot,
-emacs-tree-sitter, emacs-gnustep and emacs-native-comp-speed{0,1,2}.
+emacs-tree-sitter and emacs-native-comp-speed{0,1,2}.
 Use the appropriate one.
 
 The image contains a directory "/checkout", which is a copy of your
