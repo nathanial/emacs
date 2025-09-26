@@ -17,28 +17,24 @@ Rationalize the Emacs source tree for a codebase that only targets modern macOS 
 - [x] Removed `lwlib/` Lucid widget toolkit implementation on 2025-09-26.
 - [x] Removed `nextstep/GNUstep/` GNUstep bundle assets and support on 2025-09-26.
 - [x] Retired Windows/MS-DOS shims (`src/w16select.c`, `lisp/term/pc-win.el`) and dropped the `etc/NEXTSTEP` GNUstep doc stub on 2025-09-26.
-- [ ] Audited remaining `HAVE_ANDROID`/`HAVE_HAIKU` references across the tree; removal work tracked in Phase 2 (inventory captured 2025-09-26).
+- [x] Audited remaining `HAVE_ANDROID`/`HAVE_HAIKU` references across the tree and removed them on 2025-09-26 (Phase 2).
 
 ## Remaining Legacy Surfaces
 | Area | Primary Purpose | Status | Follow-Up Tasks & Risks |
 |------|-----------------|--------|-------------------------|
-| Android-specific conditionals (`HAVE_ANDROID`, `ANDROID_STUBIFY`, `android.h`) | Alternative code paths for Android runtime, fonts, loader, and UI. | Inventory complete; removal planned in Phase 2. | Strip macros/includes across C/Lisp, align configure help, confirm builds succeed after guard removal. |
-| Haiku conditionals (`HAVE_HAIKU`, `haiku_*` code) | Legacy Haiku window-system integration. | Inventory complete; removed files but guards remain. | Delete Haiku branches alongside Android cleanup, update docs/tooling to drop references. |
+| Android-specific conditionals (`HAVE_ANDROID`, `ANDROID_STUBIFY`, `android.h`) | Alternative code paths for Android runtime, fonts, loader, and UI. | Removed 2025-09-26. | Validate Linux configure+make during Phase 3, monitor for downstream scripts expecting Android knobs. |
+| Haiku conditionals (`HAVE_HAIKU`, `haiku_*` code) | Legacy Haiku window-system integration. | Removed 2025-09-26. | Update docs/tooling references in Phase 3; ensure no ChangeLog tooling relies on Haiku symbols. |
 | Configure / doc references (`configure.ac`, `INSTALL*`, `etc/NEWS`, `admin/CPP-DEFINES`) | Advertise unsupported platforms/options. | Scope messaging landed in Phase 1; fine-grained references remain. | Remove obsolete flags, rerun Autotools, refresh docs once Android/Haiku code is gone. |
 | Residual Windows/MS-DOS guards (`WINDOWSNT`, `MSDOS`, `GNUSTEP`) | Dead branches in C/Lisp and helper scripts. | Major files deleted; scattered guards persist. | Fold cleanup into Phase 2 sweeps; keep list of remaining symbols for final confirmation. |
 
 ## Additional Cleanup Opportunities
-- Fold removal of remaining `WINDOWSNT`/`MSDOS` conditionals into the Android/Haiku sweeps so touched files end up fully platform-neutral.
+- Continue pruning remaining `WINDOWSNT`/`MSDOS` conditionals alongside upcoming documentation/test passes so touched files end up fully platform-neutral.
 - Capture a canonical list of external tool dependencies (`rust-analyzer`, `clangd`, etc.) needed for `make check` and document skip strategies in CI.
 - Consider archiving deleted platform content (e.g., tarball or git tag) for historical reference before stripping final guard macros.
 
 ## Phased Execution Plan
 - **Phase 1 – Scope Lockdown (Completed 2025-09-26):** Updated INSTALL/README/CONTRIBUTE to clarify the macOS Cocoa + Linux GTK/PGTK focus, made `./configure` reject unsupported switches (Android, Windows, GNUstep, etc.), regenerated Autotools artifacts via `./autogen.sh all`, refreshed NEWS/CI matrices, and verified GUI/TTY builds on macOS.
-- **Phase 2 – Platform Residue Purge (Target start 2025-10-06):**
-  - Remove all `HAVE_ANDROID`/`ANDROID_STUBIFY`/`android.h` usage across core subsystems (fonts, GC, loader/doc readers, terminal/keyboard/image code, build helpers).
-  - Eliminate remaining `HAVE_HAIKU` guards now that the backend is gone, collapsing branches into the supported macOS/Linux paths.
-  - Strip obsolete configure/help text, rerun `./autogen.sh all`, and validate `./configure --with-ns --with-modules && make -j` on macOS/Linux after each subsystem sweep.
-  - Track residual `WINDOWSNT`/`MSDOS` guards encountered during the sweep for cleanup in the same pass where feasible.
+- **Phase 2 – Platform Residue Purge (Completed 2025-09-26):** Removed every `HAVE_ANDROID`/`ANDROID_STUBIFY`/`android.h` and `HAVE_HAIKU` guard across C/Lisp sources (fonts, GC, loader, display back-ends), dropped the Android epaths overrides, regenerated `configure` via `./configure --with-ns --with-modules`, and rebuilt with `make -j8` on macOS to confirm a clean tree. Residual `WINDOWSNT`/`MSDOS` guards observed during the sweep are marked for follow-up in later passes.
 - **Phase 3 – Documentation & CI Alignment (Target start 2025-10-13):**
   - Prune Texinfo nodes and manual sections referencing Lucid, Motif, GNUstep, Android, Haiku, or Windows; ensure `make info` succeeds without missing includes.
   - Update `INSTALL`, `INSTALL.REPO`, `etc/NEWS`, `admin/CPP-DEFINES`, and contributor docs to match the final platform matrix post-sweep.
@@ -62,6 +58,6 @@ Rationalize the Emacs source tree for a codebase that only targets modern macOS 
 - **Build system brittleness**: Aggressive pruning can break Autotools logic. Maintain incremental commits with CI on macOS/Linux to catch regressions early.
 
 ## Next Steps
-- Queue Phase 2 work: start by deleting the shared `android.h` include and collapsing `HAVE_ANDROID` guards in headers/runtime, then iterate through subsystem checklists (fonts, loader, image back-ends, term/keyboard).
-- As each subsystem lands, regenerate Autotools, reconfigure, and smoke-test on macOS/Linux; log any persistent `WINDOWSNT`/`MSDOS` guards for follow-up in the same patchset.
-- Once code paths are clean, begin Phase 3 documentation/CI updates so manuals and automation stay in sync with the supported platform story.
+- Mirror the `./configure --with-ns --with-modules && make -j8` cycle on a Linux GTK/PGTK host (and capture `make check` skip notes) so both supported platforms validate the guard removal.
+- Kick off Phase 3 documentation/CI alignment: prune Texinfo nodes and INSTALL/NEWS references to Android/Haiku, update configure help text, and record required external tools (e.g., `rust-analyzer`) for the test matrix.
+- While touching subsystems for documentation or CI updates, retire any remaining `WINDOWSNT`/`MSDOS` guards to fully align the codebase with the macOS/Linux scope.

@@ -44,20 +44,9 @@ along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.  */
 #include "msdos.h"	/* for fstatat */
 #endif
 
-#if !(defined HAVE_ANDROID && !defined ANDROID_STUBIFY)
 typedef DIR emacs_dir;
 #define emacs_readdir readdir
 #define emacs_closedir closedir
-#else
-
-#include "android.h"
-
-/* The Android emulation of dirent stuff is required to be able to
-   list the /assets special directory.  */
-typedef struct android_vdir emacs_dir;
-#define emacs_readdir android_readdir
-#define emacs_closedir android_closedir
-#endif
 
 #ifdef WINDOWSNT
 extern int is_slow_fs (const char *);
@@ -110,39 +99,13 @@ open_directory (Lisp_Object dirname, Lisp_Object encoded_dirname, int *fdp)
   emacs_dir *d;
   int fd, opendir_errno;
 
-#if defined DOS_NT || (defined HAVE_ANDROID && !defined ANDROID_STUBIFY)
+#if defined DOS_NT
   /* On DOS_NT, directories cannot be opened.  The emulation assumes
      that any file descriptor other than AT_FDCWD corresponds to the
      most recently opened directory.  This hack is good enough for
-     Emacs.
-
-     This code is also used on Android for a different reason: a
-     special `assets' directory outside the normal file system is used
-     to open assets inside the Android application package, and must
-     be listed using the opendir-like interface provided in
-     android.h.  */
+     Emacs.  */
   fd = 0;
-#ifndef HAVE_ANDROID
   d = opendir (name);
-#else
-  /* `android_opendir' can return EINTR if DIRNAME designates a file
-     within a slow-to-respond document provider.  */
-
- again:
-  d = android_opendir (name);
-
-  if (d)
-    fd = android_dirfd (d);
-  else if (errno == EINTR)
-    {
-      maybe_quit ();
-
-      /* Reload the address of DIRNAME's data, as it might have been
-	 relocated by GC.  */
-      name = SSDATA (dirname);
-      goto again;
-    }
-#endif
   opendir_errno = errno;
 #else
   fd = emacs_open (name, O_RDONLY | O_DIRECTORY, 0);
@@ -1039,8 +1002,7 @@ file_attributes (int fd, char const *name,
 
   int err = EINVAL;
 
-#if defined O_PATH && !defined HAVE_CYGWIN_O_PATH_BUG	\
-  && !(defined HAVE_ANDROID && !defined ANDROID_STUBIFY)
+#if defined O_PATH && !defined HAVE_CYGWIN_O_PATH_BUG
   int namefd = emacs_openat (fd, name, O_PATH | O_CLOEXEC | O_NOFOLLOW, 0);
   if (namefd < 0)
     err = errno;

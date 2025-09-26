@@ -3948,7 +3948,7 @@ struct frame;
 
 /* Define if the windowing system provides a menu bar.  */
 #if defined (USE_X_TOOLKIT) || defined (HAVE_NTGUI) \
-  || defined (HAVE_NS) || defined (USE_GTK) || defined (HAVE_HAIKU)
+  || defined (HAVE_NS) || defined (USE_GTK)
 #define HAVE_EXT_MENU_BAR true
 #endif
 
@@ -5325,18 +5325,12 @@ extern int emacs_fstatat (int, char const *, void *, int);
 extern int sys_fstat (int, struct stat *);
 #endif
 extern int sys_faccessat (int, const char *, int, int);
-#if !(defined HAVE_ANDROID && !defined ANDROID_STUBIFY)
 extern int emacs_openat (int, char const *, int, int);
-#endif
 extern int emacs_open (const char *, int, int);
 extern int emacs_open_noquit (const char *, int, int);
 extern int emacs_pipe (int[2]);
 extern int emacs_close (int);
-#if !(defined HAVE_ANDROID && !defined ANDROID_STUBIFY)
 # define emacs_fclose fclose
-#else
-extern int emacs_fclose (FILE *);
-#endif
 extern FILE *emacs_fdopen (int, const char *)
   ATTRIBUTE_MALLOC ATTRIBUTE_DEALLOC (emacs_fclose, 1);
 extern FILE *emacs_fopen (char const *, char const *)
@@ -5382,9 +5376,7 @@ extern Lisp_Object directory_files_internal (Lisp_Object, Lisp_Object,
                                              bool, Lisp_Object, Lisp_Object);
 
 /* Defined in term.c.  */
-#ifndef HAVE_ANDROID
 extern int *char_ins_del_vector;
-#endif
 extern void syms_of_term (void);
 extern AVOID fatal (const char *msgid, ...) ATTRIBUTE_FORMAT_PRINTF (1, 2);
 

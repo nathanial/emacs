@@ -58,9 +58,6 @@ along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.  */
 #include <unistd.h>
 #include <fcntl.h>
 
-#if !defined HAVE_ANDROID || defined ANDROID_STUBIFY	\
-  || (__ANDROID_API__ < 9)
-
 #define lread_fd	int
 #define lread_fd_cmp(n) (fd == (n))
 #define lread_fd_p	(fd >= 0)
@@ -82,79 +79,6 @@ along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.  */
 #else
 #define file_offset long
 #define file_tell ftell
-#endif
-
-#else
-
-#include "android.h"
-
-/* Use an Android file descriptor under Android instead, as this
-   allows loading directly from asset files without loading each asset
-   into memory and creating a separate file descriptor every time.
-
-   Note that `struct android_fd_or_asset' as used here is different
-   from that returned from `android_open_asset'; if fd.asset is NULL,
-   then fd.fd is either a valid file descriptor or -1, meaning that
-   the file descriptor is invalid.
-
-   However, lread requires the ability to seek inside asset files,
-   which is not provided under Android 2.2.  So when building for that
-   particular system, fall back to the usual file descriptor-based
-   code.  */
-
-#define lread_fd	struct android_fd_or_asset
-#define lread_fd_cmp(n)	(!fd.asset && fd.fd == (n))
-#define lread_fd_p	(fd.asset || fd.fd >= 0)
-#define lread_close	android_close_asset
-#define lread_fstat	android_asset_fstat
-#define lread_read_quit	android_asset_read_quit
-#define lread_lseek	android_asset_lseek
-
-/* The invalid file stream.  */
-
-static struct android_fd_or_asset invalid_file_stream =
-  {
-    -1,
-    NULL,
-  };
-
-#define file_stream		struct android_fd_or_asset
-#define file_offset		off_t
-#define file_tell(n)		android_asset_lseek (n, 0, SEEK_CUR)
-#define file_seek		android_asset_lseek
-#define file_stream_valid_p(p)	((p).asset || (p).fd >= 0)
-#define file_stream_close	android_close_asset
-#define file_stream_invalid	invalid_file_stream
-
-/* Return a single character from the file input stream STREAM.
-   Value and errors are the same as getc.  */
-
-static int
-file_get_char (file_stream stream)
-{
-  int c;
-  char byte;
-  ssize_t rc;
-
- retry:
-  rc = android_asset_read (stream, &byte, 1);
-
-  if (rc == 0)
-    c = EOF;
-  else if (rc == -1)
-    {
-      if (errno == EINTR)
-	goto retry;
-      else
-	c = EOF;
-    }
-  else
-    c = (unsigned char) byte;
-
-  return c;
-}
-
-#define USE_ANDROID_ASSETS
 #endif
 
 #if IEEE_FLOATING_POINT
@@ -248,7 +172,8 @@ static Lisp_Object oblookup_considering_shorthand (Lisp_Object, const char *,
 						   char **, ptrdiff_t *,
 						   ptrdiff_t *);
 
-
+
+
 /* When READCHARFUN is Qget_file_char or Qget_emacs_mule_file_char,
    we use this to keep an unread character because
    a file stream can't handle multibyte-char unreading.  The value -1
@@ -744,7 +669,8 @@ static Lisp_Object read0 (source_t *source, bool locate_syms);
 static Lisp_Object substitute_object_recurse (struct subst *, Lisp_Object);
 static void substitute_in_interval (INTERVAL, void *);
 
-
+
+
 typedef enum {
   Cookie_None,			/* no cookie */
   Cookie_Dyn,			/* explicit dynamic binding */
@@ -883,7 +809,8 @@ lisp_file_lexical_cookie (Lisp_Object readcharfun)
       return rv;
     }
 }
-
+
+
 /* Value is a version number of byte compiled code if the file
    associated with file descriptor FD is a compiled Lisp file that's
    safe to load.  Only files compiled with Emacs can be loaded.  */
@@ -1578,7 +1505,8 @@ save_match_data_load (Lisp_Object file, Lisp_Object noerror,
   Lisp_Object result = Fload (file, noerror, nomessage, nosuffix, must_suffix);
   return unbind_to (count, result);
 }
-
+
+
 static bool
 complete_filename_p (Lisp_Object pathname)
 {
@@ -2043,7 +1971,8 @@ openp (Lisp_Object path, Lisp_Object str, Lisp_Object suffixes,
 #endif
 }
 
-
+
+
 /* Merge the list we've accumulated of globals from the current input source
    into the load_history variable.  The details depend on whether
    the source has an associated file name or not.
@@ -2450,7 +2379,8 @@ This function does not move point.  */)
   return unbind_to (count, Qnil);
 }
 
-
+
+
 DEFUN ("read", Fread, Sread, 0, 1, 0,
        doc: /* Read one Lisp expression as text from STREAM, return as Lisp object.
 If STREAM is nil, use the value of `standard-input' (which see).
@@ -2566,7 +2496,8 @@ read_internal_start (Lisp_Object stream, Lisp_Object start, Lisp_Object end,
     read_objects_completed = Qnil;
   return retval;
 }
-
+
+
 /* Return the scalar value that has the Unicode character name NAME.
    Raise 'invalid-read-syntax' if there is no such character.  */
 static int
@@ -2984,7 +2915,8 @@ read_integer (source_t *source, int radix)
   *rb.cur++ = '\0';
   return unbind_to (count, string_to_number (rb.start, radix, NULL));
 }
-
+
+
 
 /* Read a character literal (preceded by `?').  */
 static Lisp_Object
@@ -4373,7 +4305,8 @@ read0 (source_t *source, bool locate_syms)
   return unbind_to (base_pdl, obj);
 }
 
-
+
+
 DEFUN ("lread--substitute-object-in-subtree",
        Flread__substitute_object_in_subtree,
        Slread__substitute_object_in_subtree, 3, 3, 0,
@@ -4478,7 +4411,8 @@ substitute_in_interval (INTERVAL interval, void *arg)
 		      substitute_object_recurse (arg, interval->plist));
 }
 
-
+
+
 #if !IEEE_FLOATING_POINT
 /* Strings that stand in for +NaN, -NaN, respectively.  */
 static Lisp_Object not_a_number[2];
@@ -4629,7 +4563,8 @@ string_to_number (char const *string, int base, ptrdiff_t *plen)
   return result;
 }
 
-
+
+
 static Lisp_Object initial_obarray;
 
 static Lisp_Object make_obarray (unsigned bits);
@@ -4764,7 +4699,8 @@ define_symbol (Lisp_Object sym, char const *str)
       intern_sym (sym, initial_obarray, bucket);
     }
 }
-
+
+
 DEFUN ("intern", Fintern, Sintern, 1, 2, 0,
        doc: /* Return the canonical symbol whose name is STRING.
 If there is none, one is created by this function and returned.
@@ -4841,7 +4777,8 @@ it defaults to the value of `obarray'.  */)
       return BASE_EQ (sym, tem) ? name : Qnil;
     }
 }
-
+
+
 /* Bucket index of the string STR of length SIZE_BYTE bytes in obarray OA.  */
 static ptrdiff_t
 obarray_index (struct Lisp_Obarray *oa, const char *str, ptrdiff_t size_byte)
@@ -4916,7 +4853,8 @@ OBARRAY, if nil, defaults to the value of the variable `obarray'.  */)
   o->count--;
   return Qt;
 }
-
+
+
 
 /* Return the symbol in OBARRAY whose name matches the string
    of SIZE characters (SIZE_BYTE bytes) at PTR.
@@ -5011,7 +4949,8 @@ oblookup_considering_shorthand (Lisp_Object obarray, const char *in,
     return oblookup (obarray, in, size, size_byte);
 }
 
-
+
+
 static struct Lisp_Obarray *
 allocate_obarray (void)
 {
@@ -5215,7 +5154,8 @@ init_obarray_once (void)
   DEFSYM (Qvariable_documentation, "variable-documentation");
 }
 
-
+
+
 void
 defsubr (union Aligned_Lisp_Subr *aname)
 {
@@ -5286,7 +5226,8 @@ defvar_kboard (struct Lisp_Kboard_Objfwd const *ko_fwd, char const *namestring)
   XBARE_SYMBOL (sym)->u.s.redirect = SYMBOL_FORWARDED;
   SET_SYMBOL_FWD (XBARE_SYMBOL (sym), ko_fwd);
 }
-
+
+
 /* Check that the elements of lpath exist.  */
 
 static void

@@ -654,15 +654,13 @@ struct frame
     struct w32_output *w32;		/* From w32term.h.  */
     struct ns_output *ns;		/* From nsterm.h.  */
     struct pgtk_output *pgtk;		/* From pgtkterm.h. */
-    struct haiku_output *haiku;		/* From haikuterm.h. */
-    struct android_output *android;	/* From androidterm.h.  */
   }
   output_data;
 
   /* List of font-drivers available on the frame.  */
   struct font_driver_list *font_driver_list;
 
-#if defined HAVE_X_WINDOWS || defined HAVE_ANDROID
+#if defined HAVE_X_WINDOWS
   /* Used by x_wait_for_event when watching for an X event on this
      frame.  */
   int wait_event_type;
@@ -942,16 +940,6 @@ default_pixels_per_inch_y (void)
 #else
 #define FRAME_PGTK_P(f) ((f)->output_method == output_pgtk)
 #endif
-#ifndef HAVE_HAIKU
-#define FRAME_HAIKU_P(f) false
-#else
-#define FRAME_HAIKU_P(f) ((f)->output_method == output_haiku)
-#endif
-#ifndef HAVE_ANDROID
-#define FRAME_ANDROID_P(f) false
-#else
-#define FRAME_ANDROID_P(f) ((f)->output_method == output_android)
-#endif
 
 /* FRAME_WINDOW_P tests whether the frame is a graphical window system
    frame.  */
@@ -967,12 +955,6 @@ default_pixels_per_inch_y (void)
 #ifdef HAVE_PGTK
 #define FRAME_WINDOW_P(f) FRAME_PGTK_P(f)
 #endif
-#ifdef HAVE_HAIKU
-#define FRAME_WINDOW_P(f) FRAME_HAIKU_P (f)
-#endif
-#ifdef HAVE_ANDROID
-#define FRAME_WINDOW_P(f) FRAME_ANDROID_P (f)
-#endif
 #ifndef FRAME_WINDOW_P
 #define FRAME_WINDOW_P(f) ((void) (f), false)
 #endif
@@ -986,18 +968,7 @@ default_pixels_per_inch_y (void)
 #define FRAME_RES_Y(f)						\
   (eassert (FRAME_WINDOW_P (f)), FRAME_DISPLAY_INFO (f)->resy)
 
-#ifdef HAVE_ANDROID
-
-/* Android systems use a font scaling factor independent from the
-   display DPI.  */
-
-#define FRAME_RES(f)						\
-  (eassert (FRAME_WINDOW_P (f)),				\
-   FRAME_DISPLAY_INFO (f)->font_resolution)
-
-#else /* !HAVE_ANDROID */
 #define FRAME_RES(f) FRAME_RES_Y (f)
-#endif /* HAVE_ANDROID */
 
 #else /* !HAVE_WINDOW_SYSTEM */
 
@@ -1014,16 +985,10 @@ default_pixels_per_inch_y (void)
    frame F.  We need to define two versions because a TTY-only build
    does not have FRAME_DISPLAY_INFO.  */
 #ifdef HAVE_WINDOW_SYSTEM
-#ifndef HAVE_ANDROID
 #   define MOUSE_HL_INFO(F)					\
   (FRAME_WINDOW_P (F)						\
    ? &FRAME_DISPLAY_INFO (F)->mouse_highlight			\
    : &(F)->output_data.tty->display_info->mouse_highlight)
-#else
-/* There is no "struct tty_output" on Android at all.  */
-# define MOUSE_HL_INFO(F)					\
-  (&FRAME_DISPLAY_INFO(F)->mouse_highlight)
-#endif
 #else
 # define MOUSE_HL_INFO(F)					\
   (&(F)->output_data.tty->display_info->mouse_highlight)

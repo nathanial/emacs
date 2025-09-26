@@ -53,14 +53,9 @@ typedef struct
   unsigned short red, green, blue;
 } Emacs_Color;
 
-#ifndef HAVE_ANDROID
 /* Accommodate X's usage of None as a null resource ID.  */
 #define No_Cursor (NULL)
-#else
-#define No_Cursor 0
-#endif
 
-#ifndef HAVE_ANDROID
 
 /* XRectangle-like struct used by non-X GUI code.  */
 typedef struct
@@ -82,18 +77,6 @@ typedef struct
 #define GCForeground 0x01
 #define GCBackground 0x02
 
-#else
-
-typedef struct android_rectangle Emacs_Rectangle;
-typedef struct android_gc_values Emacs_GC;
-
-#define GCForeground		ANDROID_GC_FOREGROUND
-#define GCBackground		ANDROID_GC_BACKGROUND
-#define GCFillStyle		ANDROID_GC_FILL_STYLE
-#define GCStipple		ANDROID_GC_STIPPLE
-#define FillOpaqueStippled	ANDROID_FILL_OPAQUE_STIPPLED
-
-#endif
 
 #endif /* HAVE_X_WINDOWS */
 
@@ -156,19 +139,7 @@ typedef Emacs_Pixmap XImagePtr;
 typedef XImagePtr XImagePtr_or_DC;
 #endif /* HAVE_PGTK */
 
-#ifdef HAVE_HAIKU
-#include "haikugui.h"
-typedef struct haiku_display_info Display_Info;
-typedef Emacs_Pixmap Emacs_Pix_Container;
-typedef Emacs_Pixmap Emacs_Pix_Context;
-#endif
 
-#ifdef HAVE_ANDROID
-#include "androidgui.h"
-typedef struct android_display_info Display_Info;
-typedef struct android_image *Emacs_Pix_Container;
-typedef struct android_image *Emacs_Pix_Context;
-#endif
 
 #ifdef HAVE_WINDOW_SYSTEM
 # include <time.h>
@@ -1448,8 +1419,6 @@ struct glyph_string
   /* The GC to use for drawing this glyph string.  */
 #if defined (HAVE_X_WINDOWS)
   GC gc;
-#elif defined HAVE_ANDROID
-  struct android_gc *gc;
 #endif
 #if defined (HAVE_NTGUI)
   Emacs_GC *gc;
@@ -1764,8 +1733,6 @@ struct face
      drawing the characters in this face.  */
 # ifdef HAVE_X_WINDOWS
   GC gc;
-# elif defined HAVE_ANDROID
-  struct android_gc *gc;
 # else
   Emacs_GC *gc;
 # endif
@@ -3160,8 +3127,7 @@ struct redisplay_interface
 #ifdef HAVE_WINDOW_SYSTEM
 
 # if (defined USE_CAIRO || defined HAVE_XRENDER				\
-      || defined HAVE_NS || defined HAVE_NTGUI || defined HAVE_HAIKU	\
-      || defined HAVE_ANDROID)
+      || defined HAVE_NS || defined HAVE_NTGUI)
 #  define HAVE_NATIVE_TRANSFORMS
 # endif
 
@@ -3197,27 +3163,9 @@ struct image
   int original_width, original_height;
 # endif
 #endif	/* HAVE_X_WINDOWS */
-#ifdef HAVE_ANDROID
-  /* Android images of the image, corresponding to the above Pixmaps.
-     Non-NULL means it and its Pixmap counterpart may be out of sync
-     and the latter is outdated.  NULL means the X image has been
-     synchronized to Pixmap.  */
-  struct android_image *ximg, *mask_img;
-#endif /* HAVE_ANDROID */
 #ifdef HAVE_NTGUI
   XFORM xform;
   bool smoothing;
-#endif
-#ifdef HAVE_HAIKU
-  /* The affine transformation to apply to this image.  */
-  double transform[3][3];
-
-  /* The original width and height of the image.  */
-  int original_width, original_height;
-
-  /* Whether or not bilinear filtering should be used to "smooth" the
-     image.  */
-  bool use_bilinear_filtering;
 #endif
 
   /* Colors allocated for this image, if any.  Allocated via xmalloc.  */
@@ -3637,11 +3585,9 @@ extern void gui_clear_window_mouse_face (struct window *);
 extern void cancel_mouse_face (struct frame *);
 extern bool clear_mouse_face (Mouse_HLInfo *);
 extern bool cursor_in_mouse_face_p (struct window *w);
-#ifndef HAVE_ANDROID
 extern void tty_draw_row_with_mouse_face (struct window *, struct glyph_row *,
 					  int, int, enum draw_glyphs_face);
 extern void display_tty_menu_item (const char *, int, int, int, int, bool);
-#endif
 extern struct glyph *x_y_to_hpos_vpos (struct window *, int, int, int *, int *,
 				       int *, int *, int *);
 /* Flags passed to try_window.  */
@@ -3704,8 +3650,7 @@ void prepare_image_for_display (struct frame *, struct image *);
 ptrdiff_t lookup_image (struct frame *, Lisp_Object, int);
 Lisp_Object image_spec_value (Lisp_Object, Lisp_Object, bool *);
 
-#if defined HAVE_X_WINDOWS || defined USE_CAIRO || defined HAVE_NS \
-  || defined HAVE_HAIKU || defined HAVE_ANDROID
+#if defined HAVE_X_WINDOWS || defined USE_CAIRO || defined HAVE_NS
 #define RGB_PIXEL_COLOR unsigned long
 #endif
 
@@ -3785,12 +3730,6 @@ void gamma_correct (struct frame *, XColor *);
 #endif
 #ifdef HAVE_NTGUI
 void gamma_correct (struct frame *, COLORREF *);
-#endif
-#ifdef HAVE_HAIKU
-void gamma_correct (struct frame *, Emacs_Color *);
-#endif
-#ifdef HAVE_ANDROID
-extern void gamma_correct (struct frame *, Emacs_Color *);
 #endif
 
 #ifdef HAVE_WINDOW_SYSTEM

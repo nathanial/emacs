@@ -1335,7 +1335,6 @@ make_initial_frame (void)
   return f;
 }
 
-#ifndef HAVE_ANDROID
 
 static struct frame *
 make_terminal_frame (struct terminal *terminal, Lisp_Object parent,
@@ -1500,7 +1499,6 @@ get_future_frame_param (Lisp_Object parameter,
   return result;
 }
 
-#endif
 
 int
 tty_child_pos_param (struct frame *f, Lisp_Object key,
@@ -1580,7 +1578,6 @@ tty_child_size_param (struct frame *child, Lisp_Object key,
   return dflt;
 }
 
-#ifndef HAVE_ANDROID
 
 static void
 tty_child_frame_rect (struct frame *f, Lisp_Object params,
@@ -1592,7 +1589,6 @@ tty_child_frame_rect (struct frame *f, Lisp_Object params,
   *y = tty_child_pos_param (f, Qtop, params, 0, *h);
 }
 
-#endif /* !HAVE_ANDROID */
 
 DEFUN ("make-terminal-frame", Fmake_terminal_frame, Smake_terminal_frame,
        1, 1, 0,
@@ -1613,10 +1609,6 @@ Note that changing the size of one terminal frame automatically
 affects all frames on the same terminal device.  */)
   (Lisp_Object parms)
 {
-#ifdef HAVE_ANDROID
-  error ("Text terminals are not supported on this platform");
-  return Qnil;
-#else
   struct terminal *t = NULL;
   struct frame *sf = SELECTED_FRAME ();
 
@@ -1760,7 +1752,6 @@ affects all frames on the same terminal device.  */)
   f->after_make_frame = true;
 
   return frame;
-#endif
 }
 
 
@@ -2488,10 +2479,6 @@ delete_frame (Lisp_Object frame, Lisp_Object force)
 #ifdef HAVE_X_WINDOWS
   else if ((x_dnd_in_progress && f == x_dnd_frame)
 	   || (x_dnd_waiting_for_finish && f == x_dnd_finish_frame))
-    error ("Attempt to delete the drop source frame");
-#endif
-#ifdef HAVE_HAIKU
-  else if (f == haiku_dnd_frame)
     error ("Attempt to delete the drop source frame");
 #endif
 
@@ -5989,7 +5976,6 @@ gui_display_get_resource (Display_Info *dpyinfo, Lisp_Object attribute,
   *nz++ = '.';
   lispstpcpy (nz, attribute);
 
-#ifndef HAVE_ANDROID
   const char *value
     = dpyinfo->terminal->get_string_resource_hook (&dpyinfo->rdb,
 						   name_key,
@@ -6001,11 +5987,6 @@ gui_display_get_resource (Display_Info *dpyinfo, Lisp_Object attribute,
     return build_string (value);
   else
     return Qnil;
-#else
-
-  SAFE_FREE ();
-  return Qnil;
-#endif
 }
 
 
@@ -7135,7 +7116,7 @@ Setting this variable does not affect existing frames, only new ones.  */);
 
   DEFVAR_LISP ("default-frame-scroll-bars", Vdefault_frame_scroll_bars,
 	       doc: /* Default position of vertical scroll bars on this window-system.  */);
-#if defined HAVE_WINDOW_SYSTEM && !defined HAVE_ANDROID
+#if defined HAVE_WINDOW_SYSTEM
 #if defined (HAVE_NTGUI) || defined (NS_IMPL_COCOA) || (defined (USE_GTK) && defined (USE_TOOLKIT_SCROLL_BARS))
   /* MS-Windows, macOS, and GTK have scroll bars on the right by
      default.  */
@@ -7143,13 +7124,13 @@ Setting this variable does not affect existing frames, only new ones.  */);
 #else
   Vdefault_frame_scroll_bars = Qleft;
 #endif
-#else /* !HAVE_WINDOW_SYSTEM || HAVE_ANDROID */
+#else /* !HAVE_WINDOW_SYSTEM */
   Vdefault_frame_scroll_bars = Qnil;
-#endif /* HAVE_WINDOW_SYSTEM && !HAVE_ANDROID */
+#endif /* HAVE_WINDOW_SYSTEM */
 
   DEFVAR_BOOL ("scroll-bar-adjust-thumb-portion",
                scroll_bar_adjust_thumb_portion_p,
-               doc: /* Adjust scroll bars for overscrolling for Gtk+, Motif and Haiku.
+               doc: /* Adjust scroll bars for overscrolling with GUI toolkits.
 Non-nil means adjust the thumb in the scroll bar so it can be dragged downwards
 even if the end of the buffer is shown (i.e. overscrolling).
 Set to nil if you want the thumb to be at the bottom when the end of the buffer
@@ -7365,7 +7346,7 @@ fullheight frames and the width of fullwidth frames never change
 implicitly.  Note also that when a frame is not large enough to
 accommodate a change of any of the parameters listed above, Emacs may
 try to enlarge the frame even if this option is non-nil.  */);
-#if defined (HAVE_WINDOW_SYSTEM) && !defined (HAVE_ANDROID)
+#if defined (HAVE_WINDOW_SYSTEM)
 #if defined (USE_GTK) || defined (HAVE_NS)
   frame_inhibit_implied_resize = list1 (Qtab_bar_lines);
 #else

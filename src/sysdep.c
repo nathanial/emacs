@@ -132,13 +132,7 @@ int _cdecl _spawnlp (int, const char *, const char *, ...);
 # include <sys/socket.h>
 #endif
 
-#ifdef HAVE_ANDROID
-#include "android.h"
-#endif
 
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY
-#include "sfntfont.h"
-#endif
 
 /* Declare here, including term.h is problematic on some systems.  */
 extern void tputs (const char *, int, int (*)(int));
@@ -790,7 +784,6 @@ init_sigio (int fd)
 #endif
 }
 
-#ifndef HAVE_ANDROID
 #ifndef DOS_NT
 #ifdef F_SETOWN
 static void
@@ -801,7 +794,6 @@ reset_sigio (int fd)
 #endif
 }
 #endif /* F_SETOWN */
-#endif
 #endif
 
 void
@@ -974,7 +966,6 @@ narrow_foreground_group (int fd)
     tcsetpgrp_without_stopping (fd, getpid ());
 }
 
-#ifndef HAVE_ANDROID
 
 /* Set the tty to our original foreground group.  */
 static void
@@ -984,7 +975,6 @@ widen_foreground_group (int fd)
     tcsetpgrp_without_stopping (fd, inherited_pgroup);
 }
 
-#endif
 
 
 /* Getting and setting emacs_tty structures.  */
@@ -1504,7 +1494,6 @@ reset_sys_modes (struct tty_display_info *tty_out)
       return;
     }
 
-#ifndef HAVE_ANDROID
   if (!tty_out->term_initted)
     return;
 
@@ -1561,7 +1550,6 @@ reset_sys_modes (struct tty_display_info *tty_out)
 #endif
 
   widen_foreground_group (fileno (tty_out->input));
-#endif
 }
 
 #ifdef HAVE_PTYS
@@ -1812,39 +1800,6 @@ handle_arith_signal (int sig)
   xsignal0 (Qarith_error);
 }
 
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY && defined HAVE_MMAP
-
-static void
-handle_sigbus (int sig, siginfo_t *siginfo, void *arg)
-{
-  /* If this arrives during sfntfont_open, then Emacs may be
-     screwed.  */
-
-  if (sfntfont_detect_sigbus (siginfo->si_addr))
-    return;
-
-  handle_fatal_signal (sig);
-}
-
-/* Try to set up SIGBUS handling for the sfnt font driver.
-   Value is 1 upon failure, 0 otherwise.  */
-
-static int
-init_sigbus (void)
-{
-  struct sigaction sa;
-
-  sigfillset (&sa.sa_mask);
-  sa.sa_sigaction = handle_sigbus;
-  sa.sa_flags = SA_SIGINFO;
-
-  if (sigaction (SIGBUS, &sa, NULL))
-    return 1;
-
-  return 0;
-}
-
-#endif
 
 #if defined HAVE_STACK_OVERFLOW_HANDLING && !defined WINDOWSNT
 
@@ -1930,14 +1885,6 @@ handle_sigsegv (int sig, siginfo_t *siginfo, void *arg)
   if (!fatal && stack_overflow (siginfo))
     siglongjmp (return_to_command_loop, 1);
 
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY
-  /* Tombstones (crash reports with stack traces) won't be generated on
-     Android unless the original SIGSEGV handler is installed and the
-     signal is resent, such as by returning from the first signal
-     handler called.  */
-  sigaction (SIGSEGV, &old_sigsegv_handler, NULL);
-  return;
-#endif /* HAVE_ANDROID && ANDROID_STUBIFY */
 
   /* Otherwise we can't do anything with this.  */
   deliver_fatal_thread_signal (sig);
@@ -2078,13 +2025,11 @@ init_signals (void)
 
   /* SIGUSR1 and SIGUSR2 are used internally by the android_select
      function.  */
-#if !defined HAVE_ANDROID
 #ifdef SIGUSR1
   add_user_signal (SIGUSR1, "sigusr1");
 #endif
 #ifdef SIGUSR2
   add_user_signal (SIGUSR2, "sigusr2");
-#endif
 #endif
 
   sigaction (SIGABRT, &thread_fatal_action, 0);
@@ -2110,9 +2055,6 @@ init_signals (void)
   sigaction (SIGEMT, &thread_fatal_action, 0);
 #endif
 #ifdef SIGBUS
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY && defined HAVE_MMAP
-  if (init_sigbus ())
-#endif
     sigaction (SIGBUS, &thread_fatal_action, 0);
 #endif
   if (!init_sigsegv ())
@@ -2370,8 +2312,7 @@ emacs_backtrace (int backtrace_limit)
     }
 }
 
-#if !defined HAVE_NTGUI && !(defined HAVE_ANDROID		\
-			     && !defined ANDROID_STUBIFY)
+#if !defined HAVE_NTGUI
 void
 emacs_abort (void)
 {
@@ -2393,19 +2334,12 @@ int
 emacs_fstatat (int dirfd, char const *filename, void *st, int flags)
 {
   int r;
-#if !(defined HAVE_ANDROID && !defined ANDROID_STUBIFY)
   while ((r = fstatat (dirfd, filename, st, flags)) != 0
 	 && errno == EINTR)
     maybe_quit ();
-#else
-  while ((r = android_fstatat (dirfd, filename, st, flags)) != 0
-	 && errno == EINTR)
-    maybe_quit ();
-#endif
   return r;
 }
 
-#if !(defined HAVE_ANDROID && !defined ANDROID_STUBIFY)
 
 static int
 sys_openat (int dirfd, char const *file, int oflags, int mode)
@@ -2421,26 +2355,17 @@ sys_openat (int dirfd, char const *file, int oflags, int mode)
 #endif
 }
 
-#endif
 
 int
 sys_fstat (int fd, struct stat *statb)
 {
-#if !(defined HAVE_ANDROID && !defined ANDROID_STUBIFY)
   return fstat (fd, statb);
-#else
-  return android_fstat (fd, statb);
-#endif
 }
 
 int
 sys_faccessat (int fd, const char *pathname, int mode, int flags)
 {
-#if !(defined HAVE_ANDROID && !defined ANDROID_STUBIFY)
   return faccessat (fd, pathname, mode, flags);
-#else
-  return android_faccessat (fd, pathname, mode, flags);
-#endif
 }
 
 /* Assuming the directory DIRFD, open FILE for Emacs use,
@@ -2451,7 +2376,6 @@ sys_faccessat (int fd, const char *pathname, int mode, int flags)
    Do not fail merely because the open was interrupted by a signal.
    Allow the user to quit.  */
 
-#if !(defined HAVE_ANDROID && !defined ANDROID_STUBIFY)
 
 int
 emacs_openat (int dirfd, char const *file, int oflags, int mode)
@@ -2465,23 +2389,12 @@ emacs_openat (int dirfd, char const *file, int oflags, int mode)
   return fd;
 }
 
-#endif
 
 int
 emacs_open (char const *file, int oflags, int mode)
 {
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY
-  int fd;
-#endif
 
-#if !(defined HAVE_ANDROID && !defined ANDROID_STUBIFY)
   return emacs_openat (AT_FDCWD, file, oflags, mode);
-#else
-  while ((fd = android_open (file, oflags, mode)) < 0 && errno == EINTR)
-    maybe_quit ();
-
-  return fd;
-#endif
 }
 
 /* Same as above, but doesn't allow the user to quit.  */
@@ -2493,15 +2406,9 @@ emacs_open_noquit (char const *file, int oflags, int mode)
   if (! (oflags & O_TEXT))
     oflags |= O_BINARY;
   oflags |= O_CLOEXEC;
-#if !(defined HAVE_ANDROID && !defined ANDROID_STUBIFY)
   do
     fd = open (file, oflags, mode);
   while (fd < 0 && errno == EINTR);
-#else
-  do
-    fd = android_open (file, oflags, mode);
-  while (fd < 0 && errno == EINTR);
-#endif
   return fd;
 }
 
@@ -2551,7 +2458,6 @@ emacs_pipe (int fd[2])
    For the background behind this mess, please see Austin Group defect 529
    <https://austingroupbugs.net/view.php?id=529>.  */
 
-#if !(defined HAVE_ANDROID && !defined ANDROID_STUBIFY)
 
 #ifndef POSIX_CLOSE_RESTART
 # define POSIX_CLOSE_RESTART 1
@@ -2579,7 +2485,6 @@ posix_close (int fd, int flag)
 }
 #endif
 
-#endif
 
 /* Close FD, retrying if interrupted.  If successful, return 0;
    otherwise, return -1 and set errno to a non-EINTR value.  Consider
@@ -2597,12 +2502,7 @@ emacs_close (int fd)
 
   while (1)
     {
-#if !(defined HAVE_ANDROID && !defined ANDROID_STUBIFY)
       r = posix_close (fd, POSIX_CLOSE_RESTART);
-#else
-      r = android_close (fd) == 0 || errno == EINTR ? 0 : -1;
-#define POSIX_CLOSE_RESTART 1
-#endif
 
       if (r == 0)
 	return r;
@@ -2620,24 +2520,13 @@ emacs_close (int fd)
 FILE *
 emacs_fdopen (int fd, const char *mode)
 {
-#if !(defined HAVE_ANDROID && !defined ANDROID_STUBIFY)
   return fdopen (fd, mode);
-#else /* !defined HAVE_ANDROID || defined ANDROID_STUBIFY */
-  return android_fdopen (fd, mode);
-#endif /* !(defined HAVE_ANDROID && !defined ANDROID_STUBIFY) */
 }
 
 /* Wrapper around fclose.  On Android, this calls `android_fclose' to
    clear information associated with the FILE's file descriptor if
    necessary.  */
 
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY
-int
-emacs_fclose (FILE *stream)
-{
-  return android_fclose (stream);
-}
-#endif
 
 /* Wrappers around unlink, symlink, rename, renameat_noreplace, and
    rmdir.  These operations handle asset and content directories on
@@ -2646,72 +2535,44 @@ emacs_fclose (FILE *stream)
 int
 emacs_unlink (const char *name)
 {
-#if !(defined HAVE_ANDROID && !defined ANDROID_STUBIFY)
   return unlink (name);
-#else /* !defined HAVE_ANDROID || defined ANDROID_STUBIFY */
-  return android_unlink (name);
-#endif /* !(defined HAVE_ANDROID && !defined ANDROID_STUBIFY) */
 }
 
 int
 emacs_symlink (const char *target, const char *linkname)
 {
-#if !(defined HAVE_ANDROID && !defined ANDROID_STUBIFY)
   return symlink (target, linkname);
-#else /* !defined HAVE_ANDROID || defined ANDROID_STUBIFY */
-  return android_symlink (target, linkname);
-#endif /* !(defined HAVE_ANDROID && !defined ANDROID_STUBIFY) */
 }
 
 int
 emacs_rmdir (const char *dirname)
 {
-#if !(defined HAVE_ANDROID && !defined ANDROID_STUBIFY)
   return rmdir (dirname);
-#else /* !defined HAVE_ANDROID || defined ANDROID_STUBIFY */
-  return android_rmdir (dirname);
-#endif /* !(defined HAVE_ANDROID && !defined ANDROID_STUBIFY) */
 }
 
 int
 emacs_mkdir (const char *dirname, mode_t mode)
 {
-#if !(defined HAVE_ANDROID && !defined ANDROID_STUBIFY)
   return mkdir (dirname, mode);
-#else /* !defined HAVE_ANDROID || defined ANDROID_STUBIFY */
-  return android_mkdir (dirname, mode);
-#endif /* !(defined HAVE_ANDROID && !defined ANDROID_STUBIFY) */
 }
 
 int
 emacs_renameat_noreplace (int srcfd, const char *src,
 			  int dstfd, const char *dst)
 {
-#if !(defined HAVE_ANDROID && !defined ANDROID_STUBIFY)
   return renameat_noreplace (srcfd, src, dstfd, dst);
-#else /* !defined HAVE_ANDROID || defined ANDROID_STUBIFY */
-  return android_renameat_noreplace (srcfd, src, dstfd, dst);
-#endif /* !(defined HAVE_ANDROID && !defined ANDROID_STUBIFY) */
 }
 
 int
 emacs_rename (const char *src, const char *dst)
 {
-#if !(defined HAVE_ANDROID && !defined ANDROID_STUBIFY)
   return rename (src, dst);
-#else /* !defined HAVE_ANDROID || defined ANDROID_STUBIFY */
-  return android_rename (src, dst);
-#endif /* !(defined HAVE_ANDROID && !defined ANDROID_STUBIFY) */
 }
 
 int
 emacs_fchmodat (int fd, const char *path, mode_t mode, int flags)
 {
-#if !(defined HAVE_ANDROID && !defined ANDROID_STUBIFY)
   return fchmodat (fd, path, mode, flags);
-#else /* !defined HAVE_ANDROID || defined ANDROID_STUBIFY */
-  return android_fchmodat (fd, path, mode, flags);
-#endif /* !(defined HAVE_ANDROID && !defined ANDROID_STUBIFY) */
 }
 
 /* Verify that SYS_BUFSIZE_MAX fits in the relevant standard types.  */

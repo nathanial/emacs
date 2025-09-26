@@ -33,9 +33,6 @@ along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.  */
 #include <sys/utsname.h>
 #endif
 
-#ifdef HAVE_ANDROID
-#include "android.h"
-#endif
 
 #include "lisp.h"
 

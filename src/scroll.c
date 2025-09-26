@@ -24,7 +24,6 @@ along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.  */
 /* The entire file is defined out under Android, where there is no
    text terminal support of any kind.  */
 
-#ifndef HAVE_ANDROID
 
 #include "lisp.h"
 #include "termchar.h"
@@ -989,5 +988,3 @@ do_line_insertion_deletion_costs (struct frame *frame,
 		 FRAME_DELETE_COST (frame), FRAME_DELETEN_COST (frame),
 		 coefficient);
 }
-
-#endif

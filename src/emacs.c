@@ -34,13 +34,7 @@ along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.  */
 #include "lisp.h"
 #include "sysstdio.h"
 
-#ifdef HAVE_ANDROID
-#include "androidterm.h"
-#endif
 
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY
-#include "sfntfont.h"
-#endif
 
 #ifdef WINDOWSNT
 #include <fcntl.h>
@@ -117,9 +111,6 @@ along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.  */
 #include "getpagesize.h"
 #include "gnutls.h"
 
-#ifdef HAVE_HAIKU
-#include <kernel/OS.h>
-#endif
 
 #ifdef PROFILING
 # include <sys/gmon.h>
@@ -140,9 +131,6 @@ extern char etext;
 #include <sys/resource.h>
 #endif
 
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY
-#include "android.h"
-#endif
 
 /* We don't guard this with HAVE_TREE_SITTER because treesit.o is
    always compiled (to provide treesit-available-p).  */
@@ -206,11 +194,8 @@ bool display_arg;
 
    We mark being in the exec'd process by a daemon name argument of
    form "--daemon=\nFD0,FD1\nNAME" where FD are the pipe file descriptors,
-   NAME is the original daemon name, if any.
-
-   On Haiku, the table of semaphores used for looper locks doesn't
-   persist across forked processes.  */
-#if defined NS_IMPL_COCOA || defined CYGWIN || defined HAVE_HAIKU
+   NAME is the original daemon name, if any.  */
+#if defined NS_IMPL_COCOA || defined CYGWIN
 # define DAEMON_MUST_EXEC
 #endif
 
@@ -419,15 +404,7 @@ using_utf8 (void)
      the result is known in advance anyway...  */
 #if defined HAVE_WCHAR_H && !defined WINDOWSNT
   wchar_t wc;
-#ifndef HAVE_ANDROID
   mbstate_t mbs = { 0 };
-#else
-  mbstate_t mbs;
-
-  /* Not sure how mbstate works on Android, but this seems to be
-     required.  */
-  memset (&mbs, 0, sizeof mbs);
-#endif
   return mbrtowc (&wc, "\xc4\x80", 2, &mbs) == 2 && wc == 0x100;
 #else
   return false;
@@ -781,7 +758,6 @@ default_PATH (void)
   return path;
 }
 
-#if !defined HAVE_ANDROID || defined ANDROID_STUBIFY
 
 # ifndef WINDOWSNT
 /* If NAME is a symlink return a non-symlink name of the file it points to,
@@ -896,7 +872,6 @@ find_emacs_executable (char const *argv0, ptrdiff_t *candidate_size)
 #endif	/* !WINDOWSNT */
 }
 
-#endif
 
 #ifdef HAVE_PDUMPER
 
@@ -934,29 +909,6 @@ dump_error_to_string (int result)
 static char *
 load_pdump (int argc, char **argv, char *dump_file)
 {
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY
-  int skip_args = 0, result;
-
-  while (skip_args < argc - 1)
-    {
-      if (argmatch (argv, argc, "-dump-file", "--dump-file",
-		    6, &dump_file, &skip_args)
-	  || argmatch (argv, argc, "--", NULL, 2, NULL,
-		       &skip_args))
-	break;
-      skip_args++;
-    }
-
-  if (!dump_file)
-    return argv[0];
-
-  result = pdumper_load (dump_file, argv[0]);
-
-  if (result != PDUMPER_LOAD_SUCCESS)
-    fatal ("could not load dump file \"%s\": %s",
-	   dump_file, dump_error_to_string (result));
-  return argv[0];
-#else
 
 #ifdef MSDOS
   const char *const suffix = ".dmp";
@@ -1146,7 +1098,6 @@ load_pdump (int argc, char **argv, char *dump_file)
   xfree (dump_file);
 
   return emacs_executable;
-#endif
 }
 #endif /* HAVE_PDUMPER */
 
@@ -1316,19 +1267,14 @@ maybe_load_seccomp (int argc, char **argv)
 
 #endif  /* SECCOMP_USABLE */
 
-#if !defined HAVE_ANDROID || defined ANDROID_STUBIFY
 int
 main (int argc, char **argv)
-#else
-int
-android_emacs_init (int argc, char **argv, char *dump_file)
-#endif
 {
   /* Variable near the bottom of the stack, and aligned appropriately
      for pointers.  */
   void *stack_bottom_variable;
   int old_argc;
-#if defined HAVE_PDUMPER && !(defined HAVE_ANDROID && !defined ANDROID_STUBIFY)
+#if defined HAVE_PDUMPER
   char *dump_file;
 
   /* This is just a dummy argument used to avoid extra defines.  */
@@ -2428,30 +2374,6 @@ Using an Emacs configured with --with-x-toolkit=lucid does not have this problem
       syms_of_fontset ();
       syms_of_xsettings ();
 #endif /* HAVE_PGTK */
-#ifdef HAVE_HAIKU
-      syms_of_haikuterm ();
-      syms_of_haikufns ();
-      syms_of_haikumenu ();
-      syms_of_haikufont ();
-      syms_of_haikuselect ();
-#ifdef HAVE_NATIVE_IMAGE_API
-      syms_of_haikuimage ();
-#endif
-      syms_of_fontset ();
-#endif /* HAVE_HAIKU */
-#ifdef HAVE_ANDROID
-      syms_of_androidterm ();
-      syms_of_androidfns ();
-      syms_of_androidmenu ();
-      syms_of_fontset ();
-#if !defined ANDROID_STUBIFY
-      syms_of_androidfont ();
-      syms_of_androidselect ();
-      syms_of_androidvfs ();
-      syms_of_sfntfont ();
-      syms_of_sfntfont_android ();
-#endif /* !ANDROID_STUBIFY */
-#endif /* HAVE_ANDROID */
 
       syms_of_gnutls ();
 
@@ -2510,9 +2432,6 @@ Using an Emacs configured with --with-x-toolkit=lucid does not have this problem
 #endif
     }
 
-#ifdef HAVE_HAIKU
-  init_haiku_select ();
-#endif
 
   init_charset ();
 
@@ -2549,16 +2468,7 @@ Using an Emacs configured with --with-x-toolkit=lucid does not have this problem
   init_window ();
   init_font ();
 
-#ifdef HAVE_ANDROID
-  init_androidmenu ();
-#endif
 
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY
-  init_androidfont ();
-  init_androidselect ();
-  init_sfntfont ();
-  init_sfntfont_android ();
-#endif
 
   if (!initialized)
     {
@@ -2614,15 +2524,6 @@ Using an Emacs configured with --with-x-toolkit=lucid does not have this problem
   safe_run_hooks (Qafter_pdump_load_hook);
 #endif
 
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY && 0
-  /* This comes very late in the startup process because it requires
-     most of lisp/international to be loaded.  This approach doesn't
-     work because normal-top-level runs and creates the initial frame
-     before fonts are initialized.  So this is done in
-     normal-top-level instead.  */
-  Vtop_level = list3 (Qprogn, Vtop_level,
-		      list1 (Qandroid_enumerate_fonts));
-#endif
 
   /* Enter editor command loop.  This never returns.  */
   set_initial_minibuffer_mode ();
@@ -2974,9 +2875,6 @@ killed.  */
       /* Don't perform the following checks when Emacs is running as
 	 an Android GUI application, because there the system is
 	 relied on to restart Emacs.  */
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY
-      && !android_init_gui
-#endif
       )
     {
       /* This is very unlikely, but it's possible to execute a binary
@@ -3031,36 +2929,10 @@ killed.  */
 #ifdef HAVE_NATIVE_COMP
   eln_load_path_final_clean_up ();
 #endif
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY
-  if (android_init_gui)
-    {
-      struct sigaction sa;
-
-      /* Calls to exit may be followed by invalid accesses from
-	 toolkit-managed threads as the thread group is destroyed, which
-	 are inconsequential when the process is being terminated, but
-	 which must be suppressed to inhibit reporting of superfluous
-	 crashes by the system.
-
-         Execution won't return to Emacs whatever the value of RESTART,
-         as `android_restart_emacs' will only ever abort or succeed.  */
-      sigemptyset (&sa.sa_mask);
-      sa.sa_handler = _exit;
-      sigaction (SIGSEGV, &sa, NULL);
-      sigaction (SIGBUS, &sa, NULL);
-    }
-#endif /* HAVE_ANDROID && !ANDROID_STUBIFY */
 
   if (!NILP (restart))
     {
       turn_on_atimers (false);
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY
-      /* Re-executing the Emacs process created by the system doesn't
-	 work.  Instead, schedule a restart for a few hundered
-	 milliseconds and exit Emacs.  */
-      if (android_init_gui)
-	android_restart_emacs ();
-#endif
 #ifdef WINDOWSNT
       if (w32_reexec_emacs (initial_cmdline, initial_wd) < 0)
 #else
@@ -3101,17 +2973,13 @@ shut_down_emacs (int sig, Lisp_Object stuff)
   Vinhibit_redisplay = Qt;
 
   /* If we are controlling the terminal, reset terminal modes.  */
-#if !defined DOS_NT && !(defined HAVE_ANDROID && !defined ANDROID_STUBIFY)
+#if !defined DOS_NT
   pid_t tpgrp = tcgetpgrp (STDIN_FILENO);
   if (tpgrp != -1 && tpgrp == getpgrp ())
     {
       reset_all_sys_modes ();
       if (sig && sig != SIGTERM)
 	{
-#ifdef HAVE_HAIKU
-	  if (haiku_debug_on_fatal_error)
-	    debugger ("Fatal error in Emacs");
-#endif
 	  /* Output a "Fatal error NUM: DESC\n" diagnostic with a single write,
 	     but use multiple writes if the diagnosic is absurdly long
 	     and likely couldn't be written atomically anyway.  */

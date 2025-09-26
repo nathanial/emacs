@@ -178,33 +178,10 @@ font_make_entity (void)
 			      FONT_ENTITY_MAX, FONT_ENTITY_MAX, PVEC_FONT));
   XSETFONT (font_entity, entity);
 
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY
-  entity->is_android = false;
-#endif
 
   return font_entity;
 }
 
-#ifdef HAVE_ANDROID
-
-Lisp_Object
-font_make_entity_android (int size)
-{
-  Lisp_Object font_entity;
-  struct font_entity *entity
-    = ((struct font_entity *)
-       allocate_pseudovector (size, FONT_ENTITY_MAX, FONT_ENTITY_MAX,
-			      PVEC_FONT));
-
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY
-  entity->is_android = true;
-#endif
-
-  XSETFONT (font_entity, entity);
-  return font_entity;
-}
-
-#endif
 
 /* Create a font-object whose structure size is SIZE.  If ENTITY is
    not nil, copy properties from ENTITY to the font-object.  If

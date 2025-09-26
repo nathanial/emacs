@@ -48,9 +48,6 @@ along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.  */
 #include TERM_HEADER
 #endif /* HAVE_WINDOW_SYSTEM */
 
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY
-#include "sfntfont.h"
-#endif
 
 #ifdef HAVE_TREE_SITTER
 #include "treesit.h"
@@ -3112,14 +3109,6 @@ cleanup_vector (struct Lisp_Vector *vector)
 	      }
 	  }
 
-#if defined HAVE_ANDROID && !defined ANDROID_STUBIFY
-	/* The Android font driver needs the ability to associate extra
-	   information with font entities.  */
-	if (((vector->header.size & PSEUDOVECTOR_SIZE_MASK)
-	     == FONT_ENTITY_MAX)
-	    && PSEUDOVEC_STRUCT (vector, font_entity)->is_android)
-	  android_finalize_font_entity (PSEUDOVEC_STRUCT (vector, font_entity));
-#endif
       }
       break;
     case PVEC_THREAD:
@@ -5576,28 +5565,6 @@ compact_undo_list (Lisp_Object list)
   return list;
 }
 
-#if defined HAVE_ANDROID && !defined (__clang__)
-
-/* The Android gcc is broken and needs the following version of
-   make_lisp_symbol.  Otherwise a mysterious ICE pops up.  */
-
-#define make_lisp_symbol android_make_lisp_symbol
-
-static Lisp_Object
-android_make_lisp_symbol (struct Lisp_Symbol *sym)
-{
-  intptr_t symoffset;
-
-  symoffset = (intptr_t) sym;
-  ckd_sub (&symoffset, symoffset, (intptr_t) &lispsym);
-
-  {
-    Lisp_Object a = TAG_PTR_INITIALLY (Lisp_Symbol, symoffset);
-    return a;
-  }
-}
-
-#endif
 
 static void
 visit_vectorlike_root (struct gc_root_visitor visitor,
@@ -5877,9 +5844,6 @@ garbage_collect (void)
   xg_mark_data ();
 #endif
 
-#ifdef HAVE_HAIKU
-  mark_haiku_display ();
-#endif
 
 #ifdef HAVE_WINDOW_SYSTEM
   mark_fringe_data ();
@@ -5890,12 +5854,6 @@ garbage_collect (void)
   mark_xselect ();
 #endif
 
-#ifdef HAVE_ANDROID
-  mark_androidterm ();
-#ifndef ANDROID_STUBIFY
-  mark_sfntfont ();
-#endif
-#endif
 
 #ifdef HAVE_NS
   mark_nsterm ();

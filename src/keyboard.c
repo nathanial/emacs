@@ -4503,7 +4503,7 @@ static void
 process_special_events (void)
 {
   union buffered_input_event *event;
-#if defined HAVE_X11 || defined HAVE_PGTK || defined HAVE_HAIKU
+#if defined HAVE_X11 || defined HAVE_PGTK
   struct selection_input_event copy;
   int moved_events;
 #endif
