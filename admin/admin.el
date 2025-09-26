@@ -98,10 +98,6 @@ Optional argument DATE is the release date, default today."
 (defvar admin-git-command (executable-find "git")
   "The `git' program to use.")
 
-(defvar admin-android-version-code-regexp
-  "\\bAuto-incrementing version code\\(?:.\\|\n\\)*\\([[:digit:]]\\{9\\}\\)$"
-  "Regexp with which to detect the version code in AndroidManifest.xml.")
-
 (defun set-version (root version)
   "Set Emacs version to VERSION in relevant files under ROOT.
 Root must be the root of an Emacs source tree."
@@ -126,27 +122,12 @@ Root must be the root of an Emacs source tree."
 		       (rx (and "AC_INIT" (1+ (not (in ?,)))
                                 ?, (0+ space) ?\[
                                 (submatch (1+ (in "0-9."))))))
-  (set-version-in-file root "java/AndroidManifest.xml.in"
-                       (apply #'format "%02d%02d%02d000"
-                              (let ((ver-list
-                                     (mapcar #'string-to-number
-                                             (split-string version "\\."))))
-                                ;; Official releases are XX.YY, not XX.YY.ZZ
-                                (if (= 2 (length ver-list))
-                                    (setq ver-list (append ver-list '(0))))
-                                ver-list))
-                       admin-android-version-code-regexp)
   ;; Major version only.
   (when (string-match "\\([0-9]\\{2,\\}\\)" version)
     (let ((newmajor (match-string 1 version)))
       (set-version-in-file root "etc/refcards/ru-refcard.tex" newmajor
                            "\\\\newcommand{\\\\versionemacs}\\[0\\]\
 {\\([0-9]\\{2,\\}\\)}.+%.+version of Emacs")))
-  ;; Note: There's also the "android:versionCode=" property in
-  ;; java/AndroidManifest.xml, whose value is the major Emacs version,
-  ;; but if we increase it, upgraded installation will be unable to be
-  ;; downgraded to previous Emacs releases.  (The corresponding
-  ;; "android:versionName=" value there is updated by configure.)
   (let* ((oldversion
           (with-temp-buffer
             (insert-file-contents (expand-file-name "README" root))

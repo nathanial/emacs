@@ -119,8 +119,8 @@ keyboard input to the application, much as a real keyboard would.
 requesting text input as it occupies scarce space on display, and
 programs are therefore enjoined to display it once they are ready to
 accept keyboard input.  Systems running X detect when the presence of
-the virtual keyboard is warranted, but on others such as Android Emacs
-is responsible for displaying it when need be, generally in reaction
+the virtual keyboard is warranted, but on window systems that lack this
+integration Emacs is responsible for displaying it when need be, generally in reaction
 to a touch screen ``tap'' gesture (@pxref{Touchscreens}) or the
 minibuffer being brought into use (@pxref{Minibuffer}).
 
@@ -157,8 +157,8 @@ the device induces a quit.  @xref{Quitting}.
 @vindex x-quit-keysym
 @vindex android-quit-keycode
   No such button is enabled on X, but one can be configured through the
-variable @code{x-quit-keysym}, whereas the default key is the volume
-down button on Android, which is also configurable through a variable,
+variable @code{x-quit-keysym}.  Legacy Android builds defaulted to the
+device volume-down button via the archival variable
 @code{android-quit-keycode}.
 
 @cindex text conversion, keyboards

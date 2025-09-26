@@ -264,8 +264,8 @@ main_2 (int fd, struct directory_tree *tree, size_t *offset)
 	       "asset-directory-tool: invalid offset: expected %tu, "
 	       "got %tu.\n"
 	       "Please report this bug to bug-gnu-emacs@gnu.org, along\n"
-	       "with an archive containing the contents of the java/inst"
-	       "all_temp directory.\n",
+	       "with an archive containing the contents of the legacy Android"
+	       " staging directory used by asset-directory-tool.\n",
 	       tree->offset, *offset);
       abort ();
     }

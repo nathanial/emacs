@@ -29,11 +29,11 @@ compilation, configure Emacs with the option:
 
     ./configure --with-native-compilation=no
 
-** Emacs has been ported to the Android operating system.
-This requires Emacs to be compiled on another computer.  The Android
-NDK, SDK, and a suitable Java compiler must also be installed.
-
-See the file "java/INSTALL" for more details.
+** The Android packaging port has been retired.
+Earlier development snapshots supported cross-compiling Emacs for
+Android via the @file{java/} directory and the @samp{--with-android}
+configure option.  That machinery has been removed in this branch to
+focus maintenance on modern macOS and GNU/Linux builds.
 
 ** Native JSON support is now always available; libjansson is no longer used.
 No external library is required.  The '--with-json' configure option has

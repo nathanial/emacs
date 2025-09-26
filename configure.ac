@@ -980,7 +980,7 @@ EOF
   # Get the name of the android.jar file.
   ANDROID_JAR="$with_android"
 
-  # Substitute this into java/Makefile.
+  # Record Java compiler warnings for potential Android builds.
   AC_SUBST([WARN_JAVAFLAGS])
 
   AC_PATH_PROGS([AAPT], [aapt], [], "${SDK_BUILD_TOOLS}:$PATH")
@@ -1186,8 +1186,7 @@ package will likely install on older systems but crash on startup.])
   fi
   AC_SUBST([ANDROID_MIN_SDK])
 
-  # Now tell java/Makefile if Emacs is being built for Android 4.3 or
-  # earlier.
+  # Track whether the configured Android SDK level predates API 19.
   ANDROID_SDK_18_OR_EARLIER=
   if test "$android_sdk" -le "18"; then
      ANDROID_SDK_18_OR_EARLIER=yes
@@ -7544,7 +7543,7 @@ if test -f "$srcdir/$opt_makefile.in"; then
 fi
 
 if test "$ANDROID" = "yes"; then
-  SUBDIR_MAKEFILES="$SUBDIR_MAKEFILES java/Makefile cross/Makefile"
+  SUBDIR_MAKEFILES="$SUBDIR_MAKEFILES cross/Makefile"
 fi
 
 dnl The admin/ directory used to be excluded from tarfiles.
@@ -7659,12 +7658,7 @@ if test "$XCONFIGURE" != "android"; then
     done])
 fi
 
-# Make java/Makefile
-ARCH_INDEPENDENT_CONFIG_FILES([java/Makefile])
 ARCH_INDEPENDENT_CONFIG_FILES([cross/Makefile])
-
-# Make java/AndroidManifest.xml
-ARCH_INDEPENDENT_CONFIG_FILES([java/AndroidManifest.xml])
 
 # Make ndk-build Makefiles.  This is only done inside the recursive
 # configure.

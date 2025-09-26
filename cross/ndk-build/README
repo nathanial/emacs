@@ -213,7 +213,8 @@ to link Emacs, along with the rules to chdir into $ndk_DIR in order to
 build them.
 
 $ndk_DIR/ndk-build.mk is included by cross/src/Makefile
-(Makefile.android) and java/Makefile.  It defines three different
+(Makefile.android).  Earlier packaging rules in java/Makefile also
+consumed it, but that makefile has since been retired.  It defines three different
 variables:
 
   NDK_BUILD_MODULES	the file names of all modules to be built.
@@ -228,10 +229,10 @@ $(NDK_BUILD_MODULES).
 cross/src/Makefile arranges to have all dependencies of Emacs not
 already built built before linking ``libemacs.so'' with them.
 
-java/Makefile additionally arranges to have all shared object
-dependencies built before the application package is built, which is
-normally redundant because they should have already been built before
-linking ``libemacs.so''.
+The former java/Makefile additionally arranged to have all shared
+object dependencies built before assembling the Android application
+package, a step that became redundant once the packaging support was
+removed.
 
 Building the modules is performed through $ndk_DIR/Makefile, which
 contains the actual implementation of the ``ndk-build'' build system.

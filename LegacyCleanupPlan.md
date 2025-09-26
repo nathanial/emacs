@@ -11,13 +11,14 @@ Rationalize the Emacs source tree for a codebase that only targets modern macOS 
 ## Progress Update
 - [x] Removed `msdos/` directory and associated MS-DOS port sources on 2025-09-25.
 - [x] Removed `nt/` port directories, build hooks, and documentation on 2025-09-26.
+- [x] Removed `java/` Android packaging directory and host tooling on 2025-09-26.
 
 ## Candidate Directories to Retire
 | Directory | Primary Purpose | Why It Can Likely Be Removed | Follow-Up Tasks & Risks |
 |-----------|------------------|------------------------------|--------------------------|
 | `msdos/` | MS-DOS port sources, docs, and build glue. | Removed on 2025-09-25; MS-DOS is no longer a supported target. | Ensure any lingering conditionals guarding MS-DOS code paths are cleaned up as subsequent refactors land. |
 | `nt/` | Windows (NT) port including resource files, w32 GUI back-end, installer scripts. | Removed on 2025-09-26; Windows support is no longer part of the target matrix. | Monitor for residual `WINDOWSNT` conditionals that can be simplified in subsequent refactors. |
-| `java/` | Android port scaffolding and Gradle project. | Android is out of scope; none of these files participate in desktop builds. | Clean up configure probes (`--with-android`), delete Android-specific code paths under `src/` guarded by `android` macros. |
+| `java/` | Android port scaffolding and Gradle project. | Removed on 2025-09-26; Android packages are no longer built from this tree. | Continue auditing `--with-android` configure logic and `HAVE_ANDROID` code for retirement in future passes. |
 | `cross/` | Cross-compilation helper configs for niche targets (e.g., MIPS, ARM). | Focus is on native macOS/Linux builds; these configs add maintenance overhead. | Ensure documentation (`INSTALL.REPO`) reflects the change, and warn contributors that cross builds are untested/unsupported. |
 | `oldXMenu/` | Legacy X11 menu implementation used with the Lucid toolkit. | GTK and PGTK builds do not depend on it; its main consumer is `lwlib`. | If `lwlib/` is removed, this directory becomes unused. Verify no remaining references in `src/` or build scripts before deletion. |
 | `lwlib/` | Lucid Widget library (Motif-style X toolkit). | Modern Linux builds typically use GTK/PGTK; Lucid is required only for very old X setups. | Confirm `--with-x-toolkit=lucid` is disabled, remove conditional code in `src/` (`USE_LUCID`) and adjust documentation (`INSTALL`, `NEWS`). |
@@ -30,7 +31,7 @@ Rationalize the Emacs source tree for a codebase that only targets modern macOS 
 - Review `admin/` scripts that package legacy installers or Android artifacts (`admin/android/`).
 
 ## Sequencing Recommendations
-1. **Plan the order**: Continue pruning remaining platform directories (`java/`, `nextstep/GNUstep/`) so downstream references can be removed methodically.
+1. **Plan the order**: Continue pruning remaining platform directories (e.g., `nextstep/GNUstep/`) so downstream references can be removed methodically.
 2. **Adjust the build system**: Update `configure.ac`, regenerate `configure` with `autogen.sh`, and remove related options from `INSTALL.REPO`.
 3. **Remove dependent source paths**: Use `rg`/`git grep` to eliminate residual `#ifdef` branches and load-path entries referencing the removed directories.
 4. **Prune documentation**: Delete the obsolete manuals and update `doc/` indices to avoid build failures in the Info manuals.

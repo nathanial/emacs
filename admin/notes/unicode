@@ -409,7 +409,6 @@ nontrivial changes to the build process.
 	*.zip
 	etc/e/eterm-color
 	etc/e/eterm-direct
-	java/emacs.keystore
 
 This file is part of GNU Emacs.
 

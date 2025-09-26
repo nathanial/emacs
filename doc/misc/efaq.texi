@@ -938,9 +938,9 @@ machine with @samp{libgccjit}, this will improve Emacs performance in
 many typical workloads.
 
 @item
-Emacs has been ported to the Android operating system.  See the file
-@file{java/INSTALL} in the Emacs source distribution for details on how
-to build it.
+Earlier development snapshots ported Emacs to the Android operating
+system, but that support has since been retired in this branch, along
+with the associated @file{java/} packaging scripts.
 
 @item
 New user option @code{trusted-content} to allow potentially dangerous

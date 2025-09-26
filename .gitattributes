@@ -63,7 +63,6 @@ test/lisp/gnus/mm-decode-resources/win1252-multipart.bin -diff
 *.zip binary
 etc/e/eterm-color binary
 etc/e/eterm-direct binary
-java/emacs.keystore binary
 
 # Git's builtin diff hunk header styles.
 *.ad[abs] diff=ada
@@ -115,7 +114,3 @@ build-aux/move-if-change diff=shell
 build-aux/update-subdirs diff=shell
 lib-src/rcs2log diff=shell
 /make-dist diff=shell
-
-# This file contains in-line diffs, which can include trailing
-# whitespace.
-java/INSTALL -whitespace
