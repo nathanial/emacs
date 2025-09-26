@@ -33,6 +33,12 @@ removed.
 ** MS-DOS port removed.
 Support for building and running Emacs via the legacy DJGPP/MS-DOS port has been removed.  Related build scripts, documentation, and platform-specific code have been deleted.
 
++++
+** Lucid and Motif X toolkits removed.
+Legacy Lucid (lwlib) and Motif based X builds are no longer supported.
+GTK or PGTK must be used for GNU/Linux GUI builds; non-toolkit X11
+configurations are now rejected at configure time.
+
 ---
 ** Emacs's old 'ctags' program is no longer built or installed.
 You are encouraged to use Universal Ctags <https://ctags.io/> instead.

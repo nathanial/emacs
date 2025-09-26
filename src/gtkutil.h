@@ -24,7 +24,7 @@ along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.  */
 #ifdef USE_GTK
 
 #include <gtk/gtk.h>
-#include "../lwlib/lwlib-widget.h"
+#include "menu-widget.h"
 #ifdef HAVE_PGTK
 #include "pgtkterm.h"
 #define EVENT GdkEvent

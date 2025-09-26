@@ -24,8 +24,6 @@ set $dummy = main + 8
 # With some compilers, we need this to give us struct Lisp_Symbol etc.:
 set $dummy = Fmake_symbol + 8
 
-# Find lwlib source files too.
-dir ../lwlib
 #dir /gd/gnu/lesstif-0.89.9/lib/Xm
 
 # Don't enter GDB when user types C-g to quit.

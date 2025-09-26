@@ -10,7 +10,6 @@ This document summarizes the major directories and files in the Emacs source tre
 - `lib/` – Gnulib import providing portable replacements for standard C library functionality required by Emacs.
 - `lib-src/` – Auxiliary programs written in C (e.g., `etags`, `emacsclient`, `movemail`) that are built alongside the main binary.
 - `modules/` – Example and test dynamic modules demonstrating the Emacs module API.
-- `lwlib/` – Lucid Widget library used by legacy X toolkit interfaces; still part of the build for certain GUI configurations.
 
 ## Platform-Specific Support
 - `nextstep/` – Files for the macOS (Cocoa) and GNUstep GUI ports. After `make install`, the self-contained macOS bundle lives at `nextstep/Emacs.app`.

@@ -62,7 +62,6 @@ lib = ../lib
 hostlib = $(top_builddir)/lib
 libsrc = ../lib-src
 etc = ../etc
-lwlibdir = ../lwlib
 
 # Configuration files for .o files to depend on.
 config_h = config.h $(srcdir)/conf_post.h
@@ -194,8 +193,7 @@ LIBXTR6=@LIBXTR6@
 ## Only used if HAVE_X_WINDOWS.
 LIBXT_OTHER=@LIBXT_OTHER@
 
-## If !HAVE_X11 || USE_GTK, empty.
-## Else $(lwlibdir)/liblw.a.
+## GTK handles menus internally; non-GTK X builds are unsupported now.
 LIBXMENU=@LIBXMENU@
 
 ## xmenu.o if HAVE_X_WINDOWS, else empty.
@@ -687,17 +685,14 @@ endif
 	$(MKDIR_P) $(etc)
 
 
-## Ensure the Lucid widget library is built when selected as the X toolkit.
-$(lwlibdir)/liblw.a: $(config_h) globals.h lisp.h FORCE
-	$(MAKE) -C $(dir $@) $(notdir $@)
-FORCE:
-.PHONY: FORCE
-
 .PRECIOUS: ../config.status Makefile
 ../config.status: $(top_srcdir)/configure.ac $(top_srcdir)/m4/*.m4
 	$(MAKE) -C $(dir $@) $(notdir $@)
 Makefile: ../config.status $(srcdir)/Makefile.in
 	$(MAKE) -C .. src/$@
+
+FORCE:
+.PHONY: FORCE
 
 doc.o: buildobj.h
 
@@ -760,12 +755,11 @@ ctagsfiles3 = $(wildcard ${srcdir}/*.cc)
 ## In out-of-tree builds, TAGS are generated in the build dir, like
 ## other non-bootstrap build products (see Bug#31744).
 
-## This does not need to depend on ../lisp, ../lwlib and ../lib TAGS files,
+## This does not need to depend on ../lisp and ../lib TAGS files,
 ## because etags "--include" only includes a pointer to the file,
 ## rather than the file contents.
 TAGS: ${ETAGS} $(ctagsfiles1) $(ctagsfiles2)
-	$(AM_V_GEN)${ETAGS} --include=../lisp/TAGS --include=$(lwlibdir)/TAGS \
-	  --include=$(lib)/TAGS \
+	$(AM_V_GEN)${ETAGS} --include=../lisp/TAGS --include=$(lib)/TAGS \
 	  --regex='{c}/[ 	]*DEFVAR_[A-Z_ 	(]+"\([^"]+\)"/\1/' \
 	  --regex='{c}/[ 	]*DEFVAR_[A-Z_ 	(]+"[^"]+",[ 	]\([A-Za-z0-9_]+\)/\1/' \
 	  $(ctagsfiles1) \
@@ -774,12 +768,12 @@ TAGS: ${ETAGS} $(ctagsfiles1) $(ctagsfiles2)
 	  $(ctagsfiles2) \
 	  $(ctagsfiles3)
 
-## Arrange to make tags tables for ../lisp, ../lwlib and ../lib,
+## Arrange to make tags tables for ../lisp and ../lib,
 ## which the above TAGS file for the C files includes by reference.
-../lisp/TAGS $(lwlibdir)/TAGS $(lib)/TAGS: FORCE
+../lisp/TAGS $(lib)/TAGS: FORCE
 	$(MAKE) -C $(dir $@) $(notdir $@) ETAGS="$(ETAGS)"
 
-tags: TAGS ../lisp/TAGS $(lwlibdir)/TAGS $(lib)/TAGS
+tags: TAGS ../lisp/TAGS $(lib)/TAGS
 .PHONY: tags
 
 

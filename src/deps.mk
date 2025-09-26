@@ -194,7 +194,7 @@ undo.o: undo.c buffer.h commands.h window.h dispextern.h \
    lisp.h globals.h $(config_h)
 w16select.o: w16select.c dispextern.h frame.h blockinput.h atimer.h systime.h \ buffer.h charset.h coding.h composite.h lisp.h $(config_h)
 widget.o: widget.c xterm.h frame.h dispextern.h widgetprv.h \
-   $(srcdir)/../lwlib/lwlib.h lisp.h $(config_h)
+   lisp.h $(config_h)
 window.o: window.c indent.h commands.h frame.h window.h buffer.h termchar.h \
    disptab.h keyboard.h coding.h termhooks.h \
    keymap.h blockinput.h atimer.h systime.h $(INTERVALS_H) \
@@ -211,7 +211,7 @@ xfaces.o: xfaces.c frame.h xterm.h buffer.h blockinput.h \
    $(INTERVALS_H) nsgui.h termchar.h termhooks.h font.h \
    lisp.h globals.h $(config_h)
 xfns.o: xfns.c buffer.h frame.h window.h keyboard.h xterm.h \
-   $(srcdir)/../lwlib/lwlib.h blockinput.h atimer.h systime.h epaths.h \
+   blockinput.h atimer.h systime.h epaths.h \
    character.h charset.h coding.h gtkutil.h lisp.h $(config_h) termhooks.h \
    fontset.h termchar.h font.h xsettings.h $(INTERVALS_H) ccl.h globals.h \
    ../lib/unistd.h
@@ -221,11 +221,11 @@ xftfont.o: xftfont.c dispextern.h xterm.h frame.h blockinput.h character.h \
    charset.h font.h lisp.h globals.h $(config_h) atimer.h systime.h \
    fontset.h ccl.h ftfont.h composite.h
 menu.o: menu.c lisp.h keyboard.h keymap.h frame.h termhooks.h blockinput.h \
-   dispextern.h $(srcdir)/../lwlib/lwlib.h xterm.h gtkutil.h menu.h \
+   dispextern.h xterm.h gtkutil.h menu.h \
    lisp.h globals.h $(config_h) systime.h coding.h composite.h window.h \
    atimer.h nsterm.h w32term.h
 xmenu.o: xmenu.c xterm.h termhooks.h window.h dispextern.h frame.h buffer.h \
-   charset.h keyboard.h $(srcdir)/../lwlib/lwlib.h blockinput.h atimer.h \
+   charset.h keyboard.h blockinput.h atimer.h \
    systime.h gtkutil.h coding.h menu.h lisp.h globals.h $(config_h) \
    composite.h keymap.h sysselect.h
 xml.o: xml.c buffer.h lisp.h globals.h $(config_h)

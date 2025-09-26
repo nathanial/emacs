@@ -332,14 +332,11 @@ is able to find them; these options are necessary if you have your X
 Window System files installed in unusual places.  These options also
 accept a list of directories, separated with colons.
 
-To get more attractive menus, you can specify an X toolkit when you
-configure Emacs; use the option '--with-x-toolkit=TOOLKIT', where
-TOOLKIT is 'gtk' (the default), 'athena', or 'motif' ('yes' and
-'lucid' are synonyms for 'athena').  Compiling with Motif causes a
-standard File Selection Dialog to pop up when you invoke file commands
-with the mouse.  You can get fancy 3D-style scroll bars, even without
-Gtk or Motif, if you have the Xaw3d library installed (see
-"Image support libraries" above for Xaw3d availability).
+Emacs now relies on GTK for X11 GUI builds.  The '--with-x-toolkit'
+option accepts only GTK variants ('gtk', 'gtk2', or 'gtk3'; 'gtk' is
+the default).  Non-GTK toolkits such as Lucid (lwlib), Motif, or pure
+Xt are no longer supported, and '--with-x-toolkit=no' will cause
+'configure' to abort.
 
 You can tell configure where to search for GTK by giving it the
 argument PKG_CONFIG='/full/name/of/pkg-config'.

@@ -435,7 +435,6 @@ Changes to files matching one of the regexps in this list are not listed.")
     "gfdl.1" "ledit.l"
     "texi/Makefile.in"
     "autodeps.mk"
-    "lwlib/autodeps.mk"
     "src/autodeps.mk"
     "Imakefile" "icons/sink.ico" "aixcc.lex"
     "nxml/char-name/unicode"
