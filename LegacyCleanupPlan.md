@@ -18,6 +18,7 @@ Rationalize the Emacs source tree for a codebase that only targets modern macOS 
 - [x] Removed `nextstep/GNUstep/` GNUstep bundle assets and support on 2025-09-26.
 - [x] Retired Windows/MS-DOS shims (`src/w16select.c`, `lisp/term/pc-win.el`) and dropped the `etc/NEXTSTEP` GNUstep doc stub on 2025-09-26.
 - [x] Audited remaining `HAVE_ANDROID`/`HAVE_HAIKU` references across the tree and removed them on 2025-09-26 (Phase 2).
+- [x] Pruned optional tooling that referenced legacy platforms (git hooks, maintainer metadata, merge helpers) on 2025-09-26 (Phase 4).
 
 ## Remaining Legacy Surfaces
 | Area | Primary Purpose | Status | Follow-Up Tasks & Risks |
@@ -40,9 +41,9 @@ Rationalize the Emacs source tree for a codebase that only targets modern macOS 
   - Excised dedicated Texinfo nodes for Android, Haiku, Windows, Lucid, Motif, and GNUstep across `doc/lispref`, `doc/misc/tramp.texi`, and supporting manuals; regenerated manuals via `make info` (which triggered a successful macOS bootstrap build in the process).
   - Refreshed top-level collateral (`INSTALL`, `etc/NEWS`, `LegacyCleanupPlan.md`) to describe the macOS Cocoa + Linux GTK/PGTK scope only.
   - Verified GitLab pipeline definitions already ignore legacy ports; follow-up documentation of external tool requirements (e.g., `rust-analyzer`, `clangd`) remains to be captured alongside Linux test coverage.
-- **Phase 4 – Polishing & Historical Cleanup (Optional, 2025-10-20+):**
-  - Remove now-redundant comments/notes about retired ports, tidy `ChangeLog` references where appropriate, and archive deleted platform trees in a separate branch/tag if desired.
-  - Review optional tooling (packaging scripts, dist targets) for legacy assumptions.
+- **Phase 4 – Polishing & Historical Cleanup (Completed 2025-09-26):**
+  - Reviewed optional tooling (git hooks, merge helpers, maintainer rosters) and removed dead references to Android/Haiku/Windows-era assets.
+  - Remaining optional follow-ups: archive historical material separately if desired and prune obsolete code comments when convenient.
 
 ## Sequencing Recommendations
 1. **Subsystem sweep order**: Work top-down—start with shared headers and low-level runtime (file I/O, fonts, GC), then move to UI/image back-ends, and finally documentation/CI. This minimizes merge pain and keeps buildability high.

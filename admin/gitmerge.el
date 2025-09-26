@@ -419,7 +419,7 @@ MISSING must be a list of SHA1 strings."
     (let* ((skip (cdar missing))
 	   (coding-system-for-read vc-git-log-output-coding-system)
 	   (beg (car (pop missing)))
-	   end commitmessage commitmessage1 commitmessage-file status)
+	   end commitmessage status)
       ;; Determine last revision with same boolean skip status.
       (while (and missing
 		  (eq (null (cdar missing))
@@ -433,32 +433,13 @@ MISSING must be a list of SHA1 strings."
 	       (if end (concat ".." (substring end 0 6)) ""))
       (unless end
 	(setq end beg))
-      (when (eq system-type 'windows-nt)
-        ;; Command lines on MS-Windows cannot include newlines.
-	;; Since "git merge" doesn't accept a -F FILE option, we
-	;; commit the merge with a shortened single-line log message,
-	;; and then invoke "git commit --amend" with the full log
-	;; message from a temporary file.
-	(setq commitmessage1
-	      ;; Make sure the commit message is at most a single line.
-	      (car (split-string commitmessage "[\f\n\r\v]+")))
-	(setq commitmessage-file (make-nearby-temp-file "gitmerge-msg"))
-	(let ((coding-system-for-write vc-git-commits-coding-system))
-	  (write-region commitmessage nil commitmessage-file nil 'silent)))
       (unless (setq status
 		    (zerop
 		     (apply #'call-process "git" nil t nil "merge" "--no-ff"
 			    (append (when skip '("-s" "ours"))
-				    (if commitmessage-file
-					`("-m" ,commitmessage1 ,end)
-				      `("-m" ,commitmessage ,end))))))
+				    `("-m" ,commitmessage ,end)))))
 	(gitmerge-write-missing missing from)
 	(gitmerge-resolve-unmerged))
-      (when (and commitmessage-file (file-exists-p commitmessage-file))
-	(if status
-	    (call-process "git" nil t nil
-			  "commit" "--amend" "-F" commitmessage-file))
-	(delete-file commitmessage-file)))
     missing))
 
 (defun gitmerge-resolve-unmerged ()

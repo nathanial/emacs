@@ -124,50 +124,6 @@ Stefan Kangas
         admin/automerge
 	admin/update_autogen
 
-Po Lu
-	The Haiku port:
-	    src/haikuterm.c
-	    src/haikufns.c
-	    src/haikuimage.c
-	    src/haikuselect.c
-	    src/haiku_io.c
-	    src/haiku.c
-	    src/haiku_select.cc
-	    src/haiku_support.cc
-	    src/haiku_font_support.cc
-	    src/haiku_draw_support.cc
-	    src/haikugui.h
-	    src/haikuterm.h
-	    src/haikuselect.h
-	    src/haiku_support.h
-	    lisp/term/haiku-win.el
-	    doc/emacs/haiku.texi
-
-	Haiku battery support in lisp/battery.el
-
-	The Android port:
-	    src/android-asset.h
-	    src/android.c
-	    src/android-emacs.c
-	    src/androidfns.c
-	    src/androidfont.c
-	    src/androidgui.h
-	    src/android.h
-	    src/androidmenu.c
-	    src/androidselect.c
-	    src/androidterm.c
-	    src/androidterm.h
-	    src/androidvfs.c
-	    src/sfnt.c
-	    src/sfntfont-android.c
-	    src/sfntfont.c
-	    src/sfntfont.h
-	    src/sfnt.h
-	    m4/ndk-build.m4
-	    cross
-
-	Android battery support in lisp/battery.el
-
 Jim Porter
 	Eshell
 	    lisp/eshell/*
