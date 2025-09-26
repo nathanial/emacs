@@ -20,10 +20,6 @@
 srcdir = @srcdir@
 VPATH = @srcdir@
 
-# This is not empty if this is a Makefile that will be copied to
-# cross/lib.
-XCONFIGURE = @XCONFIGURE@
-
 # This is required to make sure symbol visibility is correct and
 # functions like readlinkat do not end up replacing their OS
 # counterparts.
@@ -55,12 +51,6 @@ endif
 include gnulib.mk
 libgnu_a_SOURCES += openat-die.c save-cwd.c
 
-ifeq ($(XCONFIGURE),android)
-# The next line is necessary to override -I$(srcdir), which will end
-# up pulling in lots of headers from the host.
-ALL_CFLAGS += -I$(top_srcdir)/cross -I.
-endif
-
 DEPDIR = deps
 ifeq ($(AUTO_DEPEND),yes)
   DEPFLAGS = -MMD -MF $(DEPDIR)/$*.d -MP
@@ -70,13 +60,11 @@ else
 endif
 
 # This piece of code interferes with cross compilation
-ifeq ($(XCONFIGURE),)
 .PRECIOUS: ../config.status Makefile
 ../config.status: $(top_srcdir)/configure.ac $(top_srcdir)/m4/*.m4
 	$(MAKE) -C .. $(notdir $@)
 Makefile: ../config.status $(srcdir)/Makefile.in
 	$(MAKE) -C .. lib/$@
-endif
 
 # Object modules that need not be built for Emacs.
 # Emacs does not need e-regex.o (it has its own regex-emacs.c),

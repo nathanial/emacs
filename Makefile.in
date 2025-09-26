@@ -495,7 +495,6 @@ lib lib-src lisp: Makefile
 
 	$(MAKE) -C $@ all
 
-cross: src
 	$(MAKE) -C $@ all
 
 trampolines: src lisp
@@ -978,7 +977,7 @@ mostlyclean: $(mostlyclean_dirs:=_mostlyclean)
 ###      with them.
 ###
 ###      Delete '.dvi' files here if they are not part of the distribution.
-clean_dirs = $(mostlyclean_dirs) cross nextstep admin/charsets \
+clean_dirs = $(mostlyclean_dirs) nextstep admin/charsets \
   admin/unidata
 
 $(foreach dir,$(clean_dirs),$(eval $(call submake_template,$(dir),clean)))

@@ -96,14 +96,6 @@ localstatedir=@localstatedir@
 srcdir=@srcdir@
 VPATH=@srcdir@
 
-# Cross-compilation setup
-
-XCONFIGURE=@XCONFIGURE@
-
-ifneq ($(XCONFIGURE),)
-vpath $(srcdir)
-endif
-
 # The top-level source directory, also set by configure.
 top_srcdir=@top_srcdir@
 # MinGW CPPFLAGS may use this.
@@ -162,14 +154,12 @@ UTILITIES = hexl${EXEEXT} 			 	 \
             $(and $(use_gamedir), update-game-score${EXEEXT})
 
 ifeq ($(HAVE_BE_APP),yes)
-DONT_INSTALL= make-docfile${EXEEXT} make-fingerprint${EXEEXT} be-resources
-else
-ifeq ($(XCONFIGURE)$(HAVE_ANDROID),yes)
+DONT_INSTALL = make-docfile${EXEEXT} make-fingerprint${EXEEXT} be-resources
+else ifeq ($(HAVE_ANDROID),yes)
 DONT_INSTALL = make-docfile${EXEEXT} make-fingerprint${EXEEXT} \
 	asset-directory-tool${EXEEXT}
 else
-DONT_INSTALL= make-docfile${EXEEXT} make-fingerprint${EXEEXT}
-endif
+DONT_INSTALL = make-docfile${EXEEXT} make-fingerprint${EXEEXT}
 endif
 
 # Like UTILITIES, but they're not system-dependent, and should not be

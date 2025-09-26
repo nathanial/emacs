@@ -12,6 +12,7 @@ Rationalize the Emacs source tree for a codebase that only targets modern macOS 
 - [x] Removed `msdos/` directory and associated MS-DOS port sources on 2025-09-25.
 - [x] Removed `nt/` port directories, build hooks, and documentation on 2025-09-26.
 - [x] Removed `java/` Android packaging directory and host tooling on 2025-09-26.
+- [x] Removed `cross/` cross-compilation scaffolding and build glue on 2025-09-26.
 
 ## Candidate Directories to Retire
 | Directory | Primary Purpose | Why It Can Likely Be Removed | Follow-Up Tasks & Risks |
@@ -19,7 +20,7 @@ Rationalize the Emacs source tree for a codebase that only targets modern macOS 
 | `msdos/` | MS-DOS port sources, docs, and build glue. | Removed on 2025-09-25; MS-DOS is no longer a supported target. | Ensure any lingering conditionals guarding MS-DOS code paths are cleaned up as subsequent refactors land. |
 | `nt/` | Windows (NT) port including resource files, w32 GUI back-end, installer scripts. | Removed on 2025-09-26; Windows support is no longer part of the target matrix. | Monitor for residual `WINDOWSNT` conditionals that can be simplified in subsequent refactors. |
 | `java/` | Android port scaffolding and Gradle project. | Removed on 2025-09-26; Android packages are no longer built from this tree. | Continue auditing `--with-android` configure logic and `HAVE_ANDROID` code for retirement in future passes. |
-| `cross/` | Cross-compilation helper configs for niche targets (e.g., MIPS, ARM). | Focus is on native macOS/Linux builds; these configs add maintenance overhead. | Ensure documentation (`INSTALL.REPO`) reflects the change, and warn contributors that cross builds are untested/unsupported. |
+| `cross/` | Cross-compilation helper configs for niche targets (e.g., MIPS, ARM). | Removed on 2025-09-26; cross-compilation scaffolding is no longer supported. | Double-check configuration help text (`--with-android`, `--with-ndk-*`) and contributor docs to reflect the narrower platform scope. |
 | `oldXMenu/` | Legacy X11 menu implementation used with the Lucid toolkit. | GTK and PGTK builds do not depend on it; its main consumer is `lwlib`. | If `lwlib/` is removed, this directory becomes unused. Verify no remaining references in `src/` or build scripts before deletion. |
 | `lwlib/` | Lucid Widget library (Motif-style X toolkit). | Modern Linux builds typically use GTK/PGTK; Lucid is required only for very old X setups. | Confirm `--with-x-toolkit=lucid` is disabled, remove conditional code in `src/` (`USE_LUCID`) and adjust documentation (`INSTALL`, `NEWS`). |
 | `nextstep/GNUstep/` | GNUstep variant of the Nextstep port. | Target macOS Cocoa only; GNUstep (for non-mac platforms) can be dropped. | Keep `nextstep/Cocoa/`; prune configure checks for GNUstep, and update `nextstep/Makefile.in`. |

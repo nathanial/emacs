@@ -90,18 +90,6 @@ src/globals.h
 src/lisp.mk
 src/verbose.mk
 
-# Stuff built during cross compilation
-cross/lib/*
-cross/src/*
-cross/lib-src/*
-cross/sys/*
-cross/config.status
-cross/*.bak
-cross/etc/DOC
-
-cross/ndk-build/Makefile
-cross/ndk-build/ndk-build.mk
-cross/ndk-build/*.o
 
 # Lisp-level sources built by 'make'.
 lisp/**/*cus-load.el

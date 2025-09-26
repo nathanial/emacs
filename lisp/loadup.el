@@ -324,19 +324,6 @@
       (load "term/common-win")
       (load "term/android-win")))
 
-(if (or (eq system-type 'windows-nt)
-        (featurep 'w32))
-    (progn
-      (load "term/common-win")
-      (load "w32-vars")
-      (load "term/w32-win")
-      (load "disp-table")
-      (when (eq system-type 'windows-nt)
-        (load "term/w32-nt")
-        (load "w32-fns")
-        (load "ls-lisp")
-        (load "dos-w32"))
-      (load "touch-screen")))
 
 (if (featurep 'ns)
     (progn
@@ -559,7 +546,8 @@ directory got moved.  This is set to be a pair in the form of:
 ;; Make sure we will attempt bidi reordering henceforth.
 (setq redisplay--inhibit-bidi nil)
 
-
+
+
 
 (if (and (eq system-type 'android)
          (featurep 'android))
@@ -681,7 +669,8 @@ directory got moved.  This is set to be a pair in the form of:
 
 (setq current-load-list (list "loadup.el"))
 
-
+
+
 ;; Local Variables:
 ;; no-byte-compile: t
 ;; no-update-autoloads: t
