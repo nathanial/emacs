@@ -129,11 +129,6 @@ struct scroll_bar
      being dragged, this is -1.  */
   int dragging;
 
-#if defined (USE_TOOLKIT_SCROLL_BARS) && defined (USE_LUCID)
-  /* Last scroll bar part seen in xaw_jump_callback and xaw_scroll_callback.  */
-  enum scroll_bar_part last_seen_part;
-#endif
-
 #if defined (USE_TOOLKIT_SCROLL_BARS) && !defined (USE_GTK)
   /* Last value of whole for horizontal scrollbars.  */
   int whole;

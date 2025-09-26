@@ -6558,7 +6558,7 @@ The return value is only relevant for a call to `read-file-name' that happens
 before any other event (mouse or keypress) is handled.  */)
   (void)
 {
-#if (defined USE_GTK || defined USE_MOTIF \
+#if (defined USE_GTK \
      || defined HAVE_NS || defined HAVE_NTGUI || defined HAVE_HAIKU)
   if ((NILP (last_nonmenu_event) || CONSP (last_nonmenu_event))
       && use_dialog_box

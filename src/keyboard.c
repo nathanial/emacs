@@ -13982,15 +13982,6 @@ See also `pre-command-hook'.  */);
 
   Fset (Qecho_area_clear_hook, Qnil);
 
-#ifdef USE_LUCID
-  DEFVAR_BOOL ("lucid--menu-grab-keyboard",
-               lucid__menu_grab_keyboard,
-               doc: /* If non-nil, grab keyboard during menu operations.
-This is only relevant when using the Lucid X toolkit.  It can be
-convenient to disable this for debugging purposes.  */);
-  lucid__menu_grab_keyboard = true;
-#endif
-
   DEFVAR_LISP ("menu-bar-final-items", Vmenu_bar_final_items,
 	       doc: /* List of menu bar items to move to the end of the menu bar.
 The elements of the list are event types that may have menu bar

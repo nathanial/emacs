@@ -49,8 +49,6 @@ HAVE_X11R6	Whether or not the system has X11R6.  (Always defined.)
 HAVE_X11R6_XIM	Whether or not the system supports XIM features introduced in R6.
 HAVE_X11XTR6	Whether or not the Xt is from X11R6 or newer.
 
-USE_LUCID	Use the Lucid toolkit for menus&scrollbars.  Requires HAVE_X11.
-USE_MOTIF	Use the Motif toolkit for menus&scrollbars.  Requires HAVE_X11.
 USE_GTK		Use the Gtk   toolkit for menus&scrollbars.  Requires HAVE_X11 or HAVE_PGTK.
 HAVE_GTK3	Use GTK version 3 or later. Requires HAVE_X11.
 

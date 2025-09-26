@@ -74,7 +74,6 @@ along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.  */
 #ifdef USE_X_TOOLKIT
 #include <X11/Shell.h>
 
-#ifndef USE_MOTIF
 #ifdef HAVE_XAW3D
 #include <X11/Xaw3d/Paned.h>
 #include <X11/Xaw3d/Label.h>
@@ -82,7 +81,6 @@ along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.  */
 #include <X11/Xaw/Paned.h>
 #include <X11/Xaw/Label.h>
 #endif /* HAVE_XAW3D */
-#endif /* USE_MOTIF */
 
 #ifdef USG
 #undef USG	/* ####KLUDGE for Solaris 2.2 and up */
@@ -98,26 +96,9 @@ along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.  */
 
 #include "../lwlib/lwlib.h"
 
-#ifdef USE_MOTIF
-#include <Xm/Xm.h>
-#include <Xm/DialogS.h>
-#include <Xm/FileSB.h>
-#include <Xm/List.h>
-#include <Xm/TextF.h>
-#include <Xm/MwmUtil.h>
-#endif
-
-#ifdef USE_LUCID
-#include "../lwlib/xlwmenu.h"
-#endif
-
 /* Unique id counter for widgets created by the Lucid Widget Library.  */
 
 extern LWLIB_ID widget_id_tick;
-
-#ifdef USE_MOTIF
-
-#endif /* USE_MOTIF */
 
 #endif /* USE_X_TOOLKIT */
 
@@ -131,7 +112,6 @@ extern LWLIB_ID widget_id_tick;
 static int dpyinfo_refcount;
 #endif
 
-#ifndef USE_MOTIF
 #ifndef USE_GTK
 /** #define MWM_HINTS_FUNCTIONS     (1L << 0) **/
 #define MWM_HINTS_DECORATIONS   (1L << 1)
@@ -158,7 +138,7 @@ typedef struct {
 
 #define PROP_MOTIF_WM_HINTS_ELEMENTS 5
 #endif /* NOT USE_GTK */
-#endif /* NOT USE_MOTIF */
+#endif /* !USE_GTK */
 
 static struct x_display_info *x_display_info_for_name (Lisp_Object);
 static void set_up_x_back_buffer (struct frame *f);
@@ -2081,20 +2061,6 @@ x_set_scroll_bar_background (struct frame *f, Lisp_Object value, Lisp_Object old
 
   if (f->output_data.x->scroll_bar_background_pixel != -1)
     unload_color (f, f->output_data.x->scroll_bar_background_pixel);
-
-#if defined (USE_LUCID) && defined (USE_TOOLKIT_SCROLL_BARS)
-  /* Scrollbar shadow colors.  */
-  if (f->output_data.x->scroll_bar_top_shadow_pixel != -1)
-    {
-      unload_color (f, f->output_data.x->scroll_bar_top_shadow_pixel);
-      f->output_data.x->scroll_bar_top_shadow_pixel = -1;
-    }
-  if (f->output_data.x->scroll_bar_bottom_shadow_pixel != -1)
-    {
-      unload_color (f, f->output_data.x->scroll_bar_bottom_shadow_pixel);
-      f->output_data.x->scroll_bar_bottom_shadow_pixel = -1;
-    }
-#endif /* USE_LUCID && USE_TOOLKIT_SCROLL_BARS */
 
   f->output_data.x->scroll_bar_background_pixel = pixel;
   if (FRAME_X_WINDOW (f) && FRAME_VISIBLE_P (f))
@@ -4245,14 +4211,12 @@ x_window (struct frame *f, long window_prompting)
 
     FRAME_MENUBAR_HEIGHT (f) = menubar_size;
 
-#ifndef USE_LUCID
     /* Motif seems to need this amount added to the sizes
        specified for the shell widget.  The Athena/Lucid widgets don't.
        Both conclusions reached experimentally.  -- rms.  */
     XtVaGetValues (f->output_data.x->edit_widget, XtNinternalBorderWidth,
 		   &extra_borders, NULL);
     extra_borders *= 2;
-#endif
 
     f->shell_position = xmalloc (sizeof "=x++" + 4 * INT_STRLEN_BOUND (int));
 
@@ -5028,10 +4992,6 @@ This function is an internal primitive--use `make-frame' instead.  */)
   FRAME_FONTSET (f) = -1;
   f->output_data.x->scroll_bar_foreground_pixel = -1;
   f->output_data.x->scroll_bar_background_pixel = -1;
-#if defined (USE_LUCID) && defined (USE_TOOLKIT_SCROLL_BARS)
-  f->output_data.x->scroll_bar_top_shadow_pixel = -1;
-  f->output_data.x->scroll_bar_bottom_shadow_pixel = -1;
-#endif /* USE_LUCID && USE_TOOLKIT_SCROLL_BARS */
   f->output_data.x->white_relief.pixel = -1;
   f->output_data.x->black_relief.pixel = -1;
   f->output_data.x->visibility_state = VisibilityFullyObscured;
@@ -6521,59 +6481,6 @@ x_get_monitor_attributes (struct x_display_info *dpyinfo)
 
 #endif /* !USE_GTK */
 
-#ifdef USE_LUCID
-/* This is used by the Lucid menu widget, but it's defined here so we
-   can make use of a great deal of existing code.  */
-static void
-xlw_monitor_dimensions_at_pos_1 (struct x_display_info *dpyinfo,
-				 Screen *screen, int src_x, int src_y,
-				 int *x, int *y, int *width, int *height)
-{
-  Lisp_Object attrs, tem, val;
-
-  attrs = x_get_monitor_attributes (dpyinfo);
-
-  for (tem = attrs; CONSP (tem); tem = XCDR (tem))
-    {
-      int sx, sy, swidth, sheight;
-      val = assq_no_quit (Qworkarea, XCAR (tem));
-      if (!NILP (val))
-	{
-	  sx = XFIXNUM (XCAR (XCDR (val)));
-	  sy = XFIXNUM (XCAR (XCDR (XCDR (val))));
-	  swidth = XFIXNUM (XCAR (XCDR (XCDR (XCDR (val)))));
-	  sheight = XFIXNUM (XCAR (XCDR (XCDR (XCDR (XCDR (val))))));
-
-	  if (sx <= src_x && src_x < (sx + swidth)
-	      && sy <= src_y && src_y < (sy + swidth))
-	    {
-	      *x = sx;
-	      *y = sy;
-	      *width = swidth;
-	      *height = sheight;
-	      return;
-	    }
-	}
-    }
-
-  *x = 0;
-  *y = 0;
-  *width = WidthOfScreen (screen);
-  *height = HeightOfScreen (screen);
-}
-
-void
-xlw_monitor_dimensions_at_pos (Display *dpy, Screen *screen, int src_x,
-			       int src_y, int *x, int *y, int *width, int *height)
-{
-  struct x_display_info *dpyinfo = x_dpyinfo (dpy);
-
-  block_input ();
-  xlw_monitor_dimensions_at_pos_1 (dpyinfo, screen, src_x, src_y,
-				   x, y, width, height);
-
-  unblock_input ();
-}
 #endif
 
 
@@ -8428,10 +8335,6 @@ x_create_tip_frame (struct x_display_info *dpyinfo, Lisp_Object parms)
   FRAME_FONTSET (f) = -1;
   f->output_data.x->scroll_bar_foreground_pixel = -1;
   f->output_data.x->scroll_bar_background_pixel = -1;
-#if defined (USE_LUCID) && defined (USE_TOOLKIT_SCROLL_BARS)
-  f->output_data.x->scroll_bar_top_shadow_pixel = -1;
-  f->output_data.x->scroll_bar_bottom_shadow_pixel = -1;
-#endif /* USE_LUCID && USE_TOOLKIT_SCROLL_BARS */
   f->output_data.x->white_relief.pixel = -1;
   f->output_data.x->black_relief.pixel = -1;
 
@@ -9390,249 +9293,6 @@ DEFUN ("x-uses-old-gtk-dialog", Fx_uses_old_gtk_dialog,
 }
 
 
-#ifdef USE_MOTIF
-/* Callback for "OK" and "Cancel" on file selection dialog.  */
-
-static void
-file_dialog_cb (Widget widget, XtPointer client_data, XtPointer call_data)
-{
-  int *result = client_data;
-  XmAnyCallbackStruct *cb = call_data;
-  *result = cb->reason;
-}
-
-
-/* Callback for unmapping a file selection dialog.  This is used to
-   capture the case where a dialog is closed via a window manager's
-   closer button, for example. Using a XmNdestroyCallback didn't work
-   in this case.  */
-
-static void
-file_dialog_unmap_cb (Widget widget, XtPointer client_data, XtPointer call_data)
-{
-  int *result = client_data;
-  *result = XmCR_CANCEL;
-}
-
-static void
-clean_up_file_dialog (void *arg)
-{
-  Widget dialog = arg;
-
-  /* Clean up.  */
-  block_input ();
-  XtUnmanageChild (dialog);
-  XtDestroyWidget (dialog);
-  x_menu_set_in_use (false);
-  unblock_input ();
-}
-
-
-DEFUN ("x-file-dialog", Fx_file_dialog, Sx_file_dialog, 2, 5, 0,
-       doc: /* SKIP: real doc in USE_GTK definition in xfns.c.  */)
-  (Lisp_Object prompt, Lisp_Object dir, Lisp_Object default_filename,
-   Lisp_Object mustmatch, Lisp_Object only_dir_p)
-{
-  int result;
-  struct frame *f = SELECTED_FRAME ();
-  Lisp_Object file = Qnil;
-  Lisp_Object decoded_file;
-  Widget dialog, text, help;
-  Arg al[10];
-  int ac = 0;
-  XmString dir_xmstring, pattern_xmstring;
-  specpdl_ref count = SPECPDL_INDEX ();
-
-  check_window_system (f);
-
-  if (popup_activated ())
-    error ("Trying to use a menu from within a menu-entry");
-
-  CHECK_STRING (prompt);
-  CHECK_STRING (dir);
-
-  /* Prevent redisplay.  */
-  specbind (Qinhibit_redisplay, Qt);
-
-  /* Defer selection requests.  */
-  DEFER_SELECTIONS;
-
-  block_input ();
-
-  /* Create the dialog with PROMPT as title, using DIR as initial
-     directory and using "*" as pattern.  */
-  dir = Fexpand_file_name (dir, Qnil);
-  dir_xmstring = XmStringCreateLocalized (SSDATA (dir));
-  pattern_xmstring = XmStringCreateLocalized ("*");
-
-  XtSetArg (al[ac], XmNtitle, SDATA (prompt)); ++ac;
-  XtSetArg (al[ac], XmNdirectory, dir_xmstring); ++ac;
-  XtSetArg (al[ac], XmNpattern, pattern_xmstring); ++ac;
-  XtSetArg (al[ac], XmNresizePolicy, XmRESIZE_GROW); ++ac;
-  XtSetArg (al[ac], XmNdialogStyle, XmDIALOG_APPLICATION_MODAL); ++ac;
-  dialog = XmCreateFileSelectionDialog (f->output_data.x->widget,
-					"fsb", al, ac);
-  XmStringFree (dir_xmstring);
-  XmStringFree (pattern_xmstring);
-
-  /* Add callbacks for OK and Cancel.  */
-  XtAddCallback (dialog, XmNokCallback, file_dialog_cb,
-		 (XtPointer) &result);
-  XtAddCallback (dialog, XmNcancelCallback, file_dialog_cb,
-		 (XtPointer) &result);
-  XtAddCallback (dialog, XmNunmapCallback, file_dialog_unmap_cb,
-		 (XtPointer) &result);
-
-  /* Remove the help button since we can't display help.  */
-  help = XmFileSelectionBoxGetChild (dialog, XmDIALOG_HELP_BUTTON);
-  XtUnmanageChild (help);
-
-  /* Mark OK button as default.  */
-  XtVaSetValues (XmFileSelectionBoxGetChild (dialog, XmDIALOG_OK_BUTTON),
-		 XmNshowAsDefault, True, NULL);
-
-  /* If MUSTMATCH is non-nil, disable the file entry field of the
-     dialog, so that the user must select a file from the files list
-     box.  We can't remove it because we wouldn't have a way to get at
-     the result file name, then.  */
-  text = XmFileSelectionBoxGetChild (dialog, XmDIALOG_TEXT);
-  if (!NILP (mustmatch))
-    {
-      Widget label;
-      label = XmFileSelectionBoxGetChild (dialog, XmDIALOG_SELECTION_LABEL);
-      XtSetSensitive (text, False);
-      XtSetSensitive (label, False);
-    }
-
-  /* Manage the dialog, so that list boxes get filled.  */
-  XtManageChild (dialog);
-
-  if (STRINGP (default_filename))
-    {
-      XmString default_xmstring;
-      Widget wtext = XmFileSelectionBoxGetChild (dialog, XmDIALOG_TEXT);
-      Widget list = XmFileSelectionBoxGetChild (dialog, XmDIALOG_LIST);
-
-      XmTextPosition last_pos = XmTextFieldGetLastPosition (wtext);
-      XmTextFieldReplace (wtext, 0, last_pos,
-                          (SSDATA (Ffile_name_nondirectory (default_filename))));
-
-      /* Select DEFAULT_FILENAME in the files list box.  DEFAULT_FILENAME
-         must include the path for this to work.  */
-
-      default_xmstring = XmStringCreateLocalized (SSDATA (default_filename));
-
-      if (XmListItemExists (list, default_xmstring))
-        {
-          int item_pos = XmListItemPos (list, default_xmstring);
-          /* Select the item and scroll it into view.  */
-          XmListSelectPos (list, item_pos, True);
-          XmListSetPos (list, item_pos);
-        }
-
-      XmStringFree (default_xmstring);
-    }
-
-  record_unwind_protect_ptr (clean_up_file_dialog, dialog);
-
-  /* Process events until the user presses Cancel or OK.  */
-  x_menu_set_in_use (true);
-  result = 0;
-  while (result == 0)
-    {
-      XEvent event, copy;
-      x_menu_wait_for_event (0);
-
-      if (XtAppPending (Xt_app_con))
-	{
-	  XtAppNextEvent (Xt_app_con, &event);
-
-	  copy = event;
-	  if (event.type == KeyPress
-	      && FRAME_X_DISPLAY (f) == event.xkey.display)
-	    {
-	      KeySym keysym = XLookupKeysym (&event.xkey, 0);
-
-	      /* Pop down on C-g.  */
-	      if (keysym == XK_g && (event.xkey.state & ControlMask) != 0)
-		XtUnmanageChild (dialog);
-	    }
-#ifdef HAVE_XINPUT2
-	  else if (event.type == GenericEvent
-		   && FRAME_X_DISPLAY (f) == event.xgeneric.display
-		   && FRAME_DISPLAY_INFO (f)->supports_xi2
-		   && (event.xgeneric.extension
-		       == FRAME_DISPLAY_INFO (f)->xi2_opcode)
-		   && event.xgeneric.evtype == XI_KeyPress)
-	    {
-	      KeySym keysym;
-	      XIDeviceEvent *xev;
-
-	      if (event.xcookie.data)
-		emacs_abort ();
-
-	      if (XGetEventData (FRAME_X_DISPLAY (f), &event.xcookie))
-		{
-		  xev = (XIDeviceEvent *) event.xcookie.data;
-
-		  copy.xkey.type = KeyPress;
-		  copy.xkey.serial = xev->serial;
-		  copy.xkey.send_event = xev->send_event;
-		  copy.xkey.display = FRAME_X_DISPLAY (f);
-		  copy.xkey.window = xev->event;
-		  copy.xkey.root = xev->root;
-		  copy.xkey.subwindow = xev->child;
-		  copy.xkey.time = xev->time;
-		  copy.xkey.x = lrint (xev->event_x);
-		  copy.xkey.y = lrint (xev->event_y);
-		  copy.xkey.x_root = lrint (xev->root_x);
-		  copy.xkey.y_root = lrint (xev->root_y);
-		  copy.xkey.state = xev->mods.effective;
-		  copy.xkey.keycode = xev->detail;
-		  copy.xkey.same_screen = True;
-
-		  keysym = XLookupKeysym (&copy.xkey, 0);
-
-		  if (keysym == XK_g
-		      && (copy.xkey.state & ControlMask) != 0) /* Any escape, ignore modifiers.  */
-		    XtUnmanageChild (dialog);
-
-		  XFreeEventData (FRAME_X_DISPLAY (f), &event.xcookie);
-		}
-	    }
-#endif
-
-	  (void) x_dispatch_event (&copy, FRAME_X_DISPLAY (f));
-	}
-    }
-
-  /* Get the result.  */
-  if (result == XmCR_OK)
-    {
-      XmString text_string;
-      String data;
-
-      XtVaGetValues (dialog, XmNtextString, &text_string, NULL);
-      XmStringGetLtoR (text_string, XmFONTLIST_DEFAULT_TAG, &data);
-      XmStringFree (text_string);
-      file = build_string (data);
-      XtFree (data);
-    }
-  else
-    file = Qnil;
-
-  unblock_input ();
-
-  /* Make "Cancel" equivalent to C-g.  */
-  if (NILP (file))
-    quit ();
-
-  decoded_file = DECODE_FILE (file);
-
-  return unbind_to (count, decoded_file);
-}
-
-#endif /* USE_MOTIF */
 
 #ifdef USE_GTK
 
@@ -9649,8 +9309,7 @@ selection box, if specified.  If MUSTMATCH is non-nil, the returned file
 or directory must exist.
 
 This function is defined only on PGTK, NS, Haiku, MS Windows, and X Windows with
-the Motif or Gtk toolkits.  With the Motif toolkit, ONLY-DIR-P is ignored.
-Otherwise, if ONLY-DIR-P is non-nil, the user can select only directories.
+the GTK toolkit.  If ONLY-DIR-P is non-nil, the user can select only directories.
 
 On MS Windows 7 and later, the file selection dialog "remembers" the last
 directory where the user selected a file, and will open that directory
@@ -10506,13 +10165,6 @@ eliminated in future versions of Emacs.  */);
 
 #ifdef USE_X_TOOLKIT
   Fprovide (intern_c_string ("x-toolkit"), Qnil);
-#ifdef USE_MOTIF
-  Fprovide (intern_c_string ("motif"), Qnil);
-
-  DEFVAR_LISP ("motif-version-string", Vmotif_version_string,
-	       doc: /* Version info for LessTif/Motif.  */);
-  Vmotif_version_string = build_string (XmVERSION_STRING);
-#endif /* USE_MOTIF */
 #endif /* USE_X_TOOLKIT */
 
 #ifdef USE_GTK
@@ -10613,7 +10265,7 @@ eliminated in future versions of Emacs.  */);
   staticpro (&tip_dy);
 
   defsubr (&Sx_uses_old_gtk_dialog);
-#if defined (USE_MOTIF) || defined (USE_GTK)
+#if defined (USE_GTK)
   defsubr (&Sx_file_dialog);
 #endif
 

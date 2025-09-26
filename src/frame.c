@@ -829,19 +829,12 @@ adjust_frame_size (struct frame *f, int new_text_width, int new_text_height,
 		  || inhibit == 0 || inhibit == 2))))
     {
       if (inhibit == 2
-#ifdef USE_MOTIF
-	  && !EQ (parameter, Qmenu_bar_lines)
-#endif
 	  && (f->new_width >= 0 || f->new_height >= 0))
 	/* For implied resizes with inhibit 2 (external menu and tool
 	   bar) pick up any new sizes the display engine has not
 	   processed yet.  Otherwise, we would request the old sizes
 	   which will make this request appear as a request to set new
-	   sizes and have the WM react accordingly which is not TRT.
-
-	   We don't that for the external menu bar on Motif.
-	   Otherwise, switching off the menu bar will shrink the frame
-	   and switching it on will not enlarge it.  */
+	   sizes and have the WM react accordingly which is not TRT.  */
 	{
 	  if (f->new_width >= 0)
 	    new_native_width = f->new_width;

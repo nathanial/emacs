@@ -1149,13 +1149,6 @@ struct x_output
      bars).  */
   unsigned long scroll_bar_background_pixel;
 
-#if defined (USE_LUCID) && defined (USE_TOOLKIT_SCROLL_BARS)
-  /* Top and bottom shadow colors for 3D Lucid scrollbars.
-     -1 means let the scroll compute them itself.  */
-  unsigned long scroll_bar_top_shadow_pixel;
-  unsigned long scroll_bar_bottom_shadow_pixel;
-#endif
-
   /* Descriptor for the cursor in use for this window.  */
   Cursor text_cursor;
   Cursor nontext_cursor;
@@ -1585,11 +1578,6 @@ struct scroll_bar
      being dragged, this is -1.  */
   int dragging;
 
-#if defined (USE_TOOLKIT_SCROLL_BARS) && defined (USE_LUCID)
-  /* Last scroll bar part seen in xaw_jump_callback and xaw_scroll_callback.  */
-  enum scroll_bar_part last_seen_part;
-#endif
-
 #if defined (USE_TOOLKIT_SCROLL_BARS) && !defined (USE_GTK)
   /* Last value of whole for horizontal scrollbars.  */
   int whole;
@@ -1788,16 +1776,10 @@ extern unsigned long x_copy_color (struct frame *, unsigned long);
 extern XtAppContext Xt_app_con;
 extern void x_activate_timeout_atimer (void);
 #endif
-#ifdef USE_LUCID
-extern bool x_alloc_lighter_color_for_widget (Widget, Display *, Colormap,
-					      unsigned long *,
-					      double, int);
-#endif
 extern bool x_alloc_nearest_color (struct frame *, Colormap, XColor *);
 extern void x_query_colors (struct frame *f, XColor *, int);
 extern void x_clear_area (struct frame *f, int, int, int, int);
-#if (defined USE_LUCID && defined HAVE_XINPUT2) \
-  || (!defined USE_X_TOOLKIT && !defined USE_GTK)
+#if !defined USE_X_TOOLKIT && !defined USE_GTK
 extern void x_mouse_leave (struct x_display_info *);
 #endif
 extern void x_wait_for_cell_change (Lisp_Object, struct timespec);
@@ -1913,11 +1895,6 @@ extern void x_change_tool_bar_height (struct frame *, int);
 extern void x_implicitly_set_name (struct frame *, Lisp_Object, Lisp_Object);
 extern void x_set_scroll_bar_default_width (struct frame *);
 extern void x_set_scroll_bar_default_height (struct frame *);
-#ifdef USE_LUCID
-extern void xlw_monitor_dimensions_at_pos (Display *, Screen *, int, int,
-					   int *, int *, int *, int *);
-#endif
-
 /* Defined in xselect.c.  */
 
 extern void x_handle_property_notify (const XPropertyEvent *);
@@ -1991,7 +1968,7 @@ extern void x_free_dpy_colors (Display *, Screen *, Colormap,
 extern Lisp_Object xw_popup_dialog (struct frame *, Lisp_Object, Lisp_Object);
 #endif
 
-#if defined USE_GTK || defined USE_MOTIF
+#if defined USE_GTK
 extern void x_menu_set_in_use (bool);
 #endif
 extern void x_menu_wait_for_event (void *data);

@@ -227,11 +227,6 @@ along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.  */
 #include "character.h"
 #include "frame.h"
 
-#ifdef USE_MOTIF
-#include <Xm/Xm.h>
-#include <Xm/XmStrDefs.h>
-#endif /* USE_MOTIF */
-
 #ifdef MSDOS
 #include "dosfns.h"
 #endif
@@ -4031,11 +4026,7 @@ x_update_menu_appearance (struct frame *f)
       struct face *face = FACE_FROM_ID (f, MENU_FACE_ID);
       const char *myname = SSDATA (Vx_resource_name);
       bool changed_p = false;
-#ifdef USE_MOTIF
-      const char *popup_path = "popup_menu";
-#else
       const char *popup_path = "menu.popup";
-#endif
 
       if (STRINGP (LFACE_FOREGROUND (lface)))
 	{
@@ -4076,17 +4067,11 @@ x_update_menu_appearance (struct frame *f)
 	{
 	  Lisp_Object xlfd = Ffont_xlfd_name (LFACE_FONT (lface), Qnil,
 					      Qnil);
-#ifdef USE_MOTIF
-	  const char *suffix = "List";
-	  bool motif = true;
-#else
 #if defined HAVE_X_I18N
-
 	  const char *suffix = "Set";
+	  bool motif = false;
 #else
 	  const char *suffix = "";
-#endif
-	  bool motif = false;
 #endif
 
 	  if (! NILP (xlfd))

@@ -1214,17 +1214,6 @@ xsettings_get_system_font (void)
   return current_mono_font;
 }
 
-#ifdef USE_LUCID
-/* Return the system font.
-   May be NULL if not known.  */
-
-const char *
-xsettings_get_system_normal_font (void)
-{
-  return current_font;
-}
-#endif
-
 #ifdef HAVE_PGTK
 /* Return the cairo font options, updated from the gsettings font
    config entries.  The caller should call cairo_font_options_destroy

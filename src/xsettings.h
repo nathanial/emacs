@@ -39,10 +39,6 @@ extern void xsettings_initialize (Display_Info *);
 extern bool xft_settings_event (Display_Info *, const XEvent *);
 #endif
 extern const char *xsettings_get_system_font (void);
-#ifdef USE_LUCID
-extern const char *xsettings_get_system_normal_font (void);
-#endif
-
 #ifdef HAVE_PGTK
 extern cairo_font_options_t *xsettings_get_font_options (void);
 #endif
