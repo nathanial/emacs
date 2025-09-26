@@ -4428,8 +4428,8 @@ You can enter M-f6 by typing ESC f6.
 
 This is a limitation of the Operating System, and can cause problems
 when shutting down Windows.  Ensure that all subprocesses are exited
-cleanly before exiting Emacs.  For more details, see the Emacs on MS
-Windows FAQ (info manual "efaq-w32").
+cleanly before exiting Emacs.  These notes describe historical behavior
+of the now-retired MS-Windows port.
 
 *** MS-Windows 98/ME: crashes when Emacs invokes non-existent programs.
 

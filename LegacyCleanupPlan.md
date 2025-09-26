@@ -10,12 +10,13 @@ Rationalize the Emacs source tree for a codebase that only targets modern macOS 
 
 ## Progress Update
 - [x] Removed `msdos/` directory and associated MS-DOS port sources on 2025-09-25.
+- [x] Removed `nt/` port directories, build hooks, and documentation on 2025-09-26.
 
 ## Candidate Directories to Retire
 | Directory | Primary Purpose | Why It Can Likely Be Removed | Follow-Up Tasks & Risks |
 |-----------|------------------|------------------------------|--------------------------|
 | `msdos/` | MS-DOS port sources, docs, and build glue. | Removed on 2025-09-25; MS-DOS is no longer a supported target. | Ensure any lingering conditionals guarding MS-DOS code paths are cleaned up as subsequent refactors land. |
-| `nt/` | Windows (NT) port including resource files, w32 GUI back-end, installer scripts. | Windows support is unnecessary when limiting to macOS and Linux. | Purge `NT` build options from configure scripts, remove `HAVE_NTGUI` branches in C and Lisp, adjust documentation (`doc/misc/efaq-w32.texi`). |
+| `nt/` | Windows (NT) port including resource files, w32 GUI back-end, installer scripts. | Removed on 2025-09-26; Windows support is no longer part of the target matrix. | Monitor for residual `WINDOWSNT` conditionals that can be simplified in subsequent refactors. |
 | `java/` | Android port scaffolding and Gradle project. | Android is out of scope; none of these files participate in desktop builds. | Clean up configure probes (`--with-android`), delete Android-specific code paths under `src/` guarded by `android` macros. |
 | `cross/` | Cross-compilation helper configs for niche targets (e.g., MIPS, ARM). | Focus is on native macOS/Linux builds; these configs add maintenance overhead. | Ensure documentation (`INSTALL.REPO`) reflects the change, and warn contributors that cross builds are untested/unsupported. |
 | `oldXMenu/` | Legacy X11 menu implementation used with the Lucid toolkit. | GTK and PGTK builds do not depend on it; its main consumer is `lwlib`. | If `lwlib/` is removed, this directory becomes unused. Verify no remaining references in `src/` or build scripts before deletion. |
@@ -24,12 +25,12 @@ Rationalize the Emacs source tree for a codebase that only targets modern macOS 
 | `doc/misc/efaq-w32.texi`, `doc/misc/ntfaq.texi`, related w32 docs | Manuals for legacy platforms. | Once Windows support is removed, these manuals become obsolete clutter. | Delete the files, update `doc/misc/Makefile.in`, and scrub references from the Info directory map. |
 
 ## Additional Cleanup Opportunities
-- Check `lisp/term/` for platform-specific terminal definitions (`w32-term.el`, `pc-win.el`) and remove them alongside the corresponding C back ends.
+- Check `lisp/term/` for platform-specific terminal definitions (`pc-win.el`) and remove them alongside any remaining platform-specific back ends.
 - Remove conditional compilation blocks guarded by `WINDOWSNT`, `DOS_NT`, `HAVE_ANDROID`, `NS_IMPL_GNUSTEP`, etc., once their directories disappear.
-- Review `admin/` scripts that package Windows installers or Android artifacts (`admin/nt/`, `admin/android/`).
+- Review `admin/` scripts that package legacy installers or Android artifacts (`admin/android/`).
 
 ## Sequencing Recommendations
-1. **Plan the order**: Start with platform directories (`msdos/`, `nt/`, `java/`, `nextstep/GNUstep/`) so downstream references can be pruned methodically.
+1. **Plan the order**: Continue pruning remaining platform directories (`java/`, `nextstep/GNUstep/`) so downstream references can be removed methodically.
 2. **Adjust the build system**: Update `configure.ac`, regenerate `configure` with `autogen.sh`, and remove related options from `INSTALL.REPO`.
 3. **Remove dependent source paths**: Use `rg`/`git grep` to eliminate residual `#ifdef` branches and load-path entries referencing the removed directories.
 4. **Prune documentation**: Delete the obsolete manuals and update `doc/` indices to avoid build failures in the Info manuals.

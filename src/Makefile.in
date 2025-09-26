@@ -308,25 +308,8 @@ NS_OBJ=@NS_OBJ@
 NS_OBJC_OBJ=@NS_OBJC_OBJ@
 ## Used only for GNUstep.
 GNU_OBJC_CFLAGS=$(patsubst -specs=%-hardened-cc1,,@GNU_OBJC_CFLAGS@)
-## w32fns.o w32menu.c w32reg.o fringe.o fontset.o w32font.o w32term.o
-## w32xfns.o w32select.o image.o w32uniscribe.o w32cygwinx.o if HAVE_W32,
-## w32cygwinx.o if CYGWIN but not HAVE_W32, else empty.
-W32_OBJ=@W32_OBJ@
-## -lkernel32 -luser32 -lusp10 -lgdi32 -lole32 -lcomdlg32 -lcomctl32
-## -lwinspool if HAVE_W32,
-## -lkernel32 if CYGWIN but not HAVE_W32, else empty.
-W32_LIBS=@W32_LIBS@
-
 PGTK_OBJ=@PGTK_OBJ@
 PGTK_LIBS=@PGTK_LIBS@
-
-## emacs.res if HAVE_W32
-EMACSRES = @EMACSRES@
-## If HAVE_W32, compiler arguments for including
-## the resource file in the binary.
-## Cygwin: -Wl,emacs.res
-## MinGW: emacs.res
-W32_RES_LINK=@W32_RES_LINK@
 
 ## Empty if !HAVE_X_WINDOWS
 ## xfont.o ftfont.o xftfont.o if HAVE_XFT
@@ -336,9 +319,8 @@ W32_RES_LINK=@W32_RES_LINK@
 ## if HAVE_HARFBUZZ, hbfont.o is added regardless of the rest
 FONT_OBJ=@FONT_OBJ@
 
-## Empty for MinGW and Android, cm.o for the rest.
-CM_OBJ=@CM_OBJ@
-
+## Terminal cursor-motion helpers.
+CM_OBJ = cm.o
 LIBGPM = @LIBGPM@
 
 LIBSELINUX_LIBS = @LIBSELINUX_LIBS@
@@ -460,7 +442,7 @@ base_obj = dispnew.o frame.o scroll.o xdisp.o menu.o $(XMENU_OBJ) window.o     \
 	thread.o systhread.o sqlite.o  treesit.o			       \
 	itree.o json.o 							       \
 	$(NS_OBJ) $(CYGWIN_OBJ) $(FONT_OBJ)        \
-	$(W32_OBJ) $(WINDOW_SYSTEM_OBJ) $(XGSELOBJ)			       \
+	$(WINDOW_SYSTEM_OBJ) $(XGSELOBJ)			       \
 	$(HAIKU_OBJ) $(PGTK_OBJ) $(ANDROID_OBJ)
 doc_obj = $(base_obj) $(NS_OBJC_OBJ)
 obj = $(doc_obj) $(HAIKU_CXX_OBJ)
@@ -471,11 +453,9 @@ obj = $(doc_obj) $(HAIKU_CXX_OBJ)
 ## in the list, in case they ever add any such entries.
 SOME_MACHINE_OBJECTS = \
   xterm.o xfns.o xmenu.o xselect.o xrdb.o xsmfns.o fringe.o image.o \
-  fontset.o dbusbind.o cygw32.o \
+  fontset.o dbusbind.o \
   nsterm.o nsfns.o nsmenu.o nsselect.o nsimage.o nsfont.o macfont.o \
   nsxwidget.o \
-  w32.o w32console.o w32cygwinx.o w32fns.o w32heap.o w32inevt.o w32notify.o \
-  w32menu.o w32proc.o w32reg.o w32select.o w32term.o w32xfns.o \
   w16select.o widget.o xfont.o ftfont.o xftfont.o gtkutil.o \
   xsettings.o xgselect.o termcap.o hbfont.o \
   haikuterm.o haikufns.o haikumenu.o haikufont.o androidterm.o androidfns.o \
@@ -565,7 +545,7 @@ export LISP_PRELOADED = ${shortlisp}
 lisp = $(addprefix ${lispsource}/,${shortlisp})
 
 ## Construct full set of libraries to be linked.
-LIBES = $(LIBS) $(W32_LIBS) $(LIBS_GNUSTEP) $(PGTK_LIBS) $(LIBX_BASE) $(LIBIMAGE) \
+LIBES = $(LIBS) $(LIBS_GNUSTEP) $(PGTK_LIBS) $(LIBX_BASE) $(LIBIMAGE) \
    $(LIBX_OTHER) $(LIBSOUND) \
    $(RSVG_LIBS) $(IMAGEMAGICK_LIBS) $(LIB_ACL) $(CLOCK_TIME_LIB) \
    $(NANOSLEEP_LIB) $(QCOPY_ACL_LIB) $(WEBKIT_LIBS) \
@@ -698,16 +678,16 @@ endif
 ## existence when setting Vinstallation_directory (FIXME?).
 ## This goes on to affect various things, and the emacs binary fails
 ## to start if Vinstallation_directory has the wrong value.
-temacs$(EXEEXT): $(LIBXMENU) $(ALLOBJS) $(LIBEGNU_ARCHIVE) $(EMACSRES) \
+temacs$(EXEEXT): $(LIBXMENU) $(ALLOBJS) $(LIBEGNU_ARCHIVE) \
   $(charsets) $(charscript) ${emoji-zwj} $(MAKE_PDUMPER_FINGERPRINT)
 ifeq ($(HAVE_BE_APP),yes)
 	$(AM_V_CXXLD)$(CXX) -o $@.tmp \
 	  $(ALL_CFLAGS) $(TEMACS_LDFLAGS) $(LDFLAGS) \
-	  $(ALLOBJS) $(LIBEGNU_ARCHIVE) $(W32_RES_LINK) $(LIBES) -lstdc++
+	  $(ALLOBJS) $(LIBEGNU_ARCHIVE) $(LIBES) -lstdc++
 else
 	$(AM_V_CCLD)$(CC) -o $@.tmp \
 	  $(ALL_CFLAGS) $(CXXFLAGS) $(TEMACS_LDFLAGS) $(LDFLAGS) \
-	  $(ALLOBJS) $(LIBEGNU_ARCHIVE) $(W32_RES_LINK) $(LIBES)
+	  $(ALLOBJS) $(LIBEGNU_ARCHIVE) $(LIBES)
 endif
 ifeq ($(HAVE_PDUMPER),yes)
 	$(AM_V_at)$(MAKE_PDUMPER_FINGERPRINT) $@.tmp

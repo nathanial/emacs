@@ -136,9 +136,6 @@ Root must be the root of an Emacs source tree."
                                     (setq ver-list (append ver-list '(0))))
                                 ver-list))
                        admin-android-version-code-regexp)
-  (set-version-in-file root "nt/README.W32" version
-		       (rx (and "version" (1+ space)
-				(submatch (1+ (in "0-9."))))))
   ;; Major version only.
   (when (string-match "\\([0-9]\\{2,\\}\\)" version)
     (let ((newmajor (match-string 1 version)))
@@ -284,10 +281,9 @@ ROOT should be the root of an Emacs source tree."
       (while (and (looking-back "\\\\" (- (point) 2))
 		  (zerop (forward-line 1)))
 	(end-of-line))
-      (append (split-string (replace-regexp-in-string
+      (split-string (replace-regexp-in-string
 			     "\\(\\\\\\|\\.info\\)" ""
-			     (buffer-substring start (point))))
-	      '("efaq-w32")))))
+			     (buffer-substring start (point)))))))
 
 ;; TODO report the progress
 (defun make-manuals (root &optional type)

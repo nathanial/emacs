@@ -28,7 +28,7 @@ EXEEXT = @EXEEXT@
 
 # Empty for all systems except MinGW, where xargs needs an explicit
 # limitation.
-XARGS_LIMIT = @XARGS_LIMIT@
+XARGS_LIMIT =
 
 HAVE_NATIVE_COMP = @HAVE_NATIVE_COMP@
 NATIVE_COMPILATION_AOT = @NATIVE_COMPILATION_AOT@

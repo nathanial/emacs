@@ -215,7 +215,7 @@ These directories are searched after those in `Info-directory-list'."
 
 (defcustom Info-url-alist
   '((("auth" "autotype" "bovine" "calc" "ccmode" "cl" "dbus" "dired-x"
-      "ebrowse" "ede" "ediff" "edt" "efaq" "efaq-w32" "eglot" "eieio"
+      "ebrowse" "ede" "ediff" "edt" "efaq" "eglot" "eieio"
       "eintr" "elisp" "emacs" "emacs-gnutls" "emacs-mime" "epa" "erc"
       "ert" "eshell" "eudc" "eww" "flymake" "forms" "gnus"
       "htmlfontify" "idlwave" "ido" "info" "mairix-el" "message"

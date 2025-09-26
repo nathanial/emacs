@@ -129,7 +129,7 @@ If LINK is not an info link then DESC is returned."
 
 (defconst org-info-emacs-documents
   '("ada-mode" "auth" "autotype" "bovine" "calc" "ccmode" "cl" "dbus" "dired-x"
-    "ebrowse" "ede" "ediff" "edt" "efaq-w32" "efaq" "eglot" "eieio" "eintr"
+    "ebrowse" "ede" "ediff" "edt" "efaq" "eglot" "eieio" "eintr"
     "elisp" "emacs-gnutls" "emacs-mime" "emacs" "epa" "erc" "ert" "eshell"
     "eudc" "eww" "flymake" "forms" "gnus" "htmlfontify" "idlwave" "ido" "info"
     "mairix-el" "message" "mh-e" "modus-themes" "newsticker" "nxml-mode" "octave-mode"

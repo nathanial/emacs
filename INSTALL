@@ -10,7 +10,6 @@ instructions in this file should be sufficient.  For other
 configurations, we have additional specialized files:
 
   . INSTALL.REPO if you build from a Git checkout
-  . nt/INSTALL if you build a native (non-Cygwin) Emacs for MS-Windows
   . nextstep/INSTALL if you build for GNUstep/macOS
   . java/INSTALL if you build for Android
 

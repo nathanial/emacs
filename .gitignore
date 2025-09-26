@@ -355,8 +355,6 @@ lib/SYS/
 /README.W32
 /share/
 /site-lisp/
-nt/emacs.rc
-nt/emacsclient.rc
 src/gdb.ini
 /var/
 

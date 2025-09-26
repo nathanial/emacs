@@ -112,7 +112,6 @@ build-aux/git-hooks/pre-commit diff=shell
 build-aux/gitlog-to-emacslog diff=shell
 build-aux/make-info-dir diff=shell
 build-aux/move-if-change diff=shell
-build-aux/msys-to-w32 diff=shell
 build-aux/update-subdirs diff=shell
 lib-src/rcs2log diff=shell
 /make-dist diff=shell

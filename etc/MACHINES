@@ -68,7 +68,8 @@ file, and edit the 'configure.ac' source as needed.
 
 ** Microsoft Windows
 
-  For installation instructions see the file nt/INSTALL.
+  Windows-specific installation instructions have been retired along
+  with the MS-Windows port.
 
 
 ** Solaris

@@ -3845,11 +3845,10 @@ and any Emacs Info files that might be in @file{/usr/local/share/info/}.
 Emacs supports macOS natively.  See the file @file{nextstep/INSTALL}
 in the distribution.
 
-@cindex FAQ for Emacs on MS-Windows
 @cindex Emacs for MS-Windows
 @cindex Microsoft Windows, Emacs for
-There is a separate FAQ for Emacs on MS-Windows,
-@pxref{Top,,,efaq-w32,FAQ for Emacs on MS Windows}.
+This codebase no longer targets Microsoft Windows; the legacy
+MS-Windows FAQ has been retired along with that platform support.
 
 @cindex GNUstep, Emacs for
 Emacs supports GNUstep natively.  See the file @file{nextstep/INSTALL}

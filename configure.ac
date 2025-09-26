@@ -222,50 +222,8 @@ AS_IF([test "$XCONFIGURE" = "android"],[
 
 case $host in
  *-mingw*)
-
-  if test -z "$host_alias"; then
-
-      # No --host argument was given to 'configure'; therefore $host
-      # was set to a default value based on the build platform.  But
-      # this default value may be wrong if we are building from a
-      # 64-bit MSYS[2] pre-configured to build 32-bit MinGW programs.
-      # Therefore, we'll try to get the right host platform from the
-      # compiler's target.
-
-      AC_MSG_CHECKING([the compiler's target])
-      if test -z "$CC"; then
-	  cc=gcc
-      else
-	  cc=$CC
-      fi
-      cc_target=`$cc -v 2>&1 | sed -n 's/Target: //p'`
-      case "$cc_target" in
-          *-*) host=$cc_target
-	      ;;
-          "") AC_MSG_ERROR([Impossible to obtain $cc compiler target.
-Please explicitly provide --host.])
-              ;;
-	  *) AC_MSG_WARN([Compiler reported non-standard target.
-Defaulting to $host.])
-              ;;
-      esac
-      AC_MSG_RESULT([$host])
-  fi
-
-  . $srcdir/nt/mingw-cfg.site
-
-  case $srcdir in
-    /* | ?:*)
-      # srcdir is an absolute path.  In this case, force the format
-      # "/c/foo/bar", to simplify later conversions to native Windows
-      # format ("c:/foo/bar").
-      srcdir=`cd "${srcdir}" && pwd -W`
-      # 'eval' pacifies strict POSIX non-MinGW shells (Bug#18612).
-      # We downcase the drive letter to avoid warnings when
-      # generating autoloads.
-      eval 'srcdir=/`echo ${srcdir:0:1} | sed "y/ABCDEFGHIJKLMNOPQRSTUVWXYZ/abcdefghijklmnopqrstuvwxyz/"`"${srcdir:2}"'
-      ;;
-  esac;;
+  AC_MSG_ERROR([This Emacs configuration removes native Windows (MinGW) support.])
+  ;;
 esac
 
 canonical=$host
@@ -570,7 +528,6 @@ OPTION_DEFAULT_ON([xdbe],[don't use X11 double buffering support])
 AC_ARG_WITH([ns],[AS_HELP_STRING([--with-ns],
 [use Nextstep (macOS Cocoa or GNUstep) windowing system.
 On by default on macOS.])],[],[with_ns=maybe])
-OPTION_DEFAULT_OFF([w32], [use native MS Windows GUI in a Cygwin build])
 OPTION_DEFAULT_OFF([pgtk], [use GTK to support window systems other than X])
 
 OPTION_DEFAULT_ON([gpm],[don't use -lgpm for mouse support on a GNU/Linux console])
@@ -1519,15 +1476,6 @@ case "${canonical}" in
   i[3456]86-*-* )
     case "${canonical}" in
       *-darwin* )               opsys=darwin ;;
-      *-mingw* )
-		opsys=mingw32
-		# MinGW overrides and adds some system headers in nt/inc.
-		# Also, GCC 14 turns on implicit-function-declaration
-		# error by default, which fails configure tests where our
-		# emulation of Posix headers defines only the minimal
-		# stuff we actually need.
-		GCC_TEST_OPTIONS="-I $srcdir/nt/inc -Wno-error=implicit-function-declaration"
-		;;
       *-sysv4.2uw* )		opsys=unixware ;;
       *-sysv5uw* )		opsys=unixware ;;
       *-sysv5OpenUNIX* )	opsys=unixware ;;
@@ -1538,11 +1486,6 @@ case "${canonical}" in
   # MinGW64
   x86_64-*-* )
     case "${canonical}" in
-      *-mingw* )
-		opsys=mingw32
-		# MinGW overrides and adds some system headers in nt/inc.
-		GCC_TEST_OPTIONS="-I $srcdir/nt/inc -Wno-error=implicit-function-declaration"
-		;;
       ## Otherwise, we'll fall through to the generic opsys code at the bottom.
     esac
   ;;
@@ -2134,13 +2077,6 @@ their sources.] )
   fi
 fi
 AC_SUBST([MAKEINFO])
-
-if test $opsys = mingw32; then
-   DOCMISC_W32=efaq-w32
-else
-   DOCMISC_W32=
-fi
-AC_SUBST([DOCMISC_W32])
 
 dnl Add our options to ac_link now, after it is set up.
 
@@ -2998,122 +2934,6 @@ fi
 AC_SUBST([HAVE_BE_APP])
 
 HAVE_W32=no
-W32_OBJ=
-W32_LIBS=
-EMACSRES=
-CLIENTRES=
-CLIENTW=
-W32_RES_LINK=
-EMACS_MANIFEST=
-if test "${with_w32}" != no; then
-  case "${opsys}" in
-    cygwin)
-      AC_CHECK_HEADER([windows.h], [HAVE_W32=yes],
-             [AC_MSG_ERROR(['--with-w32' was specified, but windows.h
-                   cannot be found.])])
-    ;;
-    mingw32)
-    ## Using --with-w32 with MinGW is a no-op, but we allow it.
-    ;;
-    *)
-      AC_MSG_ERROR([Using w32 with an autotools build is only supported for Cygwin and MinGW32.])
-    ;;
-  esac
-fi
-
-if test "${opsys}" = "mingw32"; then
-  AC_CACHE_CHECK([whether Windows API headers are recent enough], [emacs_cv_w32api],
-  [AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
-     #include <windows.h>
-     #include <usp10.h>]],
-   [[PIMAGE_NT_HEADERS pHeader;
-     PIMAGE_SECTION_HEADER pSection = IMAGE_FIRST_SECTION(pHeader)]])],
-   [emacs_cv_w32api=yes], [emacs_cv_w32api=no])])
-  if test "${emacs_cv_w32api}" = "no"; then
-    AC_MSG_ERROR([the Windows API headers are too old to support this build.])
-  fi
-  HAVE_W32=${emacs_cv_w32api}
-fi
-
-NTDIR=
-LIBS_ECLIENT=
-LIB_WSOCK32=
-NTLIB=
-XARGS_LIMIT=
-if test "${HAVE_W32}" = "yes"; then
-  AC_DEFINE([HAVE_NTGUI], [1], [Define to use native MS Windows GUI.])
-  if test "$with_toolkit_scroll_bars" = "no"; then
-    AC_MSG_ERROR([Non-toolkit scroll bars are not implemented for w32 build.])
-  fi
-  AC_CHECK_TOOL([WINDRES], [windres],
-                [AC_MSG_ERROR([No resource compiler found.])])
-  W32_OBJ="w32fns.o w32menu.o w32reg.o w32font.o w32term.o"
-  W32_OBJ="$W32_OBJ w32xfns.o w32select.o w32uniscribe.o w32dwrite.o w32cygwinx.o"
-  EMACSRES="emacs.res"
-  case "$canonical" in
-    x86_64-*-*) EMACS_MANIFEST="emacs-x64.manifest" ;;
-    *) EMACS_MANIFEST="emacs-x86.manifest" ;;
-  esac
-  dnl Construct something of the form "24,4,0,0" with 4 components.
-  comma_version=`echo "${PACKAGE_VERSION}.0.0" | sed -e 's/\./,/g' -e 's/^\([[^,]]*,[[^,]]*,[[^,]]*,[[^,]]*\).*/\1/'`
-
-  comma_space_version=`echo "$comma_version" | sed 's/,/, /g'`
-  AC_SUBST([comma_version])
-  AC_SUBST([comma_space_version])
-  AC_CONFIG_FILES([nt/emacs.rc nt/emacsclient.rc])
-  if test "${opsys}" = "cygwin"; then
-    W32_LIBS="$W32_LIBS -lkernel32 -luser32 -lusp10 -lgdi32"
-    W32_LIBS="$W32_LIBS -lole32 -lcomdlg32 -lcomctl32 -lwinspool"
-    # Tell the linker that emacs.res is an object (which we compile from
-    # the rc file), not a linker script.
-    W32_RES_LINK="-Wl,emacs.res"
-  else
-    W32_OBJ="$W32_OBJ w32.o w32console.o w32heap.o w32inevt.o w32proc.o"
-    dnl FIXME: This should probably be supported for Cygwin/w32 as
-    dnl well, but the Cygwin build needs to link against -lgdiplus
-    if test "${with_native_image_api}" = yes; then
-      AC_DEFINE([HAVE_NATIVE_IMAGE_API], [1],
-	[Define to use native OS APIs for images.])
-      NATIVE_IMAGE_API="yes (w32)"
-      W32_OBJ="$W32_OBJ w32image.o"
-    fi
-    W32_LIBS="$W32_LIBS -lwinmm -lgdi32 -lcomdlg32"
-    W32_LIBS="$W32_LIBS -lmpr -lwinspool -lole32 -lcomctl32"
-    W32_RES_LINK="\$(EMACSRES)"
-    CLIENTRES="emacsclient.res"
-    CLIENTW="emacsclientw\$(EXEEXT)"
-    NTDIR=nt
-    CM_OBJ=
-    LIBS_ECLIENT="-lcomctl32"
-    LIB_WSOCK32="-lwsock32"
-    NTLIB="ntlib.$ac_objext"
-    XARGS_LIMIT="-s 10000"
-  fi
-fi
-
-if test "${HAVE_W32}" = "no" && test "${opsys}" = "cygwin"; then
-  W32_LIBS="-lkernel32"
-  W32_OBJ="w32cygwinx.o"
-fi
-
-AC_SUBST([W32_OBJ])
-AC_SUBST([W32_LIBS])
-AC_SUBST([EMACSRES])
-AC_SUBST([EMACS_MANIFEST])
-AC_SUBST([CLIENTRES])
-AC_SUBST([CLIENTW])
-AC_SUBST([W32_RES_LINK])
-AC_SUBST([NTDIR])
-AC_SUBST([CM_OBJ])
-AC_SUBST([LIBS_ECLIENT])
-AC_SUBST([LIB_WSOCK32])
-AC_SUBST([NTLIB])
-AC_SUBST([XARGS_LIMIT])
-
-if test "${HAVE_W32}" = "yes"; then
-  window_system=w32
-  with_xft=no
-fi
 
 HAIKU_OBJ=
 HAIKU_CXX_OBJ=
@@ -4073,10 +3893,6 @@ if test "${with_tree_sitter}" != "no"; then
     fi
   fi
 
-  # Windows loads tree-sitter dynamically
-  if test "${opsys}" = "mingw32"; then
-    TREE_SITTER_LIBS=
-  fi
 fi
 
 AC_SUBST(TREE_SITTER_LIBS)
@@ -4085,21 +3901,7 @@ AC_SUBST(TREE_SITTER_CFLAGS)
 NOTIFY_OBJ=
 NOTIFY_SUMMARY=no
 
-dnl MS Windows native file monitor is available for mingw32 only.
-case $with_file_notification,$opsys in
-  w32,cygwin)
-    AC_MSG_ERROR(['--with-file-notification=w32' was specified, but
-    this is only supported on MS-Windows native and MinGW32 builds.
-    Consider using gfile instead.])
-    ;;
-  w32,* | yes,mingw32)
-    AC_CHECK_HEADER([windows.h])
-    if test "$ac_cv_header_windows_h" = yes ; then
-       AC_DEFINE([HAVE_W32NOTIFY], [1], [Define to 1 to use w32notify.])
-       NOTIFY_OBJ=w32notify.o
-       NOTIFY_SUMMARY="yes (w32)"
-    fi ;;
-esac
+dnl MS Windows native file monitor is no longer supported.
 
 dnl inotify is available only on Linux-kernel based systems.
 case $with_file_notification,$NOTIFY_OBJ in
@@ -7403,12 +7205,6 @@ LIBS="$LIB_TIMER_TIME $LIBS"
 AC_CHECK_FUNCS([timer_getoverrun])
 LIBS=$OLD_LIBS
 
-if test "${opsys}" = "mingw32"; then
-  CPPFLAGS="$CPPFLAGS -DUSE_CRT_DLL=1 -I \${abs_top_srcdir}/nt/inc"
-  # Remove unneeded switches from the value of CC that goes to Makefiles
-  CC=`AS_ECHO(["$CC"]) | sed -e "s,$GCC_TEST_OPTIONS,,"`
-fi
-
 case "$opsys" in
   aix4-2) LD_SWITCH_SYSTEM_TEMACS="-Wl,-bnodelcsect" ;;
 
@@ -7723,12 +7519,12 @@ dnl config.status treats $srcdir specially, so I think this is ok...
 ARCH_INDEPENDENT_CONFIG_FILES([$srcdir/doc/man/emacs.1])
 
 AC_CONFIG_FILES([lib/Makefile lib-src/Makefile oldXMenu/Makefile src/Makefile
-                 lwlib/Makefile nextstep/Makefile nt/Makefile])
+                 lwlib/Makefile nextstep/Makefile])
 ARCH_INDEPENDENT_CONFIG_FILES([doc/emacs/Makefile doc/misc/Makefile
                                doc/lispintro/Makefile doc/lispref/Makefile
 			       lisp/Makefile leim/Makefile])
 
-SUBDIR_MAKEFILES="lib/Makefile lib-src/Makefile oldXMenu/Makefile src/Makefile lwlib/Makefile nextstep/Makefile nt/Makefile doc/emacs/Makefile doc/misc/Makefile doc/lispintro/Makefile doc/lispref/Makefile lisp/Makefile leim/Makefile"
+SUBDIR_MAKEFILES="lib/Makefile lib-src/Makefile oldXMenu/Makefile src/Makefile lwlib/Makefile nextstep/Makefile doc/emacs/Makefile doc/misc/Makefile doc/lispintro/Makefile doc/lispref/Makefile lisp/Makefile leim/Makefile"
 
 dnl The test/ directory is missing if './make-dist --no-tests' was used.
 opt_makefile=test/Makefile

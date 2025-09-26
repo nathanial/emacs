@@ -52,14 +52,8 @@ ifeq ($(HAVE_NATIVE_COMP),yes)
 ALL_CFLAGS += -DGL_COMPILE_CRYPTO_STREAM
 endif
 
-SYSTEM_TYPE = @SYSTEM_TYPE@
-ifeq ($(SYSTEM_TYPE),windows-nt)
-  include $(srcdir)/../nt/gnulib-cfg.mk
-endif
 include gnulib.mk
-ifneq ($(SYSTEM_TYPE),windows-nt)
-  libgnu_a_SOURCES += openat-die.c save-cwd.c
-endif
+libgnu_a_SOURCES += openat-die.c save-cwd.c
 
 ifeq ($(XCONFIGURE),android)
 # The next line is necessary to override -I$(srcdir), which will end

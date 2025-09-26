@@ -168,6 +168,5 @@ new_modules=$(get_module_list) || exit
 
 test "$old_modules" = "$new_modules" ||
   printf >&2 '%s\n' \
-    "$0: warning: module list changed; fix ../nt/gnulib-cfg.mk ..." \
-    "$0: warning: ... or notify emacs-devel for w32 adaption." \
+    "$0: warning: module list changed; review platform overrides." \
     "$0: warning: For more, run 'git diff ${src}lib/gnulib.mk.in'."
