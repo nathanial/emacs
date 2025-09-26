@@ -793,7 +793,7 @@ and changed EGLOT-NEWS README.md eglot-tests.el eglot.el
 Brian D. Carlstrom: changed gud.el smtpmail.el
 
 Brian Fox: changed Makefile.in Makefile configure.ac minibuf.c dired.el
-  files.el lib-src/Makefile.in oldXMenu/Makefile.in rmail.el search.c
+  files.el lib-src/Makefile.in rmail.el search.c
   simple.el sysdep.c compile.el forms.texi frame.c keyboard.c make-dist
   subr.el systty.h texindex.c xterm.c and 47 other files
 
@@ -2901,7 +2901,7 @@ Jim Salem: wrote completion.el
 
 Jim Thompson: co-wrote ps-print.el ps-samp.el
 
-Jim Wilson: changed alloca.c oldXMenu/Makefile.in
+Jim Wilson: changed alloca.c
 
 Jin Choi: changed progmodes/python.el
 

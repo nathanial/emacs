@@ -73,7 +73,6 @@ There are several subdirectories:
 'lib-src'   holds the source code for some utility programs for use by or
             with Emacs, like movemail and etags.
 'lwlib'     holds the sources of the Lucid Widget Library used on X.
-'oldXMenu'  source files from X11R2 XMenu library, used in non-toolkit builds.
 'etc'       holds miscellaneous architecture-independent data files Emacs
             uses, like the tutorial text and tool bar images.
             The contents of the 'lisp', 'leim', 'info', and 'doc'
@@ -88,15 +87,11 @@ There are several subdirectories:
                 in Emacs Lisp manual.
 'nextstep'  holds instructions and some other files for compiling the
             Nextstep port of Emacs, for GNUstep and macOS Cocoa.
-'nt'        holds code and documentation for building Emacs on MS-Windows.
 'test'      holds tests for various aspects of Emacs's functionality.
 'modules'   holds the modhelp.py helper script.
 'admin'     holds files used by Emacs developers, and Unicode data files.
 'build-aux' holds auxiliary files used during the build.
 'm4'        holds Autoconf macros used for generating the configure script.
-'java'	    holds the Java code for the Emacs port to Android.
-'cross'	    holds Makefiles and an additional copy of gnulib used to build
-	    Emacs for Android devices.
 'exec'	    holds the source code to several helper executables used to run
 	    user-installed programs on Android.
 
@@ -104,7 +99,8 @@ There are several subdirectories:
 of the standard distribution of the OS.  The platform-specific README
 files and installation instructions should list the required tools.
 
-
+
+
 NOTE ON COPYRIGHT YEARS
 
 In copyright notices where the copyright holder is the Free Software
@@ -112,7 +108,8 @@ Foundation, then where a range of years appears, this is an inclusive
 range that applies to every year in the range.  For example: 2005-2008
 represents the years 2005, 2006, 2007, and 2008.
 
-
+
+
 This file is part of GNU Emacs.
 
 GNU Emacs is free software: you can redistribute it and/or modify

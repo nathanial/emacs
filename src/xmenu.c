@@ -93,7 +93,7 @@ along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.  */
 #endif
 #else /* not USE_X_TOOLKIT */
 #ifndef USE_GTK
-#include "../oldXMenu/XMenu.h"
+#error "Non-toolkit X builds are no longer supported; build with GTK or Lucid."
 #endif
 #endif /* not USE_X_TOOLKIT */
 #endif /* HAVE_X_WINDOWS */
@@ -2534,7 +2534,8 @@ pop_down_menu (void *arg)
   x_mouse_leave (FRAME_DISPLAY_INFO (f));
 
   /* State that no mouse buttons are now held.
-     (The oldXMenu code doesn't track this info for us.)
+     Historically the oldXMenu implementation failed to track this info,
+     so we keep the same reset semantics.
      That is not necessarily true, but the fiction leads to reasonable
      results, and it is a pain to ask which are actually held now.  */
   FRAME_DISPLAY_INFO (f)->grabbed = 0;

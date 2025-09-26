@@ -6037,7 +6037,7 @@ and the class is `Emacs.CLASS.SUBCLASS'.  */)
 
 #if defined HAVE_X_WINDOWS && !defined USE_X_TOOLKIT && !defined USE_GTK
 /* Used when C code wants a resource value.  */
-/* Called from oldXMenu/Create.c.  */
+/* Historically invoked by the retired oldXMenu code path.  */
 const char *
 x_get_resource_string (const char *attribute, const char *class)
 {
