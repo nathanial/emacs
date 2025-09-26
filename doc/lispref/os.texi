@@ -942,15 +942,6 @@ The value of this variable is a symbol indicating the type of operating
 system Emacs is running on.  The possible values are:
 
 @table @code
-@item aix
-IBM's AIX.
-
-@item berkeley-unix
-Berkeley BSD and its variants.
-
-@item cygwin
-Cygwin, a POSIX layer on top of MS-Windows.
-
 @item darwin
 Darwin (macOS).
 
@@ -962,38 +953,14 @@ A GNU/Linux system---that is, a variant GNU system, using the Linux
 kernel.  (These systems are the ones people often call ``Linux'', but
 actually Linux is just the kernel, not the whole system.)
 
-@item gnu/kfreebsd
-A GNU (glibc-based) system with a FreeBSD kernel.
-
-@item haiku
-The Haiku operating system, a derivative of the Be Operating System.
-
-@item hpux
-Hewlett-Packard HPUX operating system.
-
-@item nacl
-Google Native Client (@acronym{NaCl}) sandboxing system.
-
-@item android
-The Open Handset Alliance's Android operating system.
-
-@item ms-dos
-Microsoft's DOS@.  Emacs compiled with DJGPP for MS-DOS binds
-@code{system-type} to @code{ms-dos} even when you run it on MS-Windows.
-
-@item usg-unix-v
-AT&T Unix System V.
-
-@item windows-nt
-Microsoft Windows NT, 9X and later.  The value of @code{system-type}
-is always @code{windows-nt}, e.g., even on Windows 10.
-
+@item unknown
+There is no information about the type of the system.
 @end table
 
-We do not wish to add new symbols to make finer distinctions unless it
-is absolutely necessary!  In fact, we hope to eliminate some of these
-alternatives in the future.  If you need to make a finer distinction
-than @code{system-type} allows for, you can test
+Earlier manuals documented additional symbols for legacy ports (for
+example, @code{windows-nt} or @code{haiku}), but those builds are no
+longer produced from this code base.  If you need to make a finer
+distinction than @code{system-type} allows for, you can test
 @code{system-configuration}, e.g., against a regexp.
 @end defvar
 
@@ -2949,8 +2916,7 @@ Emacs is restarted by the session manager.
 @cindex notifications, on desktop
 
 Emacs is able to send @dfn{notifications} on systems that support the
-freedesktop.org Desktop Notifications Specification, MS-Windows,
-Haiku, and Android.
+freedesktop.org Desktop Notifications Specification.
 
 In order to use this functionality on POSIX hosts, Emacs must have
 been compiled with D-Bus support, and the @code{notifications} library
@@ -3195,175 +3161,9 @@ If @var{spec_version} is @code{nil}, the server supports a
 specification prior to @samp{"1.0"}.
 @end defun
 
-@cindex tray notifications, MS-Windows
-When Emacs runs on MS-Windows as a GUI session, it supports a small
-subset of the D-Bus notifications functionality via a native
-primitive:
-
-@defun w32-notification-notify &rest params
-This function displays an MS-Windows tray notification as specified by
-@var{params}.  MS-Windows tray notifications are displayed in a
-balloon from an icon in the notification area of the taskbar.
-
-Value is the integer unique ID of the notification that can be used to
-remove the notification using @code{w32-notification-close}, described
-below.  If the function fails, the return value is @code{nil}.
-
-The arguments @var{params} are specified as keyword/value pairs.  All the
-parameters are optional, but if no parameters are specified, the
-function will do nothing and return @code{nil}.
-
-The following parameters are supported:
-
-@table @code
-@item :icon @var{icon}
-Display @var{icon} in the system tray.  If @var{icon} is a string, it
-should specify a file name from which to load the icon; the specified
-file should be a @file{.ico} Windows icon file.  If @var{icon} is not
-a string, or if this parameter is not specified, the standard Emacs
-icon will be used.
-
-@item :tip @var{tip}
-Use @var{tip} as the tooltip for the notification.  If @var{tip} is a
-string, this is the text of a tooltip that will be shown when the
-mouse pointer hovers over the tray icon added by the notification.  If
-@var{tip} is not a string, or if this parameter is not specified, the
-default tooltip text is @samp{Emacs notification}.  The tooltip text can
-be up to 127 characters long (63 on Windows versions before W2K).
-Longer strings will be truncated.
-
-@item :level @var{level}
-Notification severity level, one of @code{info}, @code{warning}, or
-@code{error}.  If given, the value determines the icon displayed to the
-left of the notification title, but only if the @code{:title} parameter
-(see below) is also specified and is a string.
-
-@item :title @var{title}
-The title of the notification.  If @var{title} is a string, it is
-displayed in a larger font immediately above the body text.  The title
-text can be up to 63 characters long; longer text will be truncated.
-
-@item :body @var{body}
-The body of the notification.  If @var{body} is a string, it specifies
-the text of the notification message.  Use embedded newlines to
-control how the text is broken into lines.  The body text can be up to
-255 characters long, and will be truncated if it's longer.  Unlike
-with D-Bus, the body text should be plain text, with no markup.
-@end table
-
-Note that versions of Windows before W2K support only @code{:icon} and
-@code{:tip}.  The other parameters can be passed, but they will be
-ignored on those old systems.
-
-There can be at most one active notification at any given time.  An
-active notification must be removed by calling
-@code{w32-notification-close} before a new one can be shown.
-@end defun
-
-To remove the notification and its icon from the taskbar, use the
-following function:
-
-@defun w32-notification-close id
-This function removes the tray notification given by its unique
-@var{id}.
-@end defun
-
-@cindex desktop notifications, Haiku
-When Emacs runs under Haiku as a GUI program, it is also provides a
-restricted pastiche of the D-Bus desktop notifications interface
-previously addressed.  The principle capabilities absent from the
-function detailed below are call-back functions such as
-@code{:actions}, @code{:on-action} and @code{:on-close}.
-
-@defun haiku-notifications-notify &rest params
-This function sends a notification to the desktop notification server,
-incorporating a number of parameters that are akin to some of those
-accepted by @code{notifications-notify}.  The parameters are:
-
-@table @code
-@item :title @var{title}
-@item :body @var{body}
-@item :replaces-id @var{replaces-id}
-@item :urgency @var{urgency}
-These have the same meaning as they do when used in calls to
-@code{notifications-notify}.
-
-@item :app-icon @var{app-icon}
-This should be the file name designating an image file to use as the
-icon for the notification displayed.  If @code{nil}, the icon
-presented will instead be Emacs's app icon.
-@end table
-
-Its return value is a number identifying the notification, which can
-be exploited as the @code{:replaces-id} parameter to a subsequent call
-to this function.
-@end defun
-
-@cindex desktop notifications, Android
-When Emacs is built as an Android application package, displaying
-notifications is facilitated by the function
-@code{android-notifications-notify}.  This function does not feature
-call-backs, and has several idiosyncrasies, when compared to
-@code{notifications-notify}.
-
-@defun android-notifications-notify &rest params
-This function displays a desktop notification.  @var{params} is a list
-of parameters analogous to its namesake in
-@code{notifications-notify}.  The parameters are:
-
-@table @code
-@item :title @var{title}
-@item :body @var{body}
-@item :replaces-id @var{replaces-id}
-@item :on-action @var{on-action}
-@item :on-cancel @var{on-close}
-@item :actions @var{actions}
-@item :timeout @var{timeout}
-@item :resident @var{resident}
-These have the same meaning as they do when used in calls to
-@code{notifications-notify}, except that no more than three non-default
-actions will be displayed.
-
-@item :urgency @var{urgency}
-The set of accepted values for @var{urgency} is the same as with
-@code{notifications-notify}, but the urgency applies to all
-notifications displayed with the defined @var{group}, except under
-Android 7.1 and earlier.
-
-@item :group @var{group}
-@var{group} is a string that designates a category to which the
-notification sent will belong.  This category is reproduced within the
-system's notification settings menus, but is ignored under Android 7.1
-and earlier.
-
-If @var{group} is nil or not present within @var{params}, it is
-replaced by the string @samp{"Desktop Notifications"}.
-
-Callers should provide one stable combination of @var{urgency} and
-@var{group} for each kind of notification they send, given that the
-system may elect to disregard @var{urgency} if it does not match that
-of any notification previously delivered to @var{group}.
-
-@item :icon @var{icon}
-This parameter controls the symbolic icon the notification will be
-displayed with.  Its value is a string designating an icon within the
-@code{android.R.drawable} system package.  See
-@uref{https://developer.android.com/reference/android/R.drawable,R.drawable
-| Android Developers} for a list of such icons.
-
-If it is not provided within @var{params} or @var{icon} does not
-exist, it defaults to @samp{"ic_dialog_alert"}.
-@end table
-
-It returns a number identifying the notification, which may be
-supplied as the @code{:replaces-id} parameter to a later call to this
-function.
-
-If Emacs is not afforded the permission to display notifications
-(@pxref{Android Environment,,, emacs, The GNU Emacs Manual}) under
-Android 13 and later, any notifications sent will be silently
-disregarded.
-@end defun
+Legacy ports such as MS-Windows, Haiku, and Android previously provided
+their own notification interfaces.  Those ports have been retired, so
+only the D-Bus interface described above is available in this tree.
 
 @node File Notifications
 @section Notifications on File Changes

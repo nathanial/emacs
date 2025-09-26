@@ -136,17 +136,16 @@ On GNU and Unix systems, Emacs needs optional libraries to correctly
 display such complex scripts as Indic and Khmer, and also for scripts
 that require Arabic shaping support (Arabic and Farsi).  If the
 HarfBuzz library is installed, Emacs will build with it and use it for
-this purpose.  HarfBuzz is the preferred shaping engine, both on Posix
-hosts and on MS-Windows, so we recommend installing it before building
-Emacs.  The alternative for GNU/Linux and Posix systems is to use the
+this purpose.  HarfBuzz is the preferred shaping engine on supported
+GUI builds, so we recommend installing it before building Emacs.  The
+alternative for GNU/Linux and other Unix-like systems is to use the
 "m17n-db", "libm17n-flt", and "libotf" libraries.  (On some systems,
 particularly GNU/Linux, these libraries may be already present or
 available as additional packages.)  Note that if there is a separate
 'dev' or 'devel' package, for use at compilation time rather than run
 time, you will need that as well as the corresponding run time
 package; typically the dev package will contain header files and a
-library archive.  On MS-Windows, if HarfBuzz is not available, Emacs
-will use the Uniscribe shaping engine that is part of the OS.
+library archive.
 
 Note that Emacs cannot support complex scripts on a TTY, unless the
 terminal includes such a support.  However, most modern terminal
@@ -295,10 +294,7 @@ Lisp code even if your system satisfies the build requirements, use the
 
 DETAILED BUILDING AND INSTALLATION:
 
-(This is for a Unix or Unix-like system (including Cygwin on
-MS-Windows).  For macOS, see nextstep/INSTALL.  For building
-a native Windows Emacs for non-ancient versions of MS Windows, see the
-file nt/INSTALL.)
+(This is for a Unix or Unix-like system.  For macOS, see nextstep/INSTALL.)
 
 1) See BASIC INSTALLATION above for getting and configuring Emacs.
 
@@ -367,8 +363,7 @@ whether Emacs actually uses POP3 is controlled by individual users;
 see the Rmail chapter of the Emacs manual.  Unless --with-mailutils is
 in effect, it is a good idea to configure without POP3 support so that
 users are less likely to inadvertently read email via insecure
-channels.  On native MS-Windows, --with-pop is the default; on other
-platforms, --without-pop is the default.
+channels.
 
 For image support you may have to download, build, and install the
 appropriate image support libraries for image types other than XBM and

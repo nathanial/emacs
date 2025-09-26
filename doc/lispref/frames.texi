@@ -59,19 +59,11 @@ kind of display the frame uses:
 The frame is displayed on a text terminal.
 @item x
 The frame is displayed on an X graphical terminal.
-@item w32
-The frame is displayed on a MS-Windows graphical terminal.
 @item ns
 The frame is displayed on a macOS Cocoa graphical
 terminal.
-@item pc
-The frame is displayed on an MS-DOS terminal.
-@item haiku
-The frame is displayed using the Haiku Application Kit.
 @item pgtk
 The frame is displayed using pure GTK facilities.
-@item android
-The frame is displayed on an Android device.
 @end table
 @end defun
 
@@ -254,8 +246,7 @@ The terminal and keyboard coding systems used on the terminal.
 @item
 The kind of display associated with the terminal.  This is the symbol
 returned by the function @code{terminal-live-p} (i.e., @code{x},
-@code{t}, @code{w32}, @code{ns}, @code{pc}, @code{haiku}, @code{pgtk},
-or @code{android}).  @xref{Frames}.
+@code{t}, @code{ns}, or @code{pgtk}).  @xref{Frames}.
 
 @item
 A list of terminal parameters.  @xref{Terminal Parameters}.
@@ -667,23 +658,19 @@ frames.  Display of the title bar can be suppressed by setting the
 @item Menu Bar
 @cindex internal menu bar
 @cindex external menu bar
-The menu bar (@pxref{Menu Bar}) can be either internal (drawn by Emacs
-itself) or external (drawn by the toolkit).  Most builds (GTK+, Lucid,
-Motif and MS-Windows) rely on an external menu bar.  NS also uses an
-external menu bar which, however, is not part of the outer frame.
-Non-toolkit builds can provide an internal menu bar.  On text terminal
-frames, the menu bar is part of the frame's root window (@pxref{Windows
-and Frames}).  As a rule, menu bars are never shown on child frames
-(@pxref{Child Frames}).  Display of the menu bar can be suppressed by
-setting the @code{menu-bar-lines} parameter (@pxref{Layout Parameters})
-to zero.
+The menu bar (@pxref{Menu Bar}) is provided by the GUI toolkit on the
+supported window systems.  GTK+ draws it within the frame, while NS
+integrates with the global macOS menu bar, which is not part of the
+outer frame.  On text terminal frames, the menu bar is part of the
+frame's root window (@pxref{Windows and Frames}).  Menu bars are never
+shown on child frames (@pxref{Child Frames}).  Display of the menu bar
+can be suppressed by setting the @code{menu-bar-lines} parameter
+(@pxref{Layout Parameters}) to zero.
 
 Whether the menu bar is wrapped or truncated whenever its width
-becomes too large to fit on its frame depends on the toolkit .
-Usually, only Motif and MS-Windows builds can wrap the menu bar.  When
-they (un-)wrap the menu bar, they try to keep the outer height of the
-frame unchanged, so the native height of the frame (see below) will
-change instead.
+becomes too large to fit on its frame depends on the toolkit.  GTK+
+typically truncates or scrolls menu entries, while NS defers to macOS
+behavior.
 
 @item Tool Bar
 @cindex internal tool bar
@@ -743,17 +730,16 @@ The position of the top left corner of the native frame specifies the
 indicate that position for the various builds:
 
 @itemize @w{}
-@item (1) non-toolkit, Android, Haiku, and terminal frames
+@item (1) terminal frames
 
-@item (2) Lucid, Motif, and MS-Windows frames
+@item (2) GTK+ frames
 
-@item (3) GTK+ and NS frames
+@item (3) NS frames
 @end itemize
 
 Accordingly, the native height of a frame may include the height of the
-tool bar but not that of the menu bar (Lucid, Motif, MS-Windows) or
-those of the menu bar and the tool bar (non-toolkit and text terminal
-frames).
+tool bar but not that of the menu bar on GTK+ builds, or both bars on
+NS builds.  Terminal frames do not impose additional decorations.
 
 If the native position would otherwise be (2), but the tool bar is
 placed at the bottom of the frame as depicted in (4), the native
@@ -1163,8 +1149,8 @@ the toolkit used.  Dragging the external border with the mouse is done
 character-wise provided the window manager is willing to process the
 corresponding size hints.  Calling @code{set-frame-size} (see below)
 with arguments that do not specify the frame size as an integer multiple
-of its character size, however, may: be ignored, cause a rounding
-(GTK+), or be accepted (Lucid, Motif, MS-Windows).
+of its character size, however, may be ignored or rounded depending on
+the toolkit (GTK+ or NS) and the window manager in use.
 
 With some window managers you may have to set this to non-@code{nil} in
 order to make a frame appear truly maximized or full-screen.
@@ -2311,11 +2297,11 @@ way that its contents are hidden, leaving only the title bar.
 @item use-frame-synchronization
 If non-@code{nil}, synchronize the frame redisplay with the refresh
 rate of the monitor to avoid graphics tearing.  At present, this is
-only implemented on Haiku and the X window system inside no-toolkit
-and X toolkit builds, does not work correctly with toolkit scroll
-bars, and requires a compositing manager supporting the relevant
-display synchronization protocols.  The @code{synchronizeResize} X
-resource must also be set to the string @code{"extended"}.
+implemented on X-based builds, does not work correctly with toolkit
+scroll bars, and requires a compositing manager supporting the
+relevant display synchronization protocols.  The
+@code{synchronizeResize} X resource must also be set to the string
+@code{"extended"}.
 
 @vindex inhibit-double-buffering@r{, a frame parameter}
 @item inhibit-double-buffering
@@ -2331,9 +2317,7 @@ beset Emacs.
 If non-@code{nil}, this tells the window manager to remove the frame's
 icon from the taskbar associated with the frame's display and inhibit
 switching to the frame's window via the combination @kbd{Alt-@key{TAB}}.
-On MS-Windows, iconifying such a frame will "roll in" its window-system
-window at the bottom of the desktop.  Some window managers may not honor
-this parameter.
+Some window managers may not honor this parameter.
 
 @vindex no-focus-on-map@r{, a frame parameter}
 @item no-focus-on-map
@@ -2349,10 +2333,7 @@ either via @code{focus-follows-mouse} (@pxref{Input Focus}) or
 @code{mouse-autoselect-window} (@pxref{Mouse Window Auto-selection}).
 This may have the unwanted side-effect that a user cannot scroll a
 non-selected frame with the mouse.  Some window managers may not honor
-this parameter.  On Haiku, it also has the side-effect that the window
-will not be able to receive any keyboard input from the user, not even
-if the user switches to the frame using the key combination
-@kbd{Alt-@key{TAB}}.
+this parameter.
 
 @vindex override-redirect@r{, a frame parameter}
 @item override-redirect
@@ -2361,8 +2342,8 @@ If non-@code{nil}, this means that this is an @dfn{override redirect}
 frame---a frame not handled by window managers under X@.  Override
 redirect frames have no window manager decorations, can be positioned
 and resized only via Emacs's positioning and resizing functions and are
-usually drawn on top of all other frames.  Setting this parameter has
-no effect on MS-Windows.
+usually drawn on top of all other frames.  Some window managers may
+ignore this parameter.
 
 @ignore
 @vindex parent-id@r{, a frame parameter}
@@ -2481,29 +2462,20 @@ variable do not take effect immediately, only when you specify the
 @table @code
 @vindex font-backend@r{, a frame parameter}
 @item font-backend
-A list of symbols, specifying the @dfn{font backends} to use for
-drawing characters on the frame, in order of priority.  In Emacs built
-without Cairo drawing on X, there are currently three potentially
-available font backends: @code{x} (the X core font driver), @code{xft}
-(the Xft font driver), and @code{xfthb} (the Xft font driver with
-HarfBuzz text shaping).  If built with Cairo drawing, there are also
-three potentially available font backends on X: @code{x}, @code{ftcr}
-(the FreeType font driver on Cairo), and @code{ftcrhb} (the FreeType
-font driver on Cairo with HarfBuzz text shaping).  When Emacs is built
-with HarfBuzz, the default font driver is @code{ftcrhb}, although use
-of the @code{ftcr} driver is still possible, but not recommended.  On
-MS-Windows, there are currently three available font backends:
-@code{gdi} (the core MS-Windows font driver), @code{uniscribe} (font
-driver for OTF and TTF fonts with text shaping by the Uniscribe
-engine), and @code{harfbuzz} (font driver for OTF and TTF fonts with
-HarfBuzz text shaping) (@pxref{Windows Fonts,,, emacs, The GNU Emacs
-Manual}).  The @code{harfbuzz} driver is similarly recommended.  On
-Haiku, there can be several font drivers (@pxref{Haiku Fonts,,, emacs,
-The GNU Emacs Manual}), as on Android (@pxref{Android Fonts,,, emacs,
-The GNU Emacs Manual}).
+A list of symbols specifying the @dfn{font backends} to use for
+drawing characters on the frame, in order of priority.  On GNU/Linux
+builds without Cairo drawing on X, the available font backends are
+typically @code{x} (the X core font driver), @code{xft} (the Xft font
+driver), and @code{xfthb} (the Xft font driver with HarfBuzz text
+shaping).  When Emacs is built with Cairo drawing, the corresponding
+backends are @code{x}, @code{ftcr} (the FreeType font driver on Cairo),
+and @code{ftcrhb} (the FreeType font driver on Cairo with HarfBuzz
+text shaping).  With HarfBuzz enabled, @code{ftcrhb} is normally the
+default backend.
 
-On other systems, there is only one available font backend, so it does
-not make sense to modify this frame parameter.
+On macOS, the primary font backend is @code{ns}, which integrates with
+Core Text.  Additional backends may become available via modules, but
+there is usually no need to change this parameter on Cocoa builds.
 
 @vindex background-mode@r{, a frame parameter}
 @item background-mode
@@ -3534,11 +3506,7 @@ it to another frame @dfn{reparents} the child frame.  Setting it to
 another child frame makes the frame a @dfn{nested} child frame.  Setting
 it to @code{nil} restores the frame's status as a top-level frame---a
 frame whose window-system window is a child of its display's root
-window.@footnote{On Haiku, child frames are only visible when a parent
-frame is active, owing to a limitation of the Haiku windowing system.
-Owing to the same limitation, child frames are only guaranteed to appear
-above their top-level parent; that is to say, the top-most frame in the
-hierarchy, which does not have a parent frame.}  On text terminals,
+window.  On text terminals,
 top-level frames are called root frames (see below).
 
   Since child frames can be arbitrarily nested, a frame can be both a
@@ -4793,14 +4761,14 @@ bounds of the selection data in the buffer @var{buf}.
 @node Other Selections
 @subsection Other Selections
 
-  Selections under such window systems as MS-Windows, Nextstep, Haiku
-and Android are not aligned with those under X@.  Each of these window
-system improvises its own selection mechanism without employing the
-``selection converter'' mechanism illustrated in the preceding node.
-Only the @code{PRIMARY}, @code{CLIPBOARD}, and @code{SECONDARY}
+  Selections on Nextstep (the macOS GUI port) are not fully aligned
+with those under X@.  The platform provides its own selection
+mechanism rather than the ``selection converter'' mechanism
+illustrated in the preceding node.  Only the
+@code{PRIMARY}, @code{CLIPBOARD}, and @code{SECONDARY}
 selections are generally supported, with the @code{XdndSelection}
 selection that records drag-and-drop data also available under
-Nextstep and Haiku.
+Nextstep.
 
 @cindex PGTK selections
   GTK seeks to emulate the X selection system, but its emulations are
@@ -4808,45 +4776,6 @@ not altogether dependable, with the overall quality of each subject to
 the GDK backend being used.  Therefore, Emacs built with PGTK will
 supply the same selection interface as Emacs built with X, but many
 selection targets will not be useful.
-
-@cindex MS-Windows selection emulation
-@cindex MS-Windows primary and secondary selection
-  Although a clipboard exists, there is no concept of primary or
-secondary selections within the MS-Windows operating system.  On this
-system, Emacs simulates the presence of a primary and secondary
-selection, while saving to and retrieving from the clipboard when so
-requested.
-
-  The simulation of the primary and secondary selections is conducted
-by saving values supplied to @code{gui-set-selection} within the
-@code{x-selections} property of the symbol designating the pertinent
-selection, namely the @var{type} argument to @code{gui-get-selection}.
-Each subsequent call to @code{gui-get-selection} in turn returns its
-value, which is not subject to further examination (such as type
-checks and the like).  Under such circumstances, @var{data-type}
-argument is generally disregarded.  (But see below for the
-qualification regarding @code{TARGETS}.)
-
-@cindex MS-Windows clipboard
-  Where the clipboard selection is concerned (whenever @var{type} is
-@code{CLIPBOARD}), @code{gui-set-selection} verifies that the value
-provided is a string and saves it within the system clipboard once it
-is encoded by the coding system configured in
-@code{selection-coding-system}.  Callers of @code{gui-get-selection}
-are required to set @var{data-type} to either @code{STRING} or
-@code{TARGETS}.
-
-  When @var{data-type} is set to @code{TARGETS} in a call to
-@code{gui-get-selection}, a vector of symbols is returned when
-selection data exists, much as it is under X@.  It is impossible to
-request clipboard data in any format besides @code{STRING}, for the
-prerequisite data conversion routines are absent.  Just as strings
-saved into the clipboard are encoded by the
-@code{selection-coding-system}, so those read from the clipboard are
-decoded by that same coding system; this variable and its cousin
-@code{next-selection-coding-system} merit particular scrutiny when
-difficulties are encountered with saving selection text into the
-clipboard.
 
 @cindex Nextstep selections
   All three selections standard in X exist in Nextstep as well, but
@@ -4878,74 +4807,10 @@ the fundamental drag-and-drop function @code{x-begin-drag}
 (@pxref{Drag and Drop}); no guarantees exist concerning its value when
 read by anything else.
 
-@cindex Haiku selections
-  Selections on Haiku systems comprise all three selections customary
-under X and the @code{XdndSelection} that records drag-and-drop data.
-
-  When @code{gui-set-selection} is called for the former three
-selections, the data supplied is converted into a window server
-``message'' by a list of @dfn{selection encoder} functions, which is
-sent to the window server.
-
-@defvar haiku-normal-selection-encoders
-List of selection encoder functions.  When @code{gui-set-selection} is
-called, each function in this list is successively called with its
-@var{selection} and @var{value} arguments.  If such a function returns
-non-@code{nil}, its return value must be a list of the form
-@w{@code{(@var{key} @var{type} @var{value})}}.  In this list,
-@var{key} must be the name of the data being transferred, generally
-that of a MIME type, for example @samp{"text/plain"}, and @var{type}
-is a symbol or a number designating the type of the data; thus also
-governing the interpretation of @var{value}; following is a list of
-valid data types and how each of them will cause @var{value} to be
-interpreted.
-
-@table @code
-@item string
-A unibyte string.  The string is NULL-terminated after being placed in
-the message.
-
-@item ref
-A file name.  The file is located and the inode identifying the file
-is placed in the message.
-
-@item short
-A 16-bit integer value.
-
-@item long
-A 32-bit integer value.
-
-@item llong
-A 64-bit integer value.
-
-@item byte
-@item char
-An unsigned byte between 0 and 255.
-
-@item size_t
-A number between 0 and 1 minus two to the power of the word size of
-the computer Emacs is running on.
-
-@item ssize_t
-A number which fits in the C type @code{ssize_t}.
-
-@item point
-A cons of two floats, specifying a coordinate on-screen.
-
-@item float
-@item double
-A single or double-precision floating point number in an unspecified
-format.
-
-@item (haiku-numeric-enum MIME)
-A unibyte string containing data in a certain MIME type.
-@end table
-@end defvar
-
-  A call to @code{gui-get-selection} generally returns the data
-named @var{data-type} within the selection message, albeit with
-@var{data-type} replaced by an alternative name should it be one of
-the following X selection targets:
+  As on X-based builds, calls to @code{gui-get-selection} generally
+return the data named by @var{data-type}, albeit with @var{data-type}
+replaced by an alternative name when the request corresponds to a
+standard X selection target.
 
 @table @code
 @item STRING
@@ -4964,22 +4829,6 @@ are afforded special treatment; the value returned for the first is
 the number of times the selection has been modified since system
 startup (@emph{not} a timestamp), and that for the other is a vector
 of available selection data types, as elsewhere.
-
-@cindex Android selections
-  Much like MS-Windows, Android provides a clipboard but no primary or
-secondary selection; @code{gui-set-selection} simulates the primary
-and secondary selections by saving the value supplied into a variable
-subsequent calls to @code{gui-get-selection} return.
-
-  From the clipboard, @code{gui-get-selection} is capable of returning
-UTF-8 string data of the type @code{STRING}, the @code{TARGETS} data
-type, or image and application data of any MIME type.
-@code{gui-set-selection} sets only string data, much as under
-MS-Windows, although this data is not affected by the value of
-@code{selection-coding-system}.  By contrast, only string data can be
-saved to and from the primary and secondary selections; but since this
-data is not communicated to programs besides Emacs, it is not subject
-to encoding or decoding by any coding system.
 
 @node Yanking Media
 @section Yanking Media

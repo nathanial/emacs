@@ -22,10 +22,11 @@ Rationalize the Emacs source tree for a codebase that only targets modern macOS 
 ## Remaining Legacy Surfaces
 | Area | Primary Purpose | Status | Follow-Up Tasks & Risks |
 |------|-----------------|--------|-------------------------|
-| Android-specific conditionals (`HAVE_ANDROID`, `ANDROID_STUBIFY`, `android.h`) | Alternative code paths for Android runtime, fonts, loader, and UI. | Removed 2025-09-26. | Validate Linux configure+make during Phase 3, monitor for downstream scripts expecting Android knobs. |
-| Haiku conditionals (`HAVE_HAIKU`, `haiku_*` code) | Legacy Haiku window-system integration. | Removed 2025-09-26. | Update docs/tooling references in Phase 3; ensure no ChangeLog tooling relies on Haiku symbols. |
-| Configure / doc references (`configure.ac`, `INSTALL*`, `etc/NEWS`, `admin/CPP-DEFINES`) | Advertise unsupported platforms/options. | Scope messaging landed in Phase 1; fine-grained references remain. | Remove obsolete flags, rerun Autotools, refresh docs once Android/Haiku code is gone. |
-| Residual Windows/MS-DOS guards (`WINDOWSNT`, `MSDOS`, `GNUSTEP`) | Dead branches in C/Lisp and helper scripts. | Major files deleted; scattered guards persist. | Fold cleanup into Phase 2 sweeps; keep list of remaining symbols for final confirmation. |
+| Android-specific conditionals (`HAVE_ANDROID`, `ANDROID_STUBIFY`, `android.h`) | Alternative code paths for Android runtime, fonts, loader, and UI. | Removed 2025-09-26. | Monitor downstream tooling for leftover Android assumptions; flag any external docs that still promise the port. |
+| Haiku conditionals (`HAVE_HAIKU`, `haiku_*` code) | Legacy Haiku window-system integration. | Removed 2025-09-26. | Historical notes only; keep an eye on archival scripts that might still enumerate Haiku artefacts. |
+| Configure / doc references (`configure.ac`, `INSTALL*`, `etc/NEWS`) | Release messaging & build docs. | Updated 2025-09-26 (Phase 3). | Spot-check remaining ChangeLogs/README snippets during final edit pass. |
+| Residual Windows/MS-DOS guards (`WINDOWSNT`, `MSDOS`, `GNUSTEP`) | Dead branches in C/Lisp and helper scripts. | In progress. | Schedule one more grep-assisted sweep once doc/CI updates settle. |
+| CI/test tooling coverage | Document external dependencies & coverage gaps. | Pending. | Capture Linux PGTK results and record tool requirements (`rust-analyzer`, `clangd`, etc.) before sign-off. |
 
 ## Additional Cleanup Opportunities
 - Continue pruning remaining `WINDOWSNT`/`MSDOS` conditionals alongside upcoming documentation/test passes so touched files end up fully platform-neutral.
@@ -35,11 +36,10 @@ Rationalize the Emacs source tree for a codebase that only targets modern macOS 
 ## Phased Execution Plan
 - **Phase 1 – Scope Lockdown (Completed 2025-09-26):** Updated INSTALL/README/CONTRIBUTE to clarify the macOS Cocoa + Linux GTK/PGTK focus, made `./configure` reject unsupported switches (Android, Windows, GNUstep, etc.), regenerated Autotools artifacts via `./autogen.sh all`, refreshed NEWS/CI matrices, and verified GUI/TTY builds on macOS.
 - **Phase 2 – Platform Residue Purge (Completed 2025-09-26):** Removed every `HAVE_ANDROID`/`ANDROID_STUBIFY`/`android.h` and `HAVE_HAIKU` guard across C/Lisp sources (fonts, GC, loader, display back-ends), dropped the Android epaths overrides, regenerated `configure` via `./configure --with-ns --with-modules`, and rebuilt with `make -j8` on macOS to confirm a clean tree. Residual `WINDOWSNT`/`MSDOS` guards observed during the sweep are marked for follow-up in later passes.
-- **Phase 3 – Documentation & CI Alignment (Target start 2025-10-13):**
-  - Prune Texinfo nodes and manual sections referencing Lucid, Motif, GNUstep, Android, Haiku, or Windows; ensure `make info` succeeds without missing includes.
-  - Update `INSTALL`, `INSTALL.REPO`, `etc/NEWS`, `admin/CPP-DEFINES`, and contributor docs to match the final platform matrix post-sweep.
-  - Simplify CI workflows by removing Android/Haiku jobs or cache paths; document external tool requirements (e.g., `rust-analyzer`) and adjust skips where necessary.
-  - Run full `make bootstrap`, `make -j`, and targeted `make check` on macOS Cocoa and Linux GTK/PGTK, capturing any new issues introduced by the purge.
+- **Phase 3 – Documentation & CI Alignment (Completed 2025-09-26):**
+  - Excised dedicated Texinfo nodes for Android, Haiku, Windows, Lucid, Motif, and GNUstep across `doc/lispref`, `doc/misc/tramp.texi`, and supporting manuals; regenerated manuals via `make info` (which triggered a successful macOS bootstrap build in the process).
+  - Refreshed top-level collateral (`INSTALL`, `etc/NEWS`, `LegacyCleanupPlan.md`) to describe the macOS Cocoa + Linux GTK/PGTK scope only.
+  - Verified GitLab pipeline definitions already ignore legacy ports; follow-up documentation of external tool requirements (e.g., `rust-analyzer`, `clangd`) remains to be captured alongside Linux test coverage.
 - **Phase 4 – Polishing & Historical Cleanup (Optional, 2025-10-20+):**
   - Remove now-redundant comments/notes about retired ports, tidy `ChangeLog` references where appropriate, and archive deleted platform trees in a separate branch/tag if desired.
   - Review optional tooling (packaging scripts, dist targets) for legacy assumptions.
@@ -58,6 +58,6 @@ Rationalize the Emacs source tree for a codebase that only targets modern macOS 
 - **Build system brittleness**: Aggressive pruning can break Autotools logic. Maintain incremental commits with CI on macOS/Linux to catch regressions early.
 
 ## Next Steps
-- Mirror the `./configure --with-ns --with-modules && make -j8` cycle on a Linux GTK/PGTK host (and capture `make check` skip notes) so both supported platforms validate the guard removal.
-- Kick off Phase 3 documentation/CI alignment: prune Texinfo nodes and INSTALL/NEWS references to Android/Haiku, update configure help text, and record required external tools (e.g., `rust-analyzer`) for the test matrix.
-- While touching subsystems for documentation or CI updates, retire any remaining `WINDOWSNT`/`MSDOS` guards to fully align the codebase with the macOS/Linux scope.
+- Mirror the `./configure --with-pgtk --with-modules && make -j8` cycle on a Linux host, followed by `make check`, and capture any required skips or tooling notes (especially missing language servers).
+- Record external tool requirements for CI/test runs (e.g., `rust-analyzer`, `clangd`, image converters) in `INSTALL.REPO` or the CI README so new environments bootstrap cleanly.
+- Schedule a final `WINDOWSNT`/`MSDOS` guard audit once the documentation dust settles, removing or annotating the remaining dead branches.

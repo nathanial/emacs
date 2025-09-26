@@ -143,7 +143,6 @@ on the remote host.
 * Remote shell setup::          Remote shell setup hints.
 * Ssh setup::                   Ssh setup hints.
 * FUSE setup::                  @acronym{FUSE} setup hints.
-* Android shell setup::         Android shell setup hints.
 * Kubernetes setup::            Kubernetes setup hints.
 * Auto-save File Lock and Backup::
                                 Auto-save, File Lock and Backup.
@@ -492,8 +491,8 @@ an @command{ssh} server:
 @file{@trampfn{plink,user@@host,/path/to/file}}.
 
 
-@anchor{Quick Start Guide su, sudo, doas, run0, androidsu and sg methods}
-@section Using @option{su}, @option{sudo}, @option{doas}, @option{run0}, @option{androidsu} and @option{sg}
+@anchor{Quick Start Guide su, sudo, doas, run0 and sg methods}
+@section Using @option{su}, @option{sudo}, @option{doas}, @option{run0} and @option{sg}
 @cindex method @option{su}
 @cindex @option{su} method
 @cindex method @option{sudo}
@@ -502,8 +501,6 @@ an @command{ssh} server:
 @cindex @option{doas} method
 @cindex method @option{run0}
 @cindex @option{run0} method
-@cindex method @option{androidsu}
-@cindex @option{androidsu} method
 @cindex method @option{sg}
 @cindex @option{sg} method
 
@@ -511,9 +508,7 @@ Sometimes, it is necessary to work on your local host under different
 permissions.  For this, you can use the @option{su} or @option{sudo}
 connection method.  If your system is @code{systemd}-based, there is
 the @option{run0} connection method.  On OpenBSD systems, the
-@option{doas} connection method offers the same functionality.  If
-your local system is Android, use the method @option{androidsu}
-instead of @option{su}.
+@option{doas} connection method offers the same functionality.
 
 These methods use @samp{root} as default user name and the return
 value of @code{(system-name)} as default host name.  Therefore, it is
@@ -644,19 +639,6 @@ used.  All remote files are available via the local mount point.
 @value{tramp} aids in mounting the file system if it isn't mounted
 yet, and it supports the access with the usual file name syntax
 @file{@trampfn{sshfs,user@@host,/path/to/file}}.
-
-
-@anchor{Quick Start Guide Android}
-@section Using Android
-@cindex method @option{adb}
-@cindex @option{adb} method
-@cindex android
-
-An Android device, which is connected via USB to your local host, can
-be accessed via the @command{adb} command.  No user or host name is
-needed.  The file name syntax is @file{@trampfn{adb,,/path/to/file}}.
-
-
 @node Configuration
 @chapter Configuring @value{tramp}
 @cindex configuration
@@ -721,7 +703,6 @@ on the remote host.
 * Remote shell setup::          Remote shell setup hints.
 * Ssh setup::                   Ssh setup hints.
 * FUSE setup::                  @acronym{FUSE} setup hints.
-* Android shell setup::         Android shell setup hints.
 * Kubernetes setup::            Kubernetes setup hints.
 * Auto-save File Lock and Backup::
                                 Auto-save, File Lock and Backup.
@@ -857,21 +838,6 @@ Instead of connecting to a remote host, @command{su} program allows
 editing as another user.  The host can be either @samp{localhost} or
 the host returned by the function @command{(system-name)}.
 @xref{Multi-hops}, for an exception to this behavior.
-
-@cindex method @option{androidsu}
-@cindex @option{androidsu} method
-@item @option{androidsu}
-
-Because the default implementation of the @option{su} method and other
-shell-based methods conflict with non-standard @command{su}
-implementations popular among Android users and the restricted
-command-line utilities distributed with that system, a largely
-equivalent @option{androidsu} method is provided for that system with
-workarounds for its many idiosyncrasies, with the exception that
-multi-hops are unsupported.
-
-This is an optional method, @pxref{Optional methods}.  It is enabled by
-default on @code{android} systems only.
 
 @cindex method @option{sudo}
 @cindex @option{sudo} method
@@ -1357,44 +1323,7 @@ UNC file name specification does not allow the specification of a
 different user name for authentication like the @command{smbclient}
 can.
 
-@cindex method @option{adb}
-@cindex @option{adb} method
-@cindex android (with @option{adb} method)
-@item @option{adb}
 
-@vindex tramp-adb-program
-@vindex PATH@r{, environment variable}
-This method uses Android Debug Bridge program for accessing Android
-devices.  The Android Debug Bridge must be installed locally for
-@value{tramp} to work.  Some GNU/Linux distributions provide Android
-Debug Bridge as an installation package.  Alternatively, the program
-is installed as part of the Android SDK@.  @value{tramp} finds the
-@command{adb} program either via the @env{PATH} environment variable
-or the absolute path set in the user option @code{tramp-adb-program}.
-
-@vindex tramp-adb-connect-if-not-connected
-@value{tramp} connects to Android devices with @option{adb} only when
-the user option @code{tramp-adb-connect-if-not-connected} is not
-@code{nil}.  Otherwise, the connection must be established outside
-Emacs.
-
-@value{tramp} does not require a host name part of the remote file
-name when a single Android device is connected to @command{adb}.
-@value{tramp} instead uses @file{@trampfn{adb,,}} as the default name.
-@command{adb devices}, run in a shell outside Emacs, shows available
-host names.
-
-@option{adb} method normally does not need user name to authenticate
-on the Android device because it runs under the @command{adbd}
-process.  But when a user name is specified, however, @value{tramp}
-applies an @command{su} in the syntax.  When authentication does not
-succeed, especially on un-rooted Android devices, @value{tramp}
-displays login errors.
-
-For Android devices connected through TCP/IP, a port number can be
-specified using @file{device#42} host name syntax or @value{tramp} can
-use the default value as declared in @command{adb} command.  Port
-numbers are not applicable to Android devices connected through USB@.
 
 @end table
 
@@ -1780,8 +1709,8 @@ to John's home directory on @samp{target} via method @option{ssh}.
 Instead of a single default host, @code{tramp-default-host-alist}
 allows multiple default host values based on access method or user
 name combinations.  The alist can hold multiple values.  While
-@code{tramp-default-host} is sufficient in most cases, some methods,
-like @option{adb}, require defaults overwritten.
+@code{tramp-default-host} is sufficient in most cases, some methods
+require defaults overwritten.
 
 The default host name for @option{nspawn} is @samp{.host}.  Therefore,
 @file{@trampfn{nspawn,,}} and @file{@trampfn{sudo,,}} have the same
@@ -2387,14 +2316,13 @@ which use predefined values.
 
 This is the home directory on the remote host.  Setting this
 connection property helps especially for methods which cannot expand
-to a remote home directory, like @option{adb}, @option{rclone} and
+to a remote home directory, like @option{rclone} and
 @option{sshfs}.  @ref{Home directories} for an example.
 
 @item @t{"tmpdir"}
 
 The temporary directory on the remote host.  If not specified, the
-default value is @t{"/data/local/tmp"} for the @option{adb} and
-@option{androidsu} methods, @t{"/C$/Temp"} for the @option{smb}
+default value is @t{"/C$/Temp"} for the @option{smb}
 method, and @t{"/tmp"} otherwise.  @xref{Temporary directory}.
 
 @item @t{"posix"}
@@ -3185,115 +3113,6 @@ processes, using the @command{ssh} command.  These don't need to be
 changed.
 
 
-@node Android shell setup
-@section Android shell setup hints
-@cindex android shell setup for ssh
-
-@value{tramp} uses the @option{adb} method to access Android devices.
-Android devices provide a restricted shell access through an USB
-connection.  The local host must have the @command{adb} program
-installed.  Usually, it is sufficient to open the file
-@file{@trampfn{adb,,/}}.  Then you can navigate in the file system via
-@code{dired}.
-
-Alternatively, applications such as @code{Termux} or @code{SSHDroid}
-that run @command{sshd} process on the Android device can accept any
-@option{ssh}-based methods provided these settings are adjusted:
-
-@itemize
-@item
-@command{sh} must be specified for remote shell since Android devices
-do not provide @command{/bin/sh}.  @command{sh} will then invoke
-whatever shell is installed on the device with this setting:
-
-@lisp
-@group
-(add-to-list 'tramp-connection-properties
-             (list (regexp-quote "192.168.0.26") "remote-shell" "sh"))
-@end group
-@end lisp
-
-@noindent
-where @samp{192.168.0.26} is the Android device's IP address.
-(@pxref{Predefined connection information}).
-
-@item
-On the Android device the directory names are prefixed with an
-application specific prefix, which is
-@file{/data/data/com.termux/files/usr/bin} instead of @file{/usr/bin}
-in the @code{Termux} case.  You must adapt the file names in
-@code{tramp-remote-path}, for example via connection-local
-@ifinfo
-settings (@pxref{Connection Variables, , , emacs}):
-@end ifinfo
-@ifnotinfo
-settings:
-@end ifnotinfo
-
-@lisp
-@group
-(connection-local-set-profile-variables
- 'tramp-connection-local-termux-profile
- `((tramp-remote-path
-    . ,(mapcar
-	(lambda (x)
-	  (if (stringp x) (concat "/data/data/com.termux/files" x) x))
-	(copy-tree tramp-remote-path)))))
-
-(connection-local-set-profiles
- '(:application tramp :machine "192.168.0.26")
- 'tramp-connection-local-termux-profile)
-@end group
-@end lisp
-
-@item
-When the Android device is not @samp{rooted}, specify a writable
-directory for temporary files:
-
-@lisp
-(add-to-list 'tramp-connection-properties
-             (list (regexp-quote "192.168.0.26")
-		   "tmpdir" "/data/data/com.termux/files/home/tmp"))
-@end lisp
-
-@item
-Open a remote connection with the command @kbd{C-x C-f
-@trampfn{ssh,192.168.0.26#2222,} @key{RET}}, where @command{sshd} is
-listening on port @samp{2222}.
-
-To add a corresponding entry to the @file{~/.ssh/config} file
-(recommended), use this:
-
-@example
-@group
-Host android
-     HostName 192.168.0.26
-     User root
-     Port 2222
-@end group
-@end example
-
-@noindent
-To use the host name @samp{android} instead of the IP address shown in
-the previous example, fix the connection properties as follows:
-
-@lisp
-@group
-(add-to-list 'tramp-connection-properties
-             (list (regexp-quote "android") "remote-shell" "sh"))
-(add-to-list 'tramp-connection-properties
-             (list (regexp-quote "android")
-		   "tmpdir" "/data/data/com.termux/files/home/tmp"))
-(connection-local-set-profiles
- '(:application tramp :machine "android")
- 'tramp-connection-local-termux-profile)
-@end group
-@end lisp
-
-@noindent
-Open a remote connection with the more concise command @kbd{C-x C-f
-@trampfn{ssh,android,} @key{RET}}.
-@end itemize
 
 
 @node Kubernetes setup
@@ -4038,7 +3857,7 @@ Since @value{tramp} cannot know in advance which share directory is
 intended to use, this expansion can be applied only when a share
 directory has been used already.
 
-The methods @option{adb}, @option{rclone} and @option{sshfs} do not
+Methods such as @option{rclone} and @option{sshfs} do not
 support home directory expansion at all.  However, @value{tramp} keeps
 the home directory in the cache.  Therefore, those methods can be
 configured to expand a home directory via a connection property,
@@ -4357,8 +4176,7 @@ continuous output.
 @code{shell-command} uses the user option @code{shell-file-name} and
 the variable @code{shell-command-switch} in order to determine which
 shell to run.  For remote hosts, their default values are
-@file{/bin/sh} and @option{-c}, respectively (except for the
-@option{adb} method, which uses @file{/system/bin/sh}).  Like the
+@file{/bin/sh} and @option{-c}, respectively. Like the
 variables in the previous section, these variables can be changed via
 connection-local variables.
 
@@ -4611,8 +4429,6 @@ The corresponding @code{tramp-process-attributes-ps-format} has the value
 @end group
 @end smallexample
 
-@vindex tramp-adb-connection-local-default-ps-profile
-@vindex tramp-adb-connection-local-default-ps-variables
 @vindex tramp-connection-local-bsd-ps-profile
 @vindex tramp-connection-local-bsd-ps-variables
 @vindex tramp-connection-local-busybox-ps-profile
@@ -4625,10 +4441,6 @@ connection-local variables.
 @ifinfo
 @xref{Connection Variables, , , emacs}.
 @end ifinfo
-This is already done by @value{tramp} for the @option{adb} method, see
-@code{tramp-adb-connection-local-default-ps-profile} and
-@code{tramp-adb-connection-local-default-ps-variables}.
-
 There are three further predefined sets of connection-local variables
 for remote BSD systems, for remote macOS systems, and for a remote
 @command{ps} command implemented with @command{busybox}.  These are
@@ -4711,7 +4523,7 @@ Furthermore, this approach has the following limitations:
 @itemize
 @item
 It works only for some connection methods defined in
-@file{tramp-adb.el}, @file{tramp-container.el}, @file{tramp-sh.el} and
+@file{tramp-container.el}, @file{tramp-sh.el} and
 @file{tramp-sshfs.el}.
 
 @item
@@ -6487,8 +6299,7 @@ This local temporary directory is kept in the constant
 @code{tramp-compat-temporary-file-directory}.  In this manual, we use
 @t{"<TMP>"} for its value.
 
-The temporary directory on a remote host is @t{"/data/local/tmp"} for
-the @option{adb} method, @t{"/C$/Temp"} for the @option{smb} method,
+The temporary directory on a remote host is @t{"/C$/Temp"} for the @option{smb} method,
 and @t{"/tmp"} otherwise.  For some methods, this can be customized.
 
 @vindex tramp-temp-name-prefix
