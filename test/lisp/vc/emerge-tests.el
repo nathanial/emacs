@@ -19,7 +19,6 @@
 
 (ert-deftest emerge-test-files ()
   "Check emerge for two files."
-  :expected-result :failed
   (skip-when (memq system-type '(windows-nt ms-dos)))
   (skip-unless (file-remote-p ert-remote-temporary-file-directory))
 
@@ -45,7 +44,6 @@
 
 (ert-deftest emerge-test-files-with-ancestor ()
   "Check emerge for three files."
-  :expected-result :failed
   (skip-when (memq system-type '(windows-nt ms-dos)))
   (skip-unless (file-remote-p ert-remote-temporary-file-directory))
 

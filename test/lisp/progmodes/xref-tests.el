@@ -44,18 +44,15 @@
              :key #'xref-location-group)))
 
 (ert-deftest xref-matches-in-directory-finds-none-for-some-regexp ()
-  :expected-result :failed
   (should (null (xref-tests--matches-in-data-dir "zzz"))))
 
 (ert-deftest xref-matches-in-directory-finds-some-for-bar ()
-  :expected-result :failed
   (let ((locs (xref-tests--locations-in-data-dir "bar")))
     (should (= 2 (length locs)))
     (should (string-match-p "file1\\.txt\\'" (xref-location-group (nth 0 locs))))
     (should (string-match-p "file2\\.txt\\'" (xref-location-group (nth 1 locs))))))
 
 (ert-deftest xref-matches-in-directory-filters-with-ignores ()
-  :expected-result :failed
   (let ((locs (xref-matches-in-directory "bar" "*" xref-tests--data-dir
                                          '("./file1.*"))))
     (should (= 1 (length locs)))
@@ -64,7 +61,6 @@
                                                (nth 0 locs)))))))
 
 (ert-deftest xref-matches-in-directory-finds-two-matches-on-the-same-line ()
-  :expected-result :failed
   (let ((locs (xref-tests--locations-in-data-dir "foo")))
     (should (= 2 (length locs)))
     (should (string-match-p "file1\\.txt\\'" (xref-location-group (nth 0 locs))))
@@ -75,7 +71,6 @@
     (should (equal 5 (xref-file-location-column (nth 1 locs))))))
 
 (ert-deftest xref-matches-in-directory-finds-an-empty-line-regexp-match ()
-  :expected-result :failed
   (let ((locs (xref-tests--locations-in-data-dir "^$")))
     (should (= 1 (length locs)))
     (should (string-match-p "file2\\.txt\\'" (xref-location-group (nth 0 locs))))
@@ -83,7 +78,6 @@
     (should (equal 0 (xref-file-location-column (nth 0 locs))))))
 
 (ert-deftest xref-matches-in-files-includes-matches-from-all-the-files ()
-  :expected-result :failed
   (let ((matches (xref-matches-in-files "bar"
                                         (directory-files xref-tests--data-dir t
                                                          "\\`[^.]"))))
@@ -93,7 +87,6 @@
              matches))))
 
 (ert-deftest xref-matches-in-files-trims-summary-for-matches-on-same-line ()
-  :expected-result :failed
   (let ((matches (xref-matches-in-files "match"
                                         (directory-files xref-tests--data-dir t
                                                          "\\`[^.]"))))
@@ -103,7 +96,6 @@
             '(" match some words " "match more " "match ends here")))))
 
 (ert-deftest xref--buf-pairs-iterator-groups-markers-by-buffers-1 ()
-  :expected-result :failed
   (let* ((xrefs (xref-tests--matches-in-data-dir "foo"))
          (iter (xref--buf-pairs-iterator xrefs))
          (cons (funcall iter :next)))
@@ -112,7 +104,6 @@
     (should (= 2 (length (cdr cons))))))
 
 (ert-deftest xref--buf-pairs-iterator-groups-markers-by-buffers-2 ()
-  :expected-result :failed
   (let* ((xrefs (xref-tests--matches-in-data-dir "bar"))
          (iter (xref--buf-pairs-iterator xrefs))
          (cons1 (funcall iter :next))
@@ -123,7 +114,6 @@
     (should (= 1 (length (cdr cons2))))))
 
 (ert-deftest xref--buf-pairs-iterator-cleans-up-markers ()
-  :expected-result :failed
   (let* ((xrefs (xref-tests--matches-in-data-dir "bar"))
          (iter (xref--buf-pairs-iterator xrefs))
          (cons1 (funcall iter :next))
@@ -135,7 +125,6 @@
     (should (null (marker-position (cdr (nth 0 (cdr cons2))))))))
 
 (ert-deftest xref--xref-file-name-display-is-abs ()
-  :expected-result :failed
   (let ((xref-file-name-display 'abs))
     (should (equal
              (delete-dups
@@ -150,7 +139,6 @@
               (concat xref-tests--data-dir "file2.txt"))))))
 
 (ert-deftest xref--xref-file-name-display-is-nondirectory ()
-  :expected-result :failed
   (let ((xref-file-name-display 'nondirectory))
     (should (equal (delete-dups
                     (mapcar
@@ -164,7 +152,6 @@
                     "file2.txt")))))
 
 (ert-deftest xref--xref-file-name-display-is-relative-to-project-root ()
-  :expected-result :failed
   (let* ((data-parent-dir
           (file-name-directory (directory-file-name xref-tests--data-dir)))
          (xref-file-name-display 'project-relative))
