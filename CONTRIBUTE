@@ -26,6 +26,11 @@ the supported hosts (macOS with the Cocoa port or GNU/Linux with GTK/PGTK):
 	make
 	src/emacs
 
+A stable Rust toolchain (rustc 1.80 or newer) is now required to build the
+Rust-based helper binaries in `lib-src`.  We recommend installing via
+`rustup`, then running `rustup toolchain install stable && rustup component add
+clippy rustfmt` to mirror the configuration used in CI.
+
 For more details on the currently supported platform matrix, see the
 "Platform Focus" section near the top of INSTALL and README.  For
 general contribution guidance, see

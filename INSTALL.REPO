@@ -33,6 +33,10 @@ git - at least Git 1.7.1.  If your repository was created by an older
 makeinfo  - required to build the manuals (whose Info files are not
   in the repository).  Installing GNU Texinfo 4.13 or later should
   work.
+Rust      - install the stable toolchain (rustc 1.80 or newer) via
+  rustup.  The Rust binaries are needed to build the `lib-src`
+  utilities implemented in Rust; ensure `cargo`, `rustfmt`, and
+  `clippy` are available on your PATH.
 
 To use the autotools, run the following shell command to generate the
 'configure' script and some related files, and to set up your git

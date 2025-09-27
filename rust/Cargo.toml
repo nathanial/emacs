@@ -1,0 +1,10 @@
+[workspace]
+members = [
+    "hexl",
+    "make-fingerprint",
+    "update-game-score",
+]
+resolver = "2"
+
+[workspace.package]
+edition = "2021"

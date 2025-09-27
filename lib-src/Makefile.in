@@ -199,6 +199,24 @@ LIBSECCOMP_LIBS=@LIBSECCOMP_LIBS@
 LIBSECCOMP_CFLAGS=@LIBSECCOMP_CFLAGS@
 SIZEOF_LONG=@SIZEOF_LONG@
 
+CARGO ?= cargo
+CARGO_PROFILE ?= release
+RUST_WORKSPACE = $(top_srcdir)/rust
+RUST_TARGET_DIR = $(top_builddir)/build/rust
+CARGO_ENV = CARGO_TARGET_DIR=$(RUST_TARGET_DIR)
+CARGO_COMMON_FLAGS = --locked --manifest-path $(RUST_WORKSPACE)/Cargo.toml --profile $(CARGO_PROFILE)
+CARGO_BIN_DIR = $(RUST_TARGET_DIR)/$(CARGO_PROFILE)
+HEXLCARGO = $(CARGO_BIN_DIR)/hexl$(EXEEXT)
+UPDATEGSCARGO = $(CARGO_BIN_DIR)/update-game-score$(EXEEXT)
+MAKEFPCARGO = $(CARGO_BIN_DIR)/make-fingerprint$(EXEEXT)
+RUST_LOCK = $(RUST_WORKSPACE)/Cargo.lock
+
+HEXL_SRC = $(wildcard $(RUST_WORKSPACE)/hexl/src/*.rs)
+UPDATE_GAME_SCORE_SRC = $(wildcard $(RUST_WORKSPACE)/update-game-score/src/*.rs)
+UPDATE_GAME_SCORE_BUILD = $(RUST_WORKSPACE)/update-game-score/build.rs
+MAKE_FINGERPRINT_SRC = $(wildcard $(RUST_WORKSPACE)/make-fingerprint/src/*.rs)
+MAKE_FINGERPRINT_BUILD = $(RUST_WORKSPACE)/make-fingerprint/build.rs
+
 # Currently, we can only generate seccomp filter files for x86-64.
 ifeq ($(HAVE_SECCOMP),yes)
 ifeq ($(HAVE_LIBSECCOMP),yes)
@@ -393,8 +411,14 @@ ebrowse${EXEEXT}: ${srcdir}/ebrowse.c ${srcdir}/../lib/min-max.h \
 make-docfile${EXEEXT}: ${srcdir}/make-docfile.c $(config_h)
 	$(AM_V_CCLD)$(CC) ${ALL_CFLAGS} $< $(LOADLIBES) -o $@
 
-make-fingerprint${EXEEXT}: ${srcdir}/make-fingerprint.c $(config_h)
-	$(AM_V_CCLD)$(CC) ${ALL_CFLAGS} $< $(LOADLIBES) -o $@
+$(HEXLCARGO): $(RUST_WORKSPACE)/Cargo.toml $(RUST_LOCK) $(RUST_WORKSPACE)/hexl/Cargo.toml $(HEXL_SRC)
+	$(AM_V_GEN)$(CARGO_ENV) $(CARGO) build $(CARGO_COMMON_FLAGS) --package hexl
+
+$(UPDATEGSCARGO): $(RUST_WORKSPACE)/Cargo.toml $(RUST_LOCK) $(RUST_WORKSPACE)/update-game-score/Cargo.toml $(UPDATE_GAME_SCORE_SRC) $(UPDATE_GAME_SCORE_BUILD)
+	$(AM_V_GEN)HAVE_SHARED_GAME_DIR=$(gamedir) $(CARGO_ENV) $(CARGO) build $(CARGO_COMMON_FLAGS) --package update-game-score
+
+$(MAKEFPCARGO): $(RUST_WORKSPACE)/Cargo.toml $(RUST_LOCK) $(RUST_WORKSPACE)/make-fingerprint/Cargo.toml $(MAKE_FINGERPRINT_SRC) $(MAKE_FINGERPRINT_BUILD)
+	$(AM_V_GEN)$(CARGO_ENV) $(CARGO) build $(CARGO_COMMON_FLAGS) --package make-fingerprint
 
 movemail${EXEEXT}: ${srcdir}/movemail.c pop.o $(config_h)
 	$(AM_V_CCLD)$(CC) ${ALL_CFLAGS} ${MOVE_FLAGS} $< pop.o \
@@ -413,13 +437,14 @@ emacsclient${EXEEXT}: ${srcdir}/emacsclient.c $(config_h)
 be-resources: ${srcdir}/be_resources.cc ${config_h}
 	$(AM_V_CXXLD)$(CXX) ${ALL_CXXFLAGS} $< -o $@
 
-hexl${EXEEXT}: ${srcdir}/hexl.c $(config_h)
-	$(AM_V_CCLD)$(CC) ${ALL_CFLAGS} $< $(LOADLIBES) -o $@
+hexl${EXEEXT}: $(HEXLCARGO)
+	$(AM_V_GEN)$(INSTALL_PROGRAM) $(HEXLCARGO) $@
 
-update-game-score${EXEEXT}: ${srcdir}/update-game-score.c $(config_h)
-	$(AM_V_CCLD)$(CC) ${ALL_CFLAGS} \
-	  -DHAVE_SHARED_GAME_DIR="\"$(gamedir)\"" \
-	  $< $(LOADLIBES) -o $@
+update-game-score${EXEEXT}: $(UPDATEGSCARGO)
+	$(AM_V_GEN)$(INSTALL_PROGRAM) $(UPDATEGSCARGO) $@
+
+make-fingerprint${EXEEXT}: $(MAKEFPCARGO)
+	$(AM_V_GEN)$(INSTALL_PROGRAM) $(MAKEFPCARGO) $@
 
 ifeq ($(SECCOMP_FILTER),1)
 seccomp-filter$(EXEEXT): $(srcdir)/seccomp-filter.c $(config_h)
