@@ -140,6 +140,8 @@ extern char etext;
 #include "fingerprint.h"
 #include "epaths.h"
 
+#include "rust-dynlib.h"
+
 /* Include these only because of INLINE.  */
 #include "comp.h"
 #include "thread.h"
@@ -1305,6 +1307,8 @@ main (int argc, char **argv)
   const char *dump_mode = NULL;
   int skip_args = 0;
   char *temacs = NULL;
+
+  emacs_rust_dynlib_probe ();
   while (skip_args < argc - 1)
     {
       if (argmatch (argv, argc, "-temacs", "--temacs", 8, &temacs, &skip_args)

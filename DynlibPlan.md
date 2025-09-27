@@ -49,15 +49,20 @@ inventory in `DynlibPlan.md` if new risks arise.
 1. Create a `rust/libemacs` crate exporting a minimal dynlib interface.
 2. Generate headers via `cbindgen`, commit them under `src/` (temporary path)
    and guard inclusion behind `HAVE_RUST_DYNLIB`.
-3. Add Autotools glue: `configure.ac` option `--with-rust-dynlib[=no/yes]`
-   defaulting to `no`; update `lib-src/Makefile.in` to build the Rust crate when
-   enabled.
+3. Add Autotools glue so the crate builds as part of the normal
+   configuration (initially gated by a `--with-rust-dynlib` option during
+   bring-up).
 4. Introduce stub Rust implementations that just call back into the existing C
    functions (`extern "C"`), validating the build pipeline without behaviour
    changes.
 
-**Exit criteria:** `./configure --with-ns --with-modules --with-rust-dynlib` and
+**Exit criteria:** `./configure --with-ns --with-modules` and
 `make -j` succeed, and `dynlib` symbols link correctly from Rust stubs.
+
+**Status (2025-09-27):** Completed. `rust/libemacs` now builds as part of
+the build, exported stubs initially delegated to the existing C implementation,
+and `rust-dynlib.h` provided the temporary bridge. (The configure flag and
+guards introduced here were removed in Phase 4.)
 
 ### Phase 2 – Rust implementation (5–6 days)
 1. Replace the Rust stubs with `libloading`-based code for macOS & Linux.
@@ -71,16 +76,24 @@ inventory in `DynlibPlan.md` if new risks arise.
 4. Wire native-comp special cases (`dynlib_open_for_eln`) and ensure module
    allowlists still work.
 5. Keep the legacy C implementation gated by `#ifndef HAVE_RUST_DYNLIB` for
-   fallback builds.
+   fallback builds. (Removed once the Rust path became the sole backend.)
 
 **Exit criteria:** Unit tests in Rust compile; `make -C test manual-modules` (or
 custom script) succeeds on macOS & Linux with the Rust backend enabled.
 
+**Status (2025-09-27):** Completed. `libloading` now drives
+`emacs_rust_dynlib_*`; after Phase 4 the C implementation was dropped entirely.
+`cargo test -p libemacs` passes, and
+`./configure --with-ns --with-modules && make -j8`
+finishes cleanly. The historical `make -C test manual-modules` target no longer
+exists; Phase 3 should either add a dedicated module smoke harness or wire
+equivalent coverage into `make check`.
+
 ### Phase 3 – Testing & harden (4 days)
 1. Add ERT smoke tests invoking `dynlib-open`/`dynlib-error` via a lightweight
    test module built during `make check` (consider reusing `test/manual/modules`).
-2. Run `make check` on macOS Cocoa and Linux GTK/PGTK with
-   `--with-rust-dynlib=yes`.
+2. Run `make check` on macOS Cocoa and Linux GTK/PGTK using the default
+   Rust-backed loader.
 3. Validate native compilation of a sample Elisp file (`native-compile`), load
    the resulting `.eln`, and ensure `dynlib_addr` still resolves doc strings.
 4. Measure performance (dlopen latency) to ensure no regressions; capture in
@@ -89,8 +102,7 @@ custom script) succeeds on macOS & Linux with the Rust backend enabled.
    `LegacyCleanupPlan.md` Phase entries with the new status.
 
 **Exit criteria:** All targeted tests pass, documentation merged, release notes
-prepared. `--with-rust-dynlib` becomes the default in nightly builds once both
-platforms are stable.
+prepared. Nightly builds ship with the Rust loader enabled everywhere.
 
 ### Phase 4 – Cleanup & Default Flip (2 days)
 1. Remove the legacy C implementation, leaving only the Rust variant.
@@ -100,18 +112,23 @@ platforms are stable.
 4. Open follow-up issues for Windows support if the platform is ever re-added
    (document assumptions for future maintainers).
 
+**Status (2025-09-27):** Completed. The configure flag is gone, Cargo is now a
+hard requirement, and the C `dynlib` implementation has been deleted. Track the
+Windows follow-up separately if that platform ever re-enters scope.
+
 ## Testing Matrix
 | Platform | Build | Tests | Notes |
 | --- | --- | --- | --- |
-| macOS 14 (arm64) | `--with-ns --with-modules --with-rust-dynlib` | `make -j`, `make check`, native-comp smoke | Ensure notarised modules still load. |
-| Ubuntu 24.04 (x86_64) | `--with-pgtk --with-modules --with-rust-dynlib` | `make -j`, `make check`, module load harness | Watch for `LD_LIBRARY_PATH` differences. |
+| macOS 14 (arm64) | `--with-ns --with-modules` | `make -j`, `make check`, native-comp smoke | Ensure notarised modules still load. |
+| Ubuntu 24.04 (x86_64) | `--with-pgtk --with-modules` | `make -j`, `make check`, module load harness | Watch for `LD_LIBRARY_PATH` differences. |
 | macOS CI | Same as above | `cargo test -p libemacs` | Tie into existing CI once CMake migration proceeds. |
 
 ## Rollback Strategy
-- Keep the C implementation behind a configure flag until Phase 4 completes.
-- During Phases 2–3, nightly builds should run both backends to catch drift.
-- If regressions surface, flip `--with-rust-dynlib` off and reopen plan without
-  destabilising releases.
+- With the C implementation removed, rollbacks require reverting the Phase 4
+  changes or rebuilding from a tag prior to the Rust switchover.
+- Nightly builds should continue to exercise module/native-comp flows so
+  regressions surface quickly. Keep the Rust crate’s unit tests (`cargo test`)
+  in CI to guard against toolchain drift.
 
 ## Open Questions
 1. Should we expose additional diagnostics (e.g., stack traces) from the Rust

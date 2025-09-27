@@ -3,6 +3,7 @@ members = [
     "hexl",
     "make-fingerprint",
     "update-game-score",
+    "libemacs",
 ]
 resolver = "2"
 

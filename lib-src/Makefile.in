@@ -199,7 +199,10 @@ LIBSECCOMP_LIBS=@LIBSECCOMP_LIBS@
 LIBSECCOMP_CFLAGS=@LIBSECCOMP_CFLAGS@
 SIZEOF_LONG=@SIZEOF_LONG@
 
-CARGO ?= cargo
+CARGO = @CARGO@
+ifeq ($(CARGO),)
+CARGO = cargo
+endif
 CARGO_PROFILE ?= release
 RUST_WORKSPACE = $(top_srcdir)/rust
 RUST_TARGET_DIR = $(top_builddir)/build/rust
@@ -210,6 +213,10 @@ HEXLCARGO = $(CARGO_BIN_DIR)/hexl$(EXEEXT)
 UPDATEGSCARGO = $(CARGO_BIN_DIR)/update-game-score$(EXEEXT)
 MAKEFPCARGO = $(CARGO_BIN_DIR)/make-fingerprint$(EXEEXT)
 RUST_LOCK = $(RUST_WORKSPACE)/Cargo.lock
+
+LIBEMACS_RUST_LIB = $(RUST_TARGET_DIR)/$(CARGO_PROFILE)/liblibemacs.a
+LIBEMACS_MANIFEST = $(RUST_WORKSPACE)/libemacs/Cargo.toml
+LIBEMACS_SRC = $(wildcard $(RUST_WORKSPACE)/libemacs/src/*.rs)
 
 HEXL_SRC = $(wildcard $(RUST_WORKSPACE)/hexl/src/*.rs)
 UPDATE_GAME_SCORE_SRC = $(wildcard $(RUST_WORKSPACE)/update-game-score/src/*.rs)
@@ -269,7 +276,7 @@ ALL_CXXFLAGS = $(filter-out ${NON_CXX_CFLAGS},${BASE_CFLAGS}) \
 # Configuration files for .o files to depend on.
 config_h = ../src/config.h $(srcdir)/../src/conf_post.h
 
-all: ${EXE_FILES} ${SCRIPTS}
+all: ${EXE_FILES} ${SCRIPTS} $(LIBEMACS_RUST_LIB)
 
 ifeq ($(SECCOMP_FILTER),1)
 all: seccomp-filter.bpf seccomp-filter-exec.bpf
@@ -419,6 +426,9 @@ $(UPDATEGSCARGO): $(RUST_WORKSPACE)/Cargo.toml $(RUST_LOCK) $(RUST_WORKSPACE)/up
 
 $(MAKEFPCARGO): $(RUST_WORKSPACE)/Cargo.toml $(RUST_LOCK) $(RUST_WORKSPACE)/make-fingerprint/Cargo.toml $(MAKE_FINGERPRINT_SRC) $(MAKE_FINGERPRINT_BUILD)
 	$(AM_V_GEN)$(CARGO_ENV) $(CARGO) build $(CARGO_COMMON_FLAGS) --package make-fingerprint
+
+$(LIBEMACS_RUST_LIB): $(RUST_WORKSPACE)/Cargo.toml $(RUST_LOCK) $(LIBEMACS_MANIFEST) $(LIBEMACS_SRC)
+	$(AM_V_GEN)$(CARGO_ENV) $(CARGO) build $(CARGO_COMMON_FLAGS) --package libemacs
 
 movemail${EXEEXT}: ${srcdir}/movemail.c pop.o $(config_h)
 	$(AM_V_CCLD)$(CC) ${ALL_CFLAGS} ${MOVE_FLAGS} $< pop.o \

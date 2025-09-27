@@ -33,7 +33,7 @@ LOC counts obtained via `wc -l` (2025-09-27). Tests marked “manual” require 
 
 2. **Phase B – Leaf runtime libraries**
    - Introduce a `rust/libemacs` crate exporting C symbols via `cbindgen`.
-   - Re-implement `dynlib` in Rust using `libloading`, exposing the same `dynlib_open/close/symbol` API; gate behind `--with-rust-dynlib` configure flag until stabilised.
+   - Re-implement `dynlib` in Rust using `libloading`, exposing the same `dynlib_open/close/symbol` API and replacing the legacy C implementation once tests stay green.
    - Port `sqlite.c` by wrapping `rusqlite` and bridging to Lisp via helper FFI shims; reuse existing ERT suites to compare behaviour.
 
 3. **Phase C – Data structure rewrites**

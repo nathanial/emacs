@@ -1,0 +1,14 @@
+[package]
+name = "libemacs"
+version = "0.1.0"
+edition = "2021"
+authors = ["GNU Emacs Maintainers"]
+license = "GPL-3.0-or-later"
+description = "Rust bridge for Emacs runtime components"
+
+[lib]
+crate-type = ["staticlib"]
+
+[dependencies]
+libc = "0.2"
+libloading = "0.8"

@@ -1053,6 +1053,11 @@ AC_ARG_WITH([native-compilation],
 )
 AC_SUBST([NATIVE_COMPILATION_AOT])
 
+AC_PATH_PROG([CARGO], [cargo])
+AS_IF([test -z "$CARGO"],
+      [AC_MSG_ERROR([Rust toolchain (cargo) is required to build Emacs.])])
+
+
 AC_ARG_ENABLE([check-lisp-object-type],
   [AS_HELP_STRING([--enable-check-lisp-object-type],
      [Enable compile time checks for the Lisp_Object data type,
