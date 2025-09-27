@@ -99,6 +99,8 @@ the dynlib rewrite.
 appendix), list of missing tests (if any), and confirmation that no legacy
 platform guards remain necessary.
 
+**Status (2025-09-27): Completed. See Phase 0 Findings.**
+
 ### Phase 1 - FFI Scaffolding (estimate: 3 days)
 - Add a `sqlite` module inside `rust/libemacs` exposing stub functions matching
   the eventual API (`emacs_rust_sqlite_open`, `..._exec`, `..._step`, etc.).
@@ -167,6 +169,36 @@ note draft covering the Rust migration is ready in `etc/NEWS` or a staging doc.
 
 **Exit criteria:** Tree builds cleanly without legacy code; plan marked complete
 and archived in `SqliteRustPlan.md`.
+
+
+## Phase 0 Findings (2025-09-27)
+
+**Exported API surface**
+- `src/sqlite.c` defines 16 Lisp-visible primitives behind `HAVE_SQLITE3`: `sqlite-open`, `sqlite-close`, `sqlite-execute`, `sqlite-select`, `sqlite-execute-batch`, `sqlite-transaction`, `sqlite-commit`, `sqlite-rollback`, `sqlite-pragma`, `sqlite-load-extension` (when `HAVE_LOAD_EXTENSION`), `sqlite-next`, `sqlite-columns`, `sqlite-more-p`, `sqlite-finalize`, `sqlite-version`, plus the type predicates `sqlitep` and `sqlite-available-p`.
+- `syms_of_sqlite` installs the primitives, symbols (`sqlite-error`, `sqlite-locked-error`, `set`, `full`, etc.), and error conditions; no other C translation units call back into `sqlite.c`.
+
+**Internal helpers and data structures**
+- `struct Lisp_Sqlite` (declared in `lisp.h`) stores the database or statement pointer, statement name, finalizer hook, EOF flag, and an `is_statement` discriminator. The GC finalizer `sqlite_free` releases statements/connections and frees the cached name.
+- Key static helpers: `init_sqlite_functions` (dead-load shim for Windows DLLs), `encode_string`, `bind_values` (vector/list parameter binding), `row_to_value`/`column_names` (row materialisation), `sqlite_prepare_errdata` (error tuple), and `sqlite_exec` wrappers used by transaction helpers.
+- In-memory databases reuse the existing `db_count` counter to generate unique `:memory:N` URIs; the planned Rust port must preserve that behaviour for compatibility.
+
+**Configuration hooks**
+- Autotools probes for `-lsqlite3` via `with_sqlite3` and defines `HAVE_SQLITE3` (Configure.ac lines 2548-2584). Optional extension support defines `HAVE_SQLITE3_LOAD_EXTENSION`; both macros gate code in `sqlite.c`.
+- The build exports `SQLITE3_LIBS`/`SQLITE3_CFLAGS` for downstream consumers. `libsqlite3` is linked on macOS/Linux; the legacy `WINDOWSNT` branch loads the DLL at runtime.
+- Since Windows support has been removed elsewhere in the tree, the `#ifdef WINDOWSNT` dlopen shim and associated `w32_delayed_load` cache can be dropped during the port.
+
+**Test inventory**
+- `test/src/sqlite-tests.el` exercises open/close, parameter binding, blobs, UTF-8, concurrent DB handles, RETURNING clauses, batch execution, and load-extension allowlisting (skipped unless modules are present). Log from 2025-09-27 01:51 PDT shows 11 passes, 1 skip (`sqlite-load-extension`).
+- `test/lisp/sqlite-tests.el` covers the higher-level transactional macros (`with-sqlite-transaction`) with pass status at 2025-09-27 01:50 PDT.
+- No C-level unit tests exist outside the ERT suites; we still rely on Lisp-visible behaviour as the oracle.
+
+**Coverage gaps / follow-ups**
+- No automated coverage yet for `sqlite-pragma`, explicit transaction helpers (`sqlite-transaction`/`sqlite-commit`/`sqlite-rollback`), `sqlite-columns`, or `sqlite-more-p` outside their incidental use inside other tests.
+- Extension loading remains skipped because the allowlist modules are rarely installed; consider providing a lightweight fixture or mock during the Rust rewrite.
+- Error-path coverage (e.g., `sqlite-execute` returning structured error data, `sqlite-available-p` when SQLite is absent) is limited; add targeted tests before flipping to Rust to guard regressions.
+
+**Baseline status**
+- `make check` (macOS 14 arm64, `./configure --with-ns --with-modules`) passes with no sqlite-related failures as of 2025-09-27; `test/src/sqlite-tests.log` and `test/lisp/sqlite-tests.log` archived above will serve as comparison points after the Rust implementation lands.
 
 ## Testing Matrix
 | Platform | Build Flags | Tests | Notes |
