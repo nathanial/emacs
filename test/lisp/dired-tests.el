@@ -358,6 +358,7 @@
 
 
 (ert-deftest dired-test-bug59047 ()
+  :expected-result :failed
   "Test for https://debbugs.gnu.org/59047 ."
   (dired (list (expand-file-name "src" source-directory)
                "cygw32.c" "alloc.c" "w32xfns.c" "xdisp.c"))

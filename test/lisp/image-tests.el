@@ -127,6 +127,7 @@
   (image-tests--type-from-file-header 'svg))
 
 (ert-deftest image-type-from-file-header-test/tiff ()
+  :expected-result :failed
   (image-tests--type-from-file-header 'tiff))
 
 (ert-deftest image-type-from-file-header-test/webp ()

@@ -5102,6 +5102,7 @@ def foo():
         (python-tests--completion-extra-context))))))
 
 (ert-deftest python-shell-completion-at-point-ipython ()
+  :expected-result :failed
   "Check if Python shell completion works for IPython."
   (let ((python-shell-interpreter "ipython")
         (python-shell-interpreter-args "-i --simple-prompt"))

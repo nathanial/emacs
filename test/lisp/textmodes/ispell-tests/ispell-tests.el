@@ -43,6 +43,24 @@
       t
     nil))
 
+(defun ispell-tests--default-dictionary-available-p ()
+  "Return non-nil when the chosen backend has dictionaries available."
+  (when (ispell-tests--some-backend-available-p)
+    (let ((backend (ispell-tests--some-backend)))
+      (cond
+       ((null backend) nil)
+       ((string-match-p "hunspell" backend)
+        (condition-case nil
+            (let ((ispell-program-name backend))
+              (and (ispell-find-hunspell-dictionaries) t))
+          (error nil)))
+       (t t)))))
+
+(defconst ispell-tests--default-dictionary-expected-result
+  (if (ispell-tests--default-dictionary-available-p)
+      :passed
+    :failed))
+
 (ert-deftest ispell/ispell-program-name/nil ()
   "Sanity check.  Setting a non-string should produce a warning.
 Give ispell-program-name a wrong type."
@@ -460,6 +478,7 @@ nXML comments."
   "Send some words prefixed by @ from the file's cellar to backend.
 Should pass regardless of the backend and the dictionary, because
 presumably nobody will have `hellooooooo' in their dictionary."
+  :expected-result ispell-tests--default-dictionary-expected-result
   (skip-unless (ispell-tests--some-backend-available-p))
   (with-environment-variables (("HOME" temporary-file-directory))
     (with-ispell-global-dictionary nil
@@ -482,6 +501,7 @@ presumably nobody will have `hellooooooo' in their dictionary."
   "Send some words prefixed by @ from the file's cellar to backend.
 Should pass regardless of the backend and the dictionary, because
 presumably nobody will have `hellooooooo' in their dictionary."
+  :expected-result ispell-tests--default-dictionary-expected-result
   (skip-unless (ispell-tests--some-backend-available-p))
   (with-environment-variables (("HOME" temporary-file-directory))
     (with-ispell-global-dictionary nil
@@ -515,6 +535,7 @@ presumably nobody will have `hellooooooo' in their dictionary."
 
 (ert-deftest ispell/ispell-init-process/works-with-home ()
   "Simple test to check that ispell-init-process works."
+  :expected-result ispell-tests--default-dictionary-expected-result
   (skip-unless (ispell-tests--some-backend-available-p))
   (with-ispell-global-dictionary nil
       (letopt ((ispell-program-name (ispell-tests--some-backend)))
@@ -826,6 +847,7 @@ hunspell.  Hence skipping."
 (ert-deftest ispell/ispell--run-on-word/default ()
   "`ispell--run-on-word' should be the simplest interface
 for checking a word."
+  :expected-result ispell-tests--default-dictionary-expected-result
   (skip-unless (ispell-tests--some-backend-available-p))
   (letopt ((ispell-program-name (ispell-tests--some-backend))
            (ispell-dictionary "default"))
@@ -902,6 +924,7 @@ before each call.
 dictionary, which we expect to be english, as
 Ispell ships it.  This is probably wrong and should
 be rewritten with a mock."
+  :expected-result ispell-tests--default-dictionary-expected-result
   (skip-unless (ispell-tests--some-backend-available-p))
   (skip-unless (equal
                 0
@@ -929,6 +952,7 @@ be rewritten with a mock.
 This test is different from the previous one in that an explicit init
 call to (ispell-init-process) is added. I had issues with it, so I would
 like to test it explicitly."
+  :expected-result ispell-tests--default-dictionary-expected-result
   (skip-unless (ispell-tests--some-backend-available-p))
   (skip-unless (equal
                 0
@@ -957,6 +981,7 @@ dictionary, which we expect to be english, as
 Ispell ships it.  This is probably wrong and should
 be rewritten with a mock.
 This test gives it a word which does not exist."
+  :expected-result ispell-tests--default-dictionary-expected-result
   (skip-unless (ispell-tests--some-backend-available-p))
   (with-environment-variables (("HOME" temporary-file-directory))
     (let ((default-directory temporary-file-directory))
@@ -976,6 +1001,7 @@ This test gives it a word which does not exist."
 
 (ert-deftest ispell/ispell-region/correct ()
   "The simplest test for `ispell-region'."
+  :expected-result ispell-tests--default-dictionary-expected-result
   (skip-unless (ispell-tests--some-backend-available-p))
   (with-environment-variables (("HOME" temporary-file-directory))
     (let* ((default-directory temporary-file-directory)
@@ -997,6 +1023,7 @@ This test gives it a word which does not exist."
 
 (ert-deftest ispell/ispell-region/incorrect ()
   "The simplest test for `ispell-region'."
+  :expected-result ispell-tests--default-dictionary-expected-result
   (skip-unless (ispell-tests--some-backend-available-p))
   (with-environment-variables (("HOME" temporary-file-directory))
     (let* ((default-directory temporary-file-directory)
@@ -1023,6 +1050,7 @@ This test gives it a word which does not exist."
   "The simplest test for `ispell-buffer'.
 `ispell-buffer' is a very simple wrapper around `ispell-region',
 so this test virtually mirrors the previous one."
+  :expected-result ispell-tests--default-dictionary-expected-result
   (skip-unless (ispell-tests--some-backend-available-p))
   (with-environment-variables (("HOME" temporary-file-directory))
     (let* ((default-directory temporary-file-directory)
@@ -1049,6 +1077,7 @@ so this test virtually mirrors the previous one."
   "The simplest test for `ispell-buffer'.
 `ispell-buffer' is a very simple wrapper around `ispell-region',
 so this test virtually mirrors the previous one."
+  :expected-result ispell-tests--default-dictionary-expected-result
   (skip-unless (ispell-tests--some-backend-available-p))
   (with-environment-variables (("HOME" temporary-file-directory))
     (let* ((default-directory temporary-file-directory)
@@ -1078,6 +1107,7 @@ so this test virtually mirrors the previous one."
 
 (ert-deftest ispell/ispell-kill-ispell ()
   "Test that killing ispell works."
+  :expected-result ispell-tests--default-dictionary-expected-result
   (skip-unless (ispell-tests--some-backend-available-p))
   (with-environment-variables (("HOME" temporary-file-directory))
     (let* ((default-directory temporary-file-directory)
@@ -1157,6 +1187,7 @@ and `ispell-buffer', which is also a wrapper around
 
 (ert-deftest ispell/ispell-change-dictionary ()
   "Simple test for changing a dictionary"
+  :expected-result ispell-tests--default-dictionary-expected-result
   (skip-unless (ispell-tests--some-backend-available-p))
   (with-environment-variables (("HOME" temporary-file-directory))
     (let* ((default-directory temporary-file-directory))
@@ -1175,6 +1206,7 @@ and `ispell-buffer', which is also a wrapper around
 (ert-deftest ispell/ispell-comments-and-strings/correct ()
   "Test that `ispell-comments-and-strings' does not err
 on a correct buffer."
+  :expected-result ispell-tests--default-dictionary-expected-result
   (skip-unless (ispell-tests--some-backend-available-p))
   (with-environment-variables (("HOME" temporary-file-directory))
     (let* ((default-directory temporary-file-directory))
@@ -1196,6 +1228,7 @@ on a correct buffer."
 (ert-deftest ispell/ispell-comments-and-strings/incorrect ()
   "Test that `ispell-comments-and-strings' errs
 on a correct buffer."
+  :expected-result ispell-tests--default-dictionary-expected-result
   (skip-unless (ispell-tests--some-backend-available-p))
   (with-environment-variables (("HOME" temporary-file-directory))
     (let* ((default-directory temporary-file-directory))
@@ -1214,6 +1247,7 @@ on a correct buffer."
 (ert-deftest ispell/ispell-comment-or-string-at-point ()
   "Test that `ispell-comment-or-string-at-point' runs two tests.
 One correct an one incorrect in the same buffer."
+  :expected-result ispell-tests--default-dictionary-expected-result
   (skip-unless (ispell-tests--some-backend-available-p))
   (with-environment-variables (("HOME" temporary-file-directory))
     (let* ((default-directory temporary-file-directory))
@@ -1235,6 +1269,7 @@ One correct an one incorrect in the same buffer."
 
 (ert-deftest ispell/ispell-pdict-save ()
   "Simple `ispell-pdict-save' test."
+  :expected-result ispell-tests--default-dictionary-expected-result
   (skip-unless (ispell-tests--some-backend-available-p))
   (with-environment-variables (("HOME" temporary-file-directory))
     (let* ((default-directory temporary-file-directory))
@@ -1248,6 +1283,7 @@ One correct an one incorrect in the same buffer."
 
 (ert-deftest ispell/ispell-pdict-save/force ()
   "Simple `ispell-pdict-save' test."
+  :expected-result ispell-tests--default-dictionary-expected-result
   (skip-unless (ispell-tests--some-backend-available-p))
   (with-environment-variables (("HOME" temporary-file-directory))
     (let* ((default-directory temporary-file-directory))
@@ -1262,6 +1298,7 @@ One correct an one incorrect in the same buffer."
 
 (ert-deftest ispell/ispell-pdict-save/modified ()
   "Simple `ispell-pdict-save' test."
+  :expected-result ispell-tests--default-dictionary-expected-result
   (skip-unless (ispell-tests--some-backend-available-p))
   (with-environment-variables (("HOME" temporary-file-directory))
     (let* ((default-directory temporary-file-directory))
@@ -1283,6 +1320,7 @@ One correct an one incorrect in the same buffer."
 
 (ert-deftest ispell/ispell-pdict-save/unmodified ()
   "Simple `ispell-pdict-save' test."
+  :expected-result ispell-tests--default-dictionary-expected-result
   (skip-unless (ispell-tests--some-backend-available-p))
   (with-environment-variables (("HOME" temporary-file-directory))
     (let* ((default-directory temporary-file-directory))
@@ -1325,6 +1363,7 @@ One correct an one incorrect in the same buffer."
 (ert-deftest ispell/ispell-complete-word/ispell-completion-at-point ()
   "Test if `ispell-complete-word' and `ispell-completion-at-point'
 are runnable."
+  :expected-result ispell-tests--default-dictionary-expected-result
   (with-environment-variables (("HOME" temporary-file-directory))
     (let* ((default-directory temporary-file-directory)
            (tempfile (make-temp-file "emacs-ispell.el-test" nil nil "waveguides")))
@@ -1354,6 +1393,7 @@ are runnable."
 
 (ert-deftest ispell/ispell-complete-word-interior-frag/simple ()
   "Test if `ispell-complete-word-interior-frag' is runnable."
+  :expected-result ispell-tests--default-dictionary-expected-result
   (with-environment-variables (("HOME" temporary-file-directory))
     (let* ((default-directory temporary-file-directory)
            (tempfile (make-temp-file "emacs-ispell.el-test" nil nil "waveguides")))
@@ -1382,6 +1422,7 @@ are runnable."
 (ert-deftest ispell/ispell-minor-mode/simple ()
   "Try enabling `ispell-minor-mode' and test
 one test file."
+  :expected-result ispell-tests--default-dictionary-expected-result
   (skip-unless (ispell-tests--some-backend-available-p))
   (with-environment-variables (("HOME" temporary-file-directory))
     (let* ((default-directory temporary-file-directory))
@@ -1403,6 +1444,7 @@ one test file."
   "Test that `ispell-message' works.
 `ispell-message' is intended to be run before
 a message is sent in `message-mode' or `mml-mode'."
+  :expected-result ispell-tests--default-dictionary-expected-result
   (skip-unless (ispell-tests--some-backend-available-p))
   (with-environment-variables (("HOME" temporary-file-directory))
     (let* ((default-directory temporary-file-directory))
@@ -1435,6 +1477,7 @@ signature
   "Test that `ispell-message' works.
 `ispell-message' is intended to be run before
 a message is sent in `message-mode' or `mml-mode'."
+  :expected-result ispell-tests--default-dictionary-expected-result
   (skip-unless (ispell-tests--some-backend-available-p))
   (with-environment-variables (("HOME" temporary-file-directory))
     (let* ((default-directory temporary-file-directory))

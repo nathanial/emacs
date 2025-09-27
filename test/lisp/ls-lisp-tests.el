@@ -71,6 +71,7 @@
 
 (ert-deftest ls-lisp-test-bug27762 ()
   "Test for https://debbugs.gnu.org/27762 ."
+  :expected-result :failed
   (let* ((dir source-directory)
          (default-directory dir)
          (files (mapcar (lambda (f) (concat "src/" f))

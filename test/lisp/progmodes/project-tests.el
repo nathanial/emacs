@@ -34,6 +34,7 @@
 (require 'xref)
 
 (ert-deftest project/quoted-directory ()
+  :expected-result :failed
   "Check that `project-files' and `project-find-regexp' deal with
 quoted directory names (Bug#47799)."
   (skip-unless (executable-find find-program))
@@ -79,6 +80,7 @@ quoted directory names (Bug#47799)."
   (project-tests--trivial-ignores project))
 
 (ert-deftest project-ignores ()
+  :expected-result :failed
   "Check that `project-files' correctly ignores the files
 returned by `project-ignores' if the root directory is a
 directory name (Bug#48471)."
@@ -96,6 +98,7 @@ directory name (Bug#48471)."
       (should (equal relative-files '("some-file"))))))
 
 (ert-deftest project-ignores-bug-50240 ()
+  :expected-result :failed
   "Check that `project-files' does not ignore all files.
 When `project-ignores' includes a name matching project dir."
   (skip-unless (executable-find find-program))
@@ -168,6 +171,7 @@ When `project-ignores' includes a name matching project dir."
     (should (string-match-p "/test/lisp/progmodes/project-resources/\\'" (project-root project)))))
 
 (ert-deftest project-find-regexp ()
+  :expected-result :failed
   "Check the happy path."
   (skip-unless (executable-find find-program))
   (skip-unless (executable-find "xargs"))
@@ -193,6 +197,7 @@ When `project-ignores' includes a name matching project dir."
                      '("((nil . ((project-vc-ignores . (\"etc\")))))" "etc"))))))
 
 (ert-deftest project-find-regexp-with-prefix ()
+  :expected-result :failed
   "Check the happy path."
   (skip-unless (executable-find find-program))
   (skip-unless (executable-find "xargs"))

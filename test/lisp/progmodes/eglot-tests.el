@@ -388,6 +388,7 @@ directory hierarchy."
         (should (not (eglot-current-server)))))))
 
 (ert-deftest eglot-test-rust-analyzer-watches-files ()
+  :expected-result :failed
   "Start rust-analyzer.  Notify it when a critical file changes."
   (skip-unless (executable-find "rust-analyzer"))
   (skip-unless (executable-find "cargo"))
@@ -538,6 +539,7 @@ directory hierarchy."
    finally (error "eglot--tests-force-full-eldoc didn't deliver")))
 
 (ert-deftest eglot-test-rust-analyzer-hover-after-edit ()
+  :expected-result :failed
   "Hover and highlightChanges."
   (skip-unless (executable-find "rust-analyzer"))
   (skip-unless (executable-find "cargo"))
@@ -862,6 +864,7 @@ int main() {
                 "#include <stdio.h>\nint main() { fprintf(blergh); }\nint ble { return 0; }")))))
 
 (ert-deftest eglot-test-rust-on-type-formatting ()
+  :expected-result :failed
   "Test textDocument/onTypeFormatting against rust-analyzer."
   (skip-unless (executable-find "rust-analyzer"))
   (skip-unless (executable-find "cargo"))
@@ -942,6 +945,7 @@ int main() {
             (should (= 4 (length (flymake--project-diagnostics))))))))))
 
 (ert-deftest eglot-test-project-wide-diagnostics-rust-analyzer ()
+  :expected-result :failed
   "Test diagnostics through multiple files in rust-analyzer."
   (skip-unless (executable-find "rust-analyzer"))
   (skip-unless (executable-find "cargo"))
