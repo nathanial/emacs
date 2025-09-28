@@ -102,6 +102,8 @@ platform guards remain necessary.
 **Status (2025-09-27): Completed. See Phase 0 Findings.**
 
 ### Phase 1 - FFI Scaffolding (estimate: 3 days)
+- Status (2025-09-27): rust-sqlite stubs compiled and header included; Lisp primitives still call legacy C implementation.
+  (Follow-up: script cbindgen to emit sqlite-only bindings; current header is trimmed post-generation.)
 - Add a `sqlite` module inside `rust/libemacs` exposing stub functions matching
   the eventual API (`emacs_rust_sqlite_open`, `..._exec`, `..._step`, etc.).
 - Generate a companion header (`src/rust-sqlite.h`) via `cbindgen` and include it

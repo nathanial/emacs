@@ -27,6 +27,9 @@ YOSHIDA <syohex@gmail.com>, which can be found at:
 #include <c-strcase.h>
 #include "lisp.h"
 #include "coding.h"
+/* Phase 1 scaffolding: rust-sqlite.h exposes stub entry points.  The
+   legacy C implementation below continues to provide all behaviour.  */
+#include "rust-sqlite.h"
 
 #ifdef HAVE_SQLITE3
 
@@ -884,6 +887,7 @@ void
 syms_of_sqlite (void)
 {
 #ifdef HAVE_SQLITE3
+  emacs_rust_sqlite_probe ();
   defsubr (&Ssqlite_open);
   defsubr (&Ssqlite_close);
   defsubr (&Ssqlite_execute);

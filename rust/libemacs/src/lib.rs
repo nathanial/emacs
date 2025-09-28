@@ -6,6 +6,17 @@
 
 #![allow(clippy::not_unsafe_ptr_arg_deref)]
 
+mod sqlite;
+pub use sqlite::{
+    emacs_rust_sqlite_changes, emacs_rust_sqlite_close, emacs_rust_sqlite_columns,
+    emacs_rust_sqlite_execute, emacs_rust_sqlite_execute_batch,
+    emacs_rust_sqlite_finalize, emacs_rust_sqlite_is_available,
+    emacs_rust_sqlite_load_extension, emacs_rust_sqlite_more, emacs_rust_sqlite_open,
+    emacs_rust_sqlite_prepare, emacs_rust_sqlite_probe, emacs_rust_sqlite_step,
+    emacs_rust_sqlite_version, EmacsSqliteHandle, EmacsSqliteResult, EmacsSqliteString,
+    EmacsSqliteValue, EmacsSqliteValueTag,
+};
+
 #[cfg(not(any(target_os = "macos", target_os = "linux")))]
 compile_error!("rust dynlib backend currently supports macOS and Linux only");
 

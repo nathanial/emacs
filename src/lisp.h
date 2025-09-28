@@ -2926,6 +2926,7 @@ struct Lisp_Sqlite
   void *stmt;
   char *name;
   void (*finalizer) (void *);
+  ptrdiff_t column_count;
   bool eof;
   bool is_statement;
 } GCALIGNED_STRUCT;
